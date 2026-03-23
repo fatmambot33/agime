@@ -142,6 +142,8 @@ Behavior:
 - Uses `curl` retry checks before failing the run.
 - Tunable retries (`POST_BUILD_TEST_ATTEMPTS`, default `20`).
 - Tunable delay between attempts (`POST_BUILD_TEST_DELAY_SECONDS`, default `3`).
+- Per-probe connect timeout (`POST_BUILD_TEST_CONNECT_TIMEOUT_SECONDS`, default `5`).
+- Per-probe total timeout (`POST_BUILD_TEST_MAX_TIME_SECONDS`, default `15`).
 
 To skip in constrained/staged environments:
 
@@ -152,6 +154,8 @@ OPENCLAW_DOMAIN=openclaw.example.com \
 OVH_ENDPOINT_API_KEY=xxxxx \
 ./build.sh
 ```
+
+If `POST_BUILD_TEST=1`, `build.sh` validates `curl` availability before deployment steps start.
 
 ## Secret handling and file permissions
 

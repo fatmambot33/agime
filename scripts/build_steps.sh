@@ -23,6 +23,8 @@ initialize_defaults() {
   POST_BUILD_TEST=${POST_BUILD_TEST:-"1"}
   POST_BUILD_TEST_ATTEMPTS=${POST_BUILD_TEST_ATTEMPTS:-"20"}
   POST_BUILD_TEST_DELAY_SECONDS=${POST_BUILD_TEST_DELAY_SECONDS:-"3"}
+  POST_BUILD_TEST_CONNECT_TIMEOUT_SECONDS=${POST_BUILD_TEST_CONNECT_TIMEOUT_SECONDS:-"5"}
+  POST_BUILD_TEST_MAX_TIME_SECONDS=${POST_BUILD_TEST_MAX_TIME_SECONDS:-"15"}
   OPENCLAW_ALLOWED_ORIGIN=${OPENCLAW_ALLOWED_ORIGIN:-"https://$OPENCLAW_DOMAIN"}
   DRY_RUN=${DRY_RUN:-"0"}
 }
@@ -35,6 +37,9 @@ check_docker_access() {
 
   require_command docker
   require_command git
+  if [ "$POST_BUILD_TEST" != "0" ]; then
+    require_command curl
+  fi
   docker compose version > /dev/null 2>&1 || fail "docker compose is required"
 
   log "Checking Docker access"
@@ -185,7 +190,7 @@ post_build_tls_test() {
   fi
 
   if [ "$DRY_RUN" = "1" ]; then
-    log "[DRY_RUN] validate https://$OPENCLAW_DOMAIN with curl (${POST_BUILD_TEST_ATTEMPTS} attempts)"
+    log "[DRY_RUN] validate https://$OPENCLAW_DOMAIN with curl (${POST_BUILD_TEST_ATTEMPTS} attempts, connect-timeout=${POST_BUILD_TEST_CONNECT_TIMEOUT_SECONDS}s, max-time=${POST_BUILD_TEST_MAX_TIME_SECONDS}s)"
     return 0
   fi
 
@@ -193,10 +198,16 @@ post_build_tls_test() {
   attempts_left=$POST_BUILD_TEST_ATTEMPTS
   [ "$attempts_left" -gt 0 ] 2> /dev/null || fail "POST_BUILD_TEST_ATTEMPTS must be a positive integer"
   [ "$POST_BUILD_TEST_DELAY_SECONDS" -ge 0 ] 2> /dev/null || fail "POST_BUILD_TEST_DELAY_SECONDS must be an integer >= 0"
+  [ "$POST_BUILD_TEST_CONNECT_TIMEOUT_SECONDS" -gt 0 ] 2> /dev/null || fail "POST_BUILD_TEST_CONNECT_TIMEOUT_SECONDS must be a positive integer"
+  [ "$POST_BUILD_TEST_MAX_TIME_SECONDS" -gt 0 ] 2> /dev/null || fail "POST_BUILD_TEST_MAX_TIME_SECONDS must be a positive integer"
+  [ "$POST_BUILD_TEST_MAX_TIME_SECONDS" -ge "$POST_BUILD_TEST_CONNECT_TIMEOUT_SECONDS" ] 2> /dev/null || fail "POST_BUILD_TEST_MAX_TIME_SECONDS must be >= POST_BUILD_TEST_CONNECT_TIMEOUT_SECONDS"
 
   log "Validating HTTPS/TLS availability for https://$OPENCLAW_DOMAIN"
   while [ "$attempts_left" -gt 0 ]; do
-    if curl --fail --silent --show-error --location "https://$OPENCLAW_DOMAIN" > /dev/null; then
+    if curl --fail --silent --show-error --location \
+      --connect-timeout "$POST_BUILD_TEST_CONNECT_TIMEOUT_SECONDS" \
+      --max-time "$POST_BUILD_TEST_MAX_TIME_SECONDS" \
+      "https://$OPENCLAW_DOMAIN" > /dev/null; then
       log "Post-build HTTPS/TLS validation passed"
       return 0
     fi

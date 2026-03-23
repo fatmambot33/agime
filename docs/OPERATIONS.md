@@ -18,6 +18,8 @@
   4. Re-run with explicit post-build test tuning if issuance is slow:
      - `POST_BUILD_TEST_ATTEMPTS=40`
      - `POST_BUILD_TEST_DELAY_SECONDS=5`
+     - `POST_BUILD_TEST_CONNECT_TIMEOUT_SECONDS=8`
+     - `POST_BUILD_TEST_MAX_TIME_SECONDS=20`
   5. As a temporary bypass (not recommended for routine use), set `POST_BUILD_TEST=0`.
 
 ### 3) OpenClaw container exits immediately
@@ -48,9 +50,12 @@ Non-dry runs execute an HTTPS/TLS validation after restarting services:
 - Target URL: `https://$OPENCLAW_DOMAIN`
 - Default retries: `POST_BUILD_TEST_ATTEMPTS=20`
 - Default delay: `POST_BUILD_TEST_DELAY_SECONDS=3`
+- Per-probe connect timeout: `POST_BUILD_TEST_CONNECT_TIMEOUT_SECONDS=5`
+- Per-probe total timeout: `POST_BUILD_TEST_MAX_TIME_SECONDS=15`
 - Skip switch: `POST_BUILD_TEST=0`
 
 This check fails fast when DNS, firewall, or certificate issuance issues block HTTPS readiness.
+When enabled, `curl` availability is validated early in deployment so missing dependencies fail before service changes are applied.
 
 ## Security defaults and safeguards
 

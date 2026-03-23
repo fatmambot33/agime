@@ -43,6 +43,8 @@ Optional environment variables:
  POST_BUILD_TEST Default: 1. Set to 0 to skip post-build HTTPS/TLS validation.
  POST_BUILD_TEST_ATTEMPTS Default: 20. Number of HTTPS validation attempts.
  POST_BUILD_TEST_DELAY_SECONDS Default: 3. Delay between HTTPS validation attempts.
+ POST_BUILD_TEST_CONNECT_TIMEOUT_SECONDS Default: 5. curl connect timeout per HTTPS probe.
+ POST_BUILD_TEST_MAX_TIME_SECONDS Default: 15. curl total timeout per HTTPS probe.
  DRY_RUN Default: 0. Set to 1 to print planned actions without applying changes.
 
 Notes:

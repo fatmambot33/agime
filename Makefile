@@ -1,10 +1,10 @@
 SHELL := /bin/sh
 
-SCRIPTS := build.sh build-interactive.sh sync.sh
+SCRIPTS := build.sh build-interactive.sh sync.sh tests/smoke_dry_run.sh
 
-.PHONY: check syntax lint fmt-check
+.PHONY: check syntax lint fmt-check smoke
 
-check: syntax lint fmt-check
+check: syntax lint fmt-check smoke
 
 syntax:
 	sh -n $(SCRIPTS)
@@ -22,3 +22,6 @@ fmt-check:
 		exit 1; \
 	}
 	shfmt -d $(SCRIPTS)
+
+smoke:
+	sh tests/smoke_dry_run.sh

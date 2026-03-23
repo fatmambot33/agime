@@ -16,9 +16,10 @@ make check
 
 This runs:
 
-- `sh -n build.sh build-interactive.sh sync.sh`
-- `shellcheck build.sh build-interactive.sh sync.sh`
-- `shfmt -d build.sh build-interactive.sh sync.sh`
+- `sh -n build.sh build-interactive.sh sync.sh tests/smoke_dry_run.sh`
+- `shellcheck build.sh build-interactive.sh sync.sh tests/smoke_dry_run.sh`
+- `shfmt -d build.sh build-interactive.sh sync.sh tests/smoke_dry_run.sh`
+- `sh tests/smoke_dry_run.sh`
 
 If `shellcheck` or `shfmt` are unavailable, install them before submitting changes.
 

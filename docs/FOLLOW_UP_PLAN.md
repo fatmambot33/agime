@@ -17,6 +17,8 @@ Transform the repo from a practical setup script collection into a maintainable,
 - Added `docs/OPERATIONS.md` with troubleshooting, backup, restore, and rollback guidance.
 - Added GitHub Actions workflow for shell checks.
 - Implemented `DRY_RUN=1` path in `build.sh` and exposed it through `build-interactive.sh`.
+- Added deterministic dry-run smoke test script (`tests/smoke_dry_run.sh`).
+- Added CI/local dry-run validation through the `make smoke` check.
 
 ---
 
@@ -65,6 +67,6 @@ Transform the repo from a practical setup script collection into a maintainable,
 
 1. Split `build.sh` into logical modules (or sourced helper script).
 2. Add idempotency validation checks for repeat runs.
-3. Add deterministic smoke test harness for non-destructive checks.
-4. Document version compatibility matrix for Docker/Traefik/OpenClaw.
-5. Add CI validation for `DRY_RUN=1` output expectations.
+3. Document version compatibility matrix for Docker/Traefik/OpenClaw.
+4. Add module-level unit-style tests for template renderer and env validation helpers.
+5. Add failure-injection scenarios for common operator mistakes (DNS mismatch, missing env, Docker access).

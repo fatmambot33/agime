@@ -7,7 +7,7 @@ Automation scripts for deploying an OpenClaw gateway behind Traefik on a VPS.
 - `build.sh`: non-interactive end-to-end setup script (environment-variable driven).
 - `build-interactive.sh`: guided wrapper that collects inputs and runs `build.sh`.
 - `sync.sh`: minimal helper to copy and run setup scripts over SSH.
-- `Makefile`: local quality checks (`make check`, `make lint`, `make fmt-check`).
+- `Makefile`: local quality checks (`make check`, `make lint`, `make fmt-check`, `make smoke`).
 
 ## Prerequisites
 
@@ -200,6 +200,7 @@ If needed, run each check independently:
 make lint
 make fmt-check
 make syntax
+make smoke
 ```
 
 ## Documentation

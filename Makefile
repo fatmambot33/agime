@@ -1,6 +1,6 @@
 SHELL := /bin/sh
 
-SCRIPTS := build.sh build-interactive.sh sync.sh tests/smoke_dry_run.sh
+SCRIPTS := build.sh build-interactive.sh sync.sh scripts/build_lib.sh scripts/build_steps.sh tests/smoke_dry_run.sh
 
 .PHONY: check syntax lint fmt-check smoke
 

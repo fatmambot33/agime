@@ -5,17 +5,11 @@ set -eu
 SCRIPT_NAME=$(basename "$0")
 SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 
-log() {
- printf '%s\n' "$*"
-}
-
-fail() {
- printf 'Error: %s\n' "$*" >&2
- exit 1
-}
+. "$SCRIPT_DIR/scripts/build_lib.sh"
+. "$SCRIPT_DIR/scripts/build_steps.sh"
 
 usage() {
- cat <<EOF
+  cat <<EOF2
 Usage:
  TRAEFIK_ACME_EMAIL=admin@example.com \\
  OPENCLAW_DOMAIN=openclaw.example.com \\
@@ -51,213 +45,28 @@ Notes:
  https://help.ovhcloud.com/csm/fr-vps-install-openclaw?id=kb_article_view&sysparm_article=KB0074788
  - Docker and Docker Compose must already be installed.
  - If the OpenClaw setup wizard runs, it remains interactive.
-EOF
-}
-
-require_command() {
- command -v "$1" >/dev/null 2>&1 || fail "Missing required command: $1"
-}
-
-require_env() {
- var_name=$1
- eval "var_value=\${$var_name-}"
- [ -n "$var_value" ] || fail "Environment variable $var_name is required"
-}
-
-run_cmd() {
- if [ "$DRY_RUN" = "1" ]; then
- log "[DRY_RUN] $*"
- return 0
- fi
- "$@"
-}
-
-escape_sed_replacement() {
- printf '%s' "$1" | sed 's/[\\\/&]/\\&/g'
-}
-
-render_template() {
- target=$1
- template=$2
-
- if [ "$DRY_RUN" = "1" ]; then
-  log "[DRY_RUN] render $template to $target"
-  return 0
- fi
-
- [ -f "$template" ] || fail "Template not found: $template"
- tmp_file="${target}.tmp"
- sed \
-  -e "s/__TRAEFIK_ACME_EMAIL__/$(escape_sed_replacement "$TRAEFIK_ACME_EMAIL")/g" \
-  -e "s/__OPENCLAW_IMAGE__/$(escape_sed_replacement "$OPENCLAW_IMAGE")/g" \
-  -e "s/__OPENCLAW_GATEWAY_BIND__/$(escape_sed_replacement "$OPENCLAW_GATEWAY_BIND")/g" \
-  -e "s/__OPENCLAW_DOMAIN__/$(escape_sed_replacement "$OPENCLAW_DOMAIN")/g" \
-  -e "s/__OPENCLAW_ALLOWED_ORIGIN__/$(escape_sed_replacement "$OPENCLAW_ALLOWED_ORIGIN")/g" \
-  -e "s/__OPENCLAW_TOKEN__/$(escape_sed_replacement "$OPENCLAW_TOKEN")/g" \
-  -e "s/__OVH_ENDPOINT_BASE_URL__/$(escape_sed_replacement "$OVH_ENDPOINT_BASE_URL")/g" \
-  -e "s/__OVH_ENDPOINT_API_KEY__/$(escape_sed_replacement "$OVH_ENDPOINT_API_KEY")/g" \
-  -e "s/__OVH_ENDPOINT_MODEL__/$(escape_sed_replacement "$OVH_ENDPOINT_MODEL")/g" \
-  "$template" >"$tmp_file"
- mv "$tmp_file" "$target"
-}
-
-extract_openclaw_token() {
- env_file=$1
- [ -f "$env_file" ] || return 1
- token=$(grep '^OPENCLAW_GATEWAY_TOKEN=' "$env_file" | tail -n 1 | cut -d '=' -f 2- || true)
- [ -n "$token" ] || return 1
- printf '%s' "$token"
+EOF2
 }
 
 [ "${1-}" = "--help" ] && {
- usage
- exit 0
+  usage
+  exit 0
 }
 
 require_env TRAEFIK_ACME_EMAIL
 require_env OPENCLAW_DOMAIN
 require_env OVH_ENDPOINT_API_KEY
 
-CURRENT_USER=$(id -un)
-HOME_DIR=${HOME:-"$(getent passwd "$CURRENT_USER" | cut -d : -f 6 2>/dev/null || printf '/home/%s' "$CURRENT_USER")"}
-OPENCLAW_DIR=${OPENCLAW_DIR:-"$HOME_DIR/openclaw"}
-OPENCLAW_CONFIG_DIR=${OPENCLAW_CONFIG_DIR:-"$HOME_DIR/.openclaw"}
-OPENCLAW_WORKSPACE_DIR=${OPENCLAW_WORKSPACE_DIR:-"$OPENCLAW_CONFIG_DIR/workspace"}
-TRAEFIK_DIR=${TRAEFIK_DIR:-"$HOME_DIR/docker/traefik"}
-OPENCLAW_REPO=${OPENCLAW_REPO:-"https://github.com/openclaw/openclaw.git"}
-OPENCLAW_IMAGE=${OPENCLAW_IMAGE:-"openclaw:local"}
-OPENCLAW_GATEWAY_BIND=${OPENCLAW_GATEWAY_BIND:-"lan"}
-OVH_ENDPOINT_BASE_URL=${OVH_ENDPOINT_BASE_URL:-"https://oai.endpoints.kepler.ai.cloud.ovh.net/v1"}
-OVH_ENDPOINT_MODEL=${OVH_ENDPOINT_MODEL:-"gpt-oss-120b"}
-OPENCLAW_USER=${OPENCLAW_USER:-"$CURRENT_USER"}
-TRAEFIK_COMPOSE_TEMPLATE=${TRAEFIK_COMPOSE_TEMPLATE:-"$SCRIPT_DIR/templates/traefik-compose.yml.tmpl"}
-OPENCLAW_COMPOSE_TEMPLATE=${OPENCLAW_COMPOSE_TEMPLATE:-"$SCRIPT_DIR/templates/openclaw-compose.yml.tmpl"}
-OPENCLAW_JSON_TEMPLATE=${OPENCLAW_JSON_TEMPLATE:-"$SCRIPT_DIR/templates/openclaw.json.tmpl"}
-SKIP_DOCKER_GROUP_SETUP=${SKIP_DOCKER_GROUP_SETUP:-"0"}
-SKIP_OPENCLAW_WIZARD=${SKIP_OPENCLAW_WIZARD:-"0"}
-OPENCLAW_ALLOWED_ORIGIN=${OPENCLAW_ALLOWED_ORIGIN:-"https://$OPENCLAW_DOMAIN"}
-DRY_RUN=${DRY_RUN:-"0"}
-
-if [ "$DRY_RUN" = "1" ]; then
- log "DRY_RUN=1 enabled; no system or Docker changes will be applied"
-else
- require_command docker
- require_command git
- docker compose version >/dev/null 2>&1 || fail "docker compose is required"
-
- log "Checking Docker access"
- if ! docker ps >/dev/null 2>&1; then
-  if [ "$SKIP_DOCKER_GROUP_SETUP" = "1" ]; then
-  fail "docker ps failed and SKIP_DOCKER_GROUP_SETUP=1"
-  fi
-
-  log "Adding $CURRENT_USER to the docker group"
-  sudo usermod -aG docker "$CURRENT_USER"
-  fail "Docker permissions updated. Reconnect or run 'newgrp docker', then rerun the script."
- fi
-fi
-
-log "Creating shared Docker network"
-if [ "$DRY_RUN" = "1" ]; then
- log "[DRY_RUN] docker network inspect proxy"
- log "[DRY_RUN] docker network create proxy"
-elif ! docker network inspect proxy >/dev/null 2>&1; then
- run_cmd docker network create proxy >/dev/null
-fi
-
-log "Writing Traefik configuration into $TRAEFIK_DIR"
-run_cmd mkdir -p "$TRAEFIK_DIR/letsencrypt"
-run_cmd chmod 700 "$TRAEFIK_DIR/letsencrypt"
-run_cmd touch "$TRAEFIK_DIR/letsencrypt/acme.json"
-run_cmd chmod 600 "$TRAEFIK_DIR/letsencrypt/acme.json"
-render_template "$TRAEFIK_DIR/docker-compose.yml" "$TRAEFIK_COMPOSE_TEMPLATE"
-
-if [ "$DRY_RUN" = "1" ]; then
- log "[DRY_RUN] (cd $TRAEFIK_DIR && docker compose up -d)"
-else
- (
- cd "$TRAEFIK_DIR"
- log "Starting Traefik"
- run_cmd docker compose up -d
- )
-fi
-
-log "Preparing OpenClaw repository in $OPENCLAW_DIR"
-if [ -d "$OPENCLAW_DIR/.git" ]; then
- (
- cd "$OPENCLAW_DIR"
- run_cmd git pull --ff-only
- )
-else
- run_cmd git clone "$OPENCLAW_REPO" "$OPENCLAW_DIR"
-fi
-
-run_cmd mkdir -p "$OPENCLAW_WORKSPACE_DIR"
-run_cmd sudo chown -R "$OPENCLAW_USER:$OPENCLAW_USER" "$OPENCLAW_DIR" "$OPENCLAW_CONFIG_DIR"
-
-if [ ! -f "$OPENCLAW_DIR/.env" ] && [ "$SKIP_OPENCLAW_WIZARD" != "1" ]; then
- log "Running OpenClaw's docker setup wizard"
- if [ "$DRY_RUN" = "1" ]; then
-  log "[DRY_RUN] (cd $OPENCLAW_DIR && ./docker-setup.sh)"
- else
-  (
-  cd "$OPENCLAW_DIR"
-  ./docker-setup.sh
-  )
- fi
-fi
-
-if [ "$DRY_RUN" != "1" ]; then
- [ -f "$OPENCLAW_DIR/.env" ] || fail "OpenClaw .env not found in $OPENCLAW_DIR. Run ./docker-setup.sh first."
-fi
-
-if [ -z "${OPENCLAW_TOKEN:-}" ]; then
- if [ "$DRY_RUN" = "1" ]; then
-  OPENCLAW_TOKEN="dry-run-token"
- else
-  OPENCLAW_TOKEN=$(extract_openclaw_token "$OPENCLAW_DIR/.env" || true)
- fi
-fi
-[ -n "${OPENCLAW_TOKEN:-}" ] || fail "Unable to determine OPENCLAW_TOKEN from $OPENCLAW_DIR/.env"
-
-log "Writing OpenClaw docker-compose.yml"
-render_template "$OPENCLAW_DIR/docker-compose.yml" "$OPENCLAW_COMPOSE_TEMPLATE"
-
-log "Ensuring OpenClaw .env contains local path overrides"
-if [ "$DRY_RUN" = "1" ]; then
- log "[DRY_RUN] append OPENCLAW_CONFIG_DIR to $OPENCLAW_DIR/.env when missing"
- log "[DRY_RUN] append OPENCLAW_WORKSPACE_DIR to $OPENCLAW_DIR/.env when missing"
-else
- if ! grep -q '^OPENCLAW_CONFIG_DIR=' "$OPENCLAW_DIR/.env"; then
-  printf '\nOPENCLAW_CONFIG_DIR=%s\n' "$OPENCLAW_CONFIG_DIR" >>"$OPENCLAW_DIR/.env"
- fi
- if ! grep -q '^OPENCLAW_WORKSPACE_DIR=' "$OPENCLAW_DIR/.env"; then
-  printf 'OPENCLAW_WORKSPACE_DIR=%s\n' "$OPENCLAW_WORKSPACE_DIR" >>"$OPENCLAW_DIR/.env"
- fi
-fi
-
-OPENCLAW_JSON="$OPENCLAW_CONFIG_DIR/openclaw.json"
-if [ -f "$OPENCLAW_JSON" ]; then
- run_cmd cp "$OPENCLAW_JSON" "${OPENCLAW_JSON}.bak"
-fi
-
-log "Writing $OPENCLAW_JSON"
-run_cmd mkdir -p "$OPENCLAW_CONFIG_DIR"
-render_template "$OPENCLAW_JSON" "$OPENCLAW_JSON_TEMPLATE"
-
-if [ "$DRY_RUN" = "1" ]; then
- log "[DRY_RUN] (cd $OPENCLAW_DIR && docker compose down && docker compose up -d)"
-else
- (
- cd "$OPENCLAW_DIR"
- log "Restarting OpenClaw"
- run_cmd docker compose down
- run_cmd docker compose up -d
- )
-fi
-
-log "OpenClaw deployment finished"
-log "URL: https://${OPENCLAW_DOMAIN}"
-log "Gateway token: ${OPENCLAW_TOKEN}"
-log "Container logs: docker logs openclaw"
-log "Pending device approvals: docker exec -it openclaw node dist/index.js devices list"
+initialize_defaults
+check_docker_access
+ensure_proxy_network
+write_traefik_config
+start_traefik
+prepare_openclaw_repo
+run_openclaw_wizard_if_needed
+resolve_openclaw_token
+write_openclaw_compose
+ensure_openclaw_env_overrides
+write_openclaw_json_config
+restart_openclaw
+print_summary

@@ -7,6 +7,7 @@ Automation scripts for deploying an OpenClaw gateway behind Traefik on a VPS.
 - `build.sh`: non-interactive end-to-end setup script (environment-variable driven).
 - `build-interactive.sh`: guided wrapper that collects inputs and runs `build.sh`.
 - `sync.sh`: minimal helper to copy and run setup scripts over SSH.
+- `scripts/build_lib.sh` + `scripts/build_steps.sh`: shared helpers and modular deployment steps used by `build.sh`.
 - `Makefile`: local quality checks (`make check`, `make lint`, `make fmt-check`, `make smoke`).
 
 ## Prerequisites
@@ -105,7 +106,7 @@ OPENCLAW_JSON_TEMPLATE=/path/to/openclaw.json.tmpl
 
 ## Known limitations
 
-- `build.sh` is still monolithic and not yet split into smaller sourced modules.
+- Core setup logic is modularized, but still shell-based and not yet covered by unit-style module tests.
 - The OpenClaw upstream wizard can still require interactive input unless `SKIP_OPENCLAW_WIZARD=1` and `.env` is pre-seeded.
 - The scripts assume Docker is already installed and operational.
 

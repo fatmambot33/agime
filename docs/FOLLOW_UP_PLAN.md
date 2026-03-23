@@ -19,6 +19,7 @@ Transform the repo from a practical setup script collection into a maintainable,
 - Implemented `DRY_RUN=1` path in `build.sh` and exposed it through `build-interactive.sh`.
 - Added deterministic dry-run smoke test script (`tests/smoke_dry_run.sh`).
 - Added CI/local dry-run validation through the `make smoke` check.
+- Split `build.sh` into sourced modules (`scripts/build_lib.sh`, `scripts/build_steps.sh`) to reduce core script complexity.
 
 ---
 
@@ -29,11 +30,9 @@ Transform the repo from a practical setup script collection into a maintainable,
 - Basic automated confidence for critical flows.
 
 ### Tasks
-1. Refactor `build.sh` into composable functions/files
-   - Separate concerns: prerequisites, Traefik, OpenClaw, endpoint wiring.
-2. Add idempotency checks
+1. Add idempotency checks
    - Validate repeated runs do not break existing installations.
-3. Introduce smoke tests
+2. Introduce smoke tests
    - Use containerized test harness (or Bats) for non-destructive validation.
 
 ### Exit criteria
@@ -65,8 +64,8 @@ Transform the repo from a practical setup script collection into a maintainable,
 
 ## Prioritized backlog (next 5 items)
 
-1. Split `build.sh` into logical modules (or sourced helper script).
-2. Add idempotency validation checks for repeat runs.
-3. Document version compatibility matrix for Docker/Traefik/OpenClaw.
-4. Add module-level unit-style tests for template renderer and env validation helpers.
-5. Add failure-injection scenarios for common operator mistakes (DNS mismatch, missing env, Docker access).
+1. Add idempotency validation checks for repeat runs.
+2. Document version compatibility matrix for Docker/Traefik/OpenClaw.
+3. Add module-level unit-style tests for template renderer and env validation helpers.
+4. Add failure-injection scenarios for common operator mistakes (DNS mismatch, missing env, Docker access).
+5. Add CI scenario for non-root user ownership and permission checks.

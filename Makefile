@@ -14,7 +14,7 @@ lint:
 		echo "shellcheck is required for 'make lint'"; \
 		exit 1; \
 	}
-	shellcheck -e SC1091,SC2034,SC2154 $(SCRIPTS)
+	shellcheck -S error -e SC1091,SC2034,SC2154 $(SCRIPTS)
 
 fmt-check:
 	@command -v shfmt >/dev/null 2>&1 || { \

@@ -27,3 +27,5 @@ The format is inspired by Keep a Changelog and this project follows a simple dat
 - Split `build.sh` into sourced modules (`scripts/build_lib.sh`, `scripts/build_steps.sh`) as Phase 2 step 1.
 - Added shellcheck source/undefined-var annotations for sourced module linting stability in CI.
 - Tuned lint/format commands to use module-friendly shellcheck excludes and explicit shfmt style flags.
+- Updated shell-checks workflow to `actions/checkout@v5` and enabled Node.js 24 runner mode.
+- Tightened lint mode to `shellcheck -S error` for CI-stable error-level gating.

@@ -11,24 +11,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install shellcheck and shfmt without apt
+      - name: Verify preinstalled tooling
         run: |
           set -eu
-          mkdir -p "$HOME/.local/bin" "$HOME/.local/tmp"
-          echo "$HOME/.local/bin" >>"$GITHUB_PATH"
-
-          SHELLCHECK_VERSION="v0.10.0"
-          SHELLCHECK_TAR="shellcheck-${SHELLCHECK_VERSION}.linux.x86_64.tar.xz"
-          curl -fsSL "https://github.com/koalaman/shellcheck/releases/download/${SHELLCHECK_VERSION}/${SHELLCHECK_TAR}" -o "$HOME/.local/tmp/${SHELLCHECK_TAR}"
-          tar -xJf "$HOME/.local/tmp/${SHELLCHECK_TAR}" -C "$HOME/.local/tmp"
-          install "$HOME/.local/tmp/shellcheck-${SHELLCHECK_VERSION}/shellcheck" "$HOME/.local/bin/shellcheck"
-
-          SHFMT_VERSION="v3.8.0"
-          curl -fsSL "https://github.com/mvdan/sh/releases/download/${SHFMT_VERSION}/shfmt_${SHFMT_VERSION}_linux_amd64" -o "$HOME/.local/bin/shfmt"
-          chmod +x "$HOME/.local/bin/shfmt"
-
-      - name: Verify tooling
-        run: |
+          command -v shellcheck
+          command -v shfmt
           shellcheck --version
           shfmt --version
 

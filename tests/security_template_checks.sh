@@ -14,7 +14,7 @@ grep -Eq '"token"[[:space:]]*:[[:space:]]*"__OPENCLAW_TOKEN__"' "$OPENCLAW_TEMPL
 # Control UI origin must be explicit and templated, not wildcard.
 grep -Eq '"allowedOrigins"[[:space:]]*:[[:space:]]*\[' "$OPENCLAW_TEMPLATE"
 grep -Eq '"__OPENCLAW_ALLOWED_ORIGIN__"' "$OPENCLAW_TEMPLATE"
-if grep -Eq '"allowedOrigins"[[:space:]]*:[[:space:]]*\[[^]]*"\\*"' "$OPENCLAW_TEMPLATE"; then
+if grep -Eq '"allowedOrigins"[[:space:]]*:[[:space:]]*\[[^]]*"\*"' "$OPENCLAW_TEMPLATE"; then
   echo "Wildcard allowedOrigins is not permitted in template defaults" >&2
   exit 1
 fi

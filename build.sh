@@ -5,7 +5,9 @@ set -eu
 SCRIPT_NAME=$(basename "$0")
 SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 
+# shellcheck source=scripts/build_lib.sh
 . "$SCRIPT_DIR/scripts/build_lib.sh"
+# shellcheck source=scripts/build_steps.sh
 . "$SCRIPT_DIR/scripts/build_steps.sh"
 
 usage() {

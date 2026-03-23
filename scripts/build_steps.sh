@@ -1,4 +1,6 @@
 #!/usr/bin/env sh
+# shellcheck shell=sh
+# shellcheck disable=SC2154
 
 initialize_defaults() {
   CURRENT_USER=$(id -un)

@@ -25,3 +25,4 @@ The format is inspired by Keep a Changelog and this project follows a simple dat
 - Hardened template rendering by escaping backslashes in sed replacements.
 - Added deterministic dry-run smoke check (`tests/smoke_dry_run.sh`) and wired it into `make check`.
 - Split `build.sh` into sourced modules (`scripts/build_lib.sh`, `scripts/build_steps.sh`) as Phase 2 step 1.
+- Added shellcheck source/undefined-var annotations for sourced module linting stability in CI.

@@ -1,4 +1,6 @@
 #!/usr/bin/env sh
+# shellcheck shell=sh
+# shellcheck disable=SC2154
 
 log() {
   printf '%s\n' "$*"

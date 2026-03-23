@@ -19,7 +19,7 @@ log_msg() {
 
 run_openclaw_cmd() {
   if [ "$OPENCLAW_SECURITY_AUDIT_RUNNER" = "host" ]; then
-    if ! command -v openclaw >/dev/null 2>&1; then
+    if ! command -v openclaw > /dev/null 2>&1; then
       echo "openclaw command not found in PATH (set OPENCLAW_SECURITY_AUDIT_RUNNER=container or install CLI)" >&2
       return 1
     fi
@@ -27,7 +27,7 @@ run_openclaw_cmd() {
     return $?
   fi
 
-  if ! command -v docker >/dev/null 2>&1; then
+  if ! command -v docker > /dev/null 2>&1; then
     echo "docker command not found in PATH (required for container audit runner)" >&2
     return 1
   fi
@@ -38,7 +38,7 @@ run_and_capture() {
   DESCRIPTION=$1
   shift
   OUTPUT_FILE=$(mktemp)
-  if run_openclaw_cmd "$@" >"$OUTPUT_FILE" 2>&1; then
+  if run_openclaw_cmd "$@" > "$OUTPUT_FILE" 2>&1; then
     :
   else
     STATUS=$?

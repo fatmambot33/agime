@@ -10,7 +10,7 @@ CRON_TIMEZONE=${OPENCLAW_SECURITY_AUDIT_CRON_TZ:-"Etc/GMT"}
 
 [ -x "$RUNNER" ] || chmod +x "$RUNNER"
 
-if ! command -v crontab >/dev/null 2>&1; then
+if ! command -v crontab > /dev/null 2>&1; then
   echo "crontab command not found; cannot install scheduled audit" >&2
   exit 1
 fi
@@ -18,7 +18,7 @@ fi
 CURRENT_CRON=$(mktemp)
 trap 'rm -f "$CURRENT_CRON"' EXIT
 
-if crontab -l > "$CURRENT_CRON" 2>/dev/null; then
+if crontab -l > "$CURRENT_CRON" 2> /dev/null; then
   :
 else
   : > "$CURRENT_CRON"

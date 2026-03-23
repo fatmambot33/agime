@@ -20,6 +20,10 @@ Transform the repo from a practical setup script collection into a maintainable,
 - Added deterministic dry-run smoke test script (`tests/smoke_dry_run.sh`).
 - Added CI/local dry-run validation through the `make smoke` check.
 - Split `build.sh` into sourced modules (`scripts/build_lib.sh`, `scripts/build_steps.sh`) to reduce core script complexity.
+- Added deterministic dry-run idempotency test script (`tests/idempotency_dry_run.sh`) to assert stable repeated output.
+- Added CI/local idempotency validation through `make idempotency`.
+- Added deterministic security template checks (`tests/security_template_checks.sh`) and CI coverage via `make security`.
+- Added cron-installable OpenClaw security audit runner (`scripts/run_security_audit.sh`, `scripts/install_security_audit_cron.sh`) with daily scheduling support.
 
 ---
 
@@ -64,8 +68,8 @@ Transform the repo from a practical setup script collection into a maintainable,
 
 ## Prioritized backlog (next 5 items)
 
-1. Add idempotency validation checks for repeat runs.
-2. Document version compatibility matrix for Docker/Traefik/OpenClaw.
-3. Add module-level unit-style tests for template renderer and env validation helpers.
-4. Add failure-injection scenarios for common operator mistakes (DNS mismatch, missing env, Docker access).
-5. Add CI scenario for non-root user ownership and permission checks.
+1. Document version compatibility matrix for Docker/Traefik/OpenClaw.
+2. Add module-level unit-style tests for template renderer and env validation helpers.
+3. Add failure-injection scenarios for common operator mistakes (DNS mismatch, missing env, Docker access).
+4. Add CI scenario for non-root user ownership and permission checks.
+5. Add release checklist and version-tagging workflow.

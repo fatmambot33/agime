@@ -1,12 +1,12 @@
 SHELL := /bin/sh
 
-SCRIPTS := build.sh build-interactive.sh sync.sh scripts/build_lib.sh scripts/build_steps.sh tests/smoke_dry_run.sh
+SCRIPTS := build.sh build-interactive.sh sync.sh scripts/build_lib.sh scripts/build_steps.sh scripts/run_security_audit.sh scripts/install_security_audit_cron.sh tests/smoke_dry_run.sh tests/idempotency_dry_run.sh tests/security_template_checks.sh
 
-.PHONY: check check-strict ensure-tools syntax lint fmt-check smoke
+.PHONY: check check-strict ensure-tools syntax lint fmt-check smoke idempotency security security-audit install-security-cron
 
-check: syntax smoke
+check: syntax smoke idempotency security
 
-check-strict: syntax lint fmt-check smoke
+check-strict: syntax lint fmt-check smoke idempotency security
 
 ensure-tools:
 	@if ! command -v shellcheck >/dev/null 2>&1 || ! command -v shfmt >/dev/null 2>&1; then \
@@ -30,3 +30,15 @@ fmt-check: ensure-tools
 
 smoke:
 	sh tests/smoke_dry_run.sh
+
+idempotency:
+	sh tests/idempotency_dry_run.sh
+
+security:
+	sh tests/security_template_checks.sh
+
+security-audit:
+	sh scripts/run_security_audit.sh
+
+install-security-cron:
+	sh scripts/install_security_audit_cron.sh

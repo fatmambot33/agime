@@ -37,6 +37,35 @@ OVH_ENDPOINT_API_KEY=xxxxx \
 
 Dry-run output prefixes planned operations with `[DRY_RUN]` and does not apply Docker, sudo, or filesystem changes.
 
+## Scheduled security audits (daily cron)
+
+You can schedule OpenClaw security audits to run daily:
+
+```sh
+make install-security-cron
+```
+
+Installed cron behavior:
+
+- Runs `scripts/run_security_audit.sh` once per day (`17 3 * * *` by default).
+- Executes:
+  - `openclaw security audit`
+  - `openclaw security audit --deep`
+  - `openclaw security audit --json` (saved under `~/.openclaw/security-audit/`)
+- Skips `openclaw security audit --fix` by default.
+
+To change schedule, reinstall with:
+
+```sh
+OPENCLAW_SECURITY_AUDIT_CRON_SCHEDULE="0 2 * * *" make install-security-cron
+```
+
+To enable automated `--fix` (use with caution), edit the installed cron line and set:
+
+```sh
+OPENCLAW_SECURITY_AUDIT_FIX=1
+```
+
 ## Backup
 
 Create a timestamped backup before upgrades or major configuration changes:

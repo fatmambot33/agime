@@ -8,7 +8,7 @@ Automation scripts for deploying an OpenClaw gateway behind Traefik on a VPS.
 - `build-interactive.sh`: guided wrapper that collects inputs and runs `build.sh`.
 - `sync.sh`: minimal helper to copy and run setup scripts over SSH.
 - `scripts/build_lib.sh` + `scripts/build_steps.sh`: shared helpers and modular deployment steps used by `build.sh`.
-- `Makefile`: local quality checks (`make check`, `make lint`, `make fmt-check`, `make smoke`).
+- `Makefile`: local quality checks (`make check`, `make lint`, `make fmt-check`, `make smoke`, `make idempotency`, `make security`) plus runtime audit helpers (`make security-audit`, `make install-security-cron`).
 
 ## Prerequisites
 
@@ -216,8 +216,27 @@ make lint
 make fmt-check
 make syntax
 make smoke
+make idempotency
+make security
 make check-strict
 ```
+
+Recommended runtime audit on a deployed gateway (from OpenClaw security docs):
+
+```bash
+openclaw security audit
+openclaw security audit --deep
+openclaw security audit --json
+openclaw security audit --fix
+```
+
+Automate this daily with cron:
+
+```bash
+make install-security-cron
+```
+
+This installs a daily cron entry that runs `scripts/run_security_audit.sh` (default: `03:17` UTC/local server time), executes `audit`, `audit --deep`, and stores a JSON report. By default it does **not** run `--fix`; set `OPENCLAW_SECURITY_AUDIT_FIX=1` in crontab only if you explicitly want automated remediation.
 
 ## Documentation
 

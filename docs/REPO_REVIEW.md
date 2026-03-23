@@ -1,41 +1,60 @@
 # Repository Review
 
-Date: 2026-03-22
+Date: 2026-03-23
 
 ## Executive summary
 
-The repository is a focused bootstrap toolkit with a clear operational intent: deploy OpenClaw behind Traefik with TLS. It currently provides practical value but remains an early-stage operational codebase with important maintainability gaps.
+The repository has evolved from a bootstrap script drop into a more maintainable deployment toolkit with clear operator and contributor workflows. The most important baseline controls are now present (quality gates, changelog, runbook, dry-run mode, and externalized templates). Remaining risks are mostly about deeper testability and modularity rather than missing fundamentals.
 
-## What is working well
+## Current strengths
 
-- **Clear deployment objective**: both scripts align around one coherent workflow.
-- **Fast path to value**: users can run interactive or environment-variable setup quickly.
-- **Defensive checks exist**: required env vars and required binaries are validated.
-- **Useful defaults**: common OpenClaw/Traefik defaults reduce friction.
+1. **Quality gate baseline is in place**
+   - Local `Makefile` checks (`syntax`, `lint`, `fmt-check`) standardize contribution checks.
+   - CI workflow enforces the same checks for push and pull requests.
 
-## Key risks and gaps
+2. **Operational documentation is substantially improved**
+   - `README.md` now covers setup expectations, reinstall/uninstall, and common usage guidance.
+   - `docs/OPERATIONS.md` provides troubleshooting, backup, restore, rollback, and dry-run validation guidance.
 
-1. **No test harness**
-   - There is no automated smoke test or shell lint workflow.
+3. **Safer configuration management**
+   - Embedded Compose/JSON payloads were moved to `templates/*.tmpl`, improving readability and auditability.
+   - `build.sh` now renders templates, making configuration diffs clearer and reducing accidental script regressions.
 
-2. **Low observability and rollback guidance**
-   - Failures surface via shell exits, but there is no troubleshooting matrix or rollback runbook.
+4. **Lower-risk execution path via dry-run**
+   - `DRY_RUN=1` allows non-destructive planning and command preview before touching host state.
 
-3. **Monolithic `build.sh` flow**
-   - High coupling makes incremental updates and targeted validation harder.
+## Remaining risks and gaps
 
-4. **No versioned release process**
-   - No changelog, semantic versioning policy, or release checklist.
+1. **Script remains monolithic**
+   - `build.sh` still combines validation, provisioning, rendering, and orchestration logic in one file.
+   - This slows focused testing and increases regression surface.
 
-5. **Security hardening not codified**
-   - Sensitive values and permission assumptions are only partially documented.
+2. **No deterministic smoke test harness yet**
+   - Quality checks validate syntax/format/lint, but there is no integration-style non-destructive scenario test.
 
-## Recommended direction
+3. **Idempotency validation is not automated**
+   - There are no codified checks for repeated execution outcomes.
 
-Adopt a staged evolution:
+4. **Security hardening is still policy-level**
+   - Guidance exists, but enforceable controls (secrets handling patterns, stricter least-privilege defaults) need follow-through.
 
-- **Stage 1**: documentation baseline + quality gates
-- **Stage 2**: script modularization + dry-run/plan mode
-- **Stage 3**: security hardening + release discipline
+## Professional recommendations (ordered)
 
-Detailed execution is defined in `docs/FOLLOW_UP_PLAN.md`.
+1. **Split `build.sh` into sourced modules**
+   - Suggested seams: `preflight`, `templates`, `docker_ops`, `openclaw_ops`.
+
+2. **Add deterministic smoke checks**
+   - Validate at minimum:
+     - template rendering succeeds,
+     - dry-run output includes expected plan markers,
+     - generated YAML/JSON parse checks pass.
+
+3. **Add idempotency checks to CI**
+   - Re-run key script phases in controlled test context and assert no destructive drift.
+
+4. **Codify compatibility matrix and release checklist**
+   - Define validated Docker/Compose/Traefik/OpenClaw versions and release expectations.
+
+## Overall assessment
+
+The project is now in a solid **Phase 1.5** state: production-useful with significantly better guardrails than its initial form. The next highest-value work is engineering structure and automated behavior validation, not additional documentation breadth.

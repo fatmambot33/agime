@@ -49,10 +49,15 @@ Installed cron behavior:
 
 - Runs `scripts/run_security_audit.sh` once per day at **12:00 GMT** by default (`CRON_TZ=Etc/GMT` + `0 12 * * *`).
 - Executes:
-  - `openclaw security audit`
-  - `openclaw security audit --deep`
-  - `openclaw security audit --json` (saved under `~/.openclaw/security-audit/`)
+  - `docker exec openclaw openclaw security audit`
+  - `docker exec openclaw openclaw security audit --deep`
+  - `docker exec openclaw openclaw security audit --json` (saved under `~/.openclaw/security-audit/`)
 - Skips `openclaw security audit --fix` by default.
+
+`scripts/run_security_audit.sh` defaults to a container runner and targets container `openclaw`. Override only if needed:
+
+- `OPENCLAW_SECURITY_AUDIT_RUNNER=host` to use host-installed CLI.
+- `OPENCLAW_SECURITY_AUDIT_CONTAINER=<name>` to target a non-default container name.
 
 To change schedule, reinstall with:
 

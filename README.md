@@ -6,7 +6,7 @@ Automation scripts for deploying an OpenClaw gateway behind Traefik on a VPS.
 
 - `build.sh`: non-interactive end-to-end setup script (environment-variable driven).
 - `build-interactive.sh`: guided wrapper that collects inputs and runs `build.sh`.
-- `sync.sh`: minimal helper to copy and run setup scripts over SSH.
+- `sync.sh`: helper to copy setup scripts plus required `scripts/` and `templates/` dependencies over SSH, then run setup remotely.
 - `scripts/build_lib.sh` + `scripts/build_steps.sh`: shared helpers and modular deployment steps used by `build.sh`.
 - `Makefile`: local quality checks (`make check`, `make lint`, `make fmt-check`, `make smoke`, `make idempotency`, `make security`) plus runtime audit helpers (`make security-audit`, `make install-security-cron`).
 
@@ -221,13 +221,13 @@ make security
 make check-strict
 ```
 
-Recommended runtime audit on a deployed gateway (from OpenClaw security docs):
+Recommended runtime audit on a deployed gateway:
 
 ```bash
-openclaw security audit
-openclaw security audit --deep
-openclaw security audit --json
-openclaw security audit --fix
+docker exec openclaw openclaw security audit
+docker exec openclaw openclaw security audit --deep
+docker exec openclaw openclaw security audit --json
+docker exec openclaw openclaw security audit --fix
 ```
 
 Automate this daily with cron:
@@ -236,7 +236,7 @@ Automate this daily with cron:
 make install-security-cron
 ```
 
-This installs a daily cron entry that runs `scripts/run_security_audit.sh` at **12:00 GMT** by default (`CRON_TZ=Etc/GMT` + `0 12 * * *`), executes `audit`, `audit --deep`, and stores a JSON report. By default it does **not** run `--fix`; set `OPENCLAW_SECURITY_AUDIT_FIX=1` in crontab only if you explicitly want automated remediation.
+This installs a daily cron entry that runs `scripts/run_security_audit.sh` at **12:00 GMT** by default (`CRON_TZ=Etc/GMT` + `0 12 * * *`), executes `audit`, `audit --deep`, and stores a JSON report. The script uses the deployed container runner (`docker exec openclaw ...`) by default; set `OPENCLAW_SECURITY_AUDIT_RUNNER=host` only if you have an `openclaw` CLI installed on the host. By default it does **not** run `--fix`; set `OPENCLAW_SECURITY_AUDIT_FIX=1` in crontab only if you explicitly want automated remediation.
 
 ## Documentation
 

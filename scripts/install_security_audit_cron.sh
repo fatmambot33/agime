@@ -26,11 +26,28 @@ fi
 
 FILTERED_CRON=$(mktemp)
 trap 'rm -f "$CURRENT_CRON" "$FILTERED_CRON"' EXIT
-grep -v 'agime-openclaw-security-audit' "$CURRENT_CRON" > "$FILTERED_CRON" || true
+awk -v marker="$CRON_MARKER" '
+  BEGIN { skip_next_cron_tz = 0 }
+  {
+    if (skip_next_cron_tz == 1 && $0 ~ /^CRON_TZ=/) {
+      skip_next_cron_tz = 0
+      next
+    }
+    skip_next_cron_tz = 0
+    if (index($0, marker) > 0) {
+      if ($0 ~ /^[[:space:]]*#/) {
+        skip_next_cron_tz = 1
+      }
+      next
+    }
+    print
+  }
+' "$CURRENT_CRON" > "$FILTERED_CRON"
 
 {
   cat "$FILTERED_CRON"
-  echo "CRON_TZ=$CRON_TIMEZONE $CRON_MARKER"
+  echo "$CRON_MARKER"
+  echo "CRON_TZ=$CRON_TIMEZONE"
   echo "$CRON_SCHEDULE OPENCLAW_SECURITY_AUDIT_FIX=0 $RUNNER $CRON_MARKER"
 } | crontab -
 

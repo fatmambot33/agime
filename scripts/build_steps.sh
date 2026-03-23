@@ -4,7 +4,7 @@
 
 initialize_defaults() {
   CURRENT_USER=$(id -un)
-  HOME_DIR=${HOME:-"$(getent passwd "$CURRENT_USER" | cut -d : -f 6 2>/dev/null || printf '/home/%s' "$CURRENT_USER")"}
+  HOME_DIR=${HOME:-"$(getent passwd "$CURRENT_USER" | cut -d : -f 6 2> /dev/null || printf '/home/%s' "$CURRENT_USER")"}
   OPENCLAW_DIR=${OPENCLAW_DIR:-"$HOME_DIR/openclaw"}
   OPENCLAW_CONFIG_DIR=${OPENCLAW_CONFIG_DIR:-"$HOME_DIR/.openclaw"}
   OPENCLAW_WORKSPACE_DIR=${OPENCLAW_WORKSPACE_DIR:-"$OPENCLAW_CONFIG_DIR/workspace"}
@@ -32,10 +32,10 @@ check_docker_access() {
 
   require_command docker
   require_command git
-  docker compose version >/dev/null 2>&1 || fail "docker compose is required"
+  docker compose version > /dev/null 2>&1 || fail "docker compose is required"
 
   log "Checking Docker access"
-  if ! docker ps >/dev/null 2>&1; then
+  if ! docker ps > /dev/null 2>&1; then
     if [ "$SKIP_DOCKER_GROUP_SETUP" = "1" ]; then
       fail "docker ps failed and SKIP_DOCKER_GROUP_SETUP=1"
     fi
@@ -51,8 +51,8 @@ ensure_proxy_network() {
   if [ "$DRY_RUN" = "1" ]; then
     log "[DRY_RUN] docker network inspect proxy"
     log "[DRY_RUN] docker network create proxy"
-  elif ! docker network inspect proxy >/dev/null 2>&1; then
-    run_cmd docker network create proxy >/dev/null
+  elif ! docker network inspect proxy > /dev/null 2>&1; then
+    run_cmd docker network create proxy > /dev/null
   fi
 }
 
@@ -136,10 +136,10 @@ ensure_openclaw_env_overrides() {
   fi
 
   if ! grep -q '^OPENCLAW_CONFIG_DIR=' "$OPENCLAW_DIR/.env"; then
-    printf '\nOPENCLAW_CONFIG_DIR=%s\n' "$OPENCLAW_CONFIG_DIR" >>"$OPENCLAW_DIR/.env"
+    printf '\nOPENCLAW_CONFIG_DIR=%s\n' "$OPENCLAW_CONFIG_DIR" >> "$OPENCLAW_DIR/.env"
   fi
   if ! grep -q '^OPENCLAW_WORKSPACE_DIR=' "$OPENCLAW_DIR/.env"; then
-    printf 'OPENCLAW_WORKSPACE_DIR=%s\n' "$OPENCLAW_WORKSPACE_DIR" >>"$OPENCLAW_DIR/.env"
+    printf 'OPENCLAW_WORKSPACE_DIR=%s\n' "$OPENCLAW_WORKSPACE_DIR" >> "$OPENCLAW_DIR/.env"
   fi
 }
 

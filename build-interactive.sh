@@ -56,7 +56,7 @@ ask_var DRY_RUN "Dry-run mode (1=yes, 0=no)" "0"
 
 milestone "Configuration complete - reviewing values"
 
-cat <<EOF
+cat << EOF
 TRAEFIK_ACME_EMAIL=$TRAEFIK_ACME_EMAIL
 OPENCLAW_DOMAIN=$OPENCLAW_DOMAIN
 OVH_ENDPOINT_API_KEY=$OVH_ENDPOINT_API_KEY
@@ -72,8 +72,7 @@ EOF
 printf 'Proceed with these settings? [y/N]: '
 read answer
 case "$(printf '%s' "$answer" | tr 'A-Z' 'a-z')" in
-  y|yes)
-    ;;
+  y | yes) ;;
   *)
     fail 'User aborted.'
     ;;
@@ -102,7 +101,7 @@ sh "$BUILD_SCRIPT"
 
 milestone "Interactive setup completed."
 
-cat <<EOF
+cat << EOF
 Success: OpenClaw should now be deployed.
 - Access: https://$OPENCLAW_DOMAIN
 - Check container logs: docker logs openclaw

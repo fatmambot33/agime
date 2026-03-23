@@ -11,7 +11,7 @@ SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 . "$SCRIPT_DIR/scripts/build_steps.sh"
 
 usage() {
-  cat <<EOF2
+  cat << EOF2
 Usage:
  TRAEFIK_ACME_EMAIL=admin@example.com \\
  OPENCLAW_DOMAIN=openclaw.example.com \\

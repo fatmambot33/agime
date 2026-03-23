@@ -12,7 +12,7 @@ fail() {
 }
 
 require_command() {
-  command -v "$1" >/dev/null 2>&1 || fail "Missing required command: $1"
+  command -v "$1" > /dev/null 2>&1 || fail "Missing required command: $1"
 }
 
 require_env() {
@@ -54,7 +54,7 @@ render_template() {
     -e "s/__OVH_ENDPOINT_BASE_URL__/$(escape_sed_replacement "$OVH_ENDPOINT_BASE_URL")/g" \
     -e "s/__OVH_ENDPOINT_API_KEY__/$(escape_sed_replacement "$OVH_ENDPOINT_API_KEY")/g" \
     -e "s/__OVH_ENDPOINT_MODEL__/$(escape_sed_replacement "$OVH_ENDPOINT_MODEL")/g" \
-    "$template" >"$tmp_file"
+    "$template" > "$tmp_file"
   mv "$tmp_file" "$target"
 }
 

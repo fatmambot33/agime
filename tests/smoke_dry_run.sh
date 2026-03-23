@@ -9,10 +9,10 @@ trap 'rm -f "$OUTPUT_FILE"' EXIT
 (
   cd "$SCRIPT_DIR"
   DRY_RUN=1 \
-  TRAEFIK_ACME_EMAIL=admin@example.com \
-  OPENCLAW_DOMAIN=openclaw.example.com \
-  OVH_ENDPOINT_API_KEY=dummy-key \
-  sh ./build.sh >"$OUTPUT_FILE"
+    TRAEFIK_ACME_EMAIL=admin@example.com \
+    OPENCLAW_DOMAIN=openclaw.example.com \
+    OVH_ENDPOINT_API_KEY=dummy-key \
+    sh ./build.sh > "$OUTPUT_FILE"
 )
 
 grep -q 'DRY_RUN=1 enabled; no system or Docker changes will be applied' "$OUTPUT_FILE"

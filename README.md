@@ -104,6 +104,8 @@ The generated config files are now stored as templates:
 - `$OPENCLAW_DIR/docker-compose.yml`
 - `$OPENCLAW_CONFIG_DIR/openclaw.json`
 
+The OpenClaw Compose template intentionally keeps Docker Compose variable interpolation syntax (for example `${OPENCLAW_CONFIG_DIR}`) unescaped so rendered YAML remains valid for `docker compose`.
+
 If needed, you can override template paths with:
 
 ```bash

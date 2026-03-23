@@ -28,6 +28,10 @@ fi
 # Compose should terminate TLS at Traefik and avoid host port publishing.
 grep -Fq 'traefik.http.routers.openclaw.entrypoints=websecure' "$COMPOSE_TEMPLATE"
 grep -Fq 'traefik.http.routers.openclaw.tls.certresolver=myresolver' "$COMPOSE_TEMPLATE"
+if grep -Fq '\${' "$COMPOSE_TEMPLATE"; then
+  echo "Escaped Compose variable syntax found in openclaw-compose template" >&2
+  exit 1
+fi
 if grep -Eq '^[[:space:]]*ports:' "$COMPOSE_TEMPLATE"; then
   echo "Direct host port publishing is not allowed for openclaw-compose defaults" >&2
   exit 1

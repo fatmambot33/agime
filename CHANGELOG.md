@@ -16,3 +16,4 @@ The format is inspired by Keep a Changelog and this project follows a simple dat
 - Updated roadmap status to remove completed follow-up items from the prioritized backlog.
 - Added explicit reinstall procedure to README and operations runbook.
 - Added `DRY_RUN=1` planning mode to `build.sh` and exposed the option in `build-interactive.sh`.
+- Fixed generated Docker Compose YAML indentation in `build.sh` so services parse correctly.

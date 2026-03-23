@@ -11,10 +11,12 @@
 Run before opening a PR:
 
 ```bash
-make check
+make check-strict
 ```
 
-This runs:
+`make check` is a lightweight local check (`syntax` + `smoke`).
+
+`make check-strict` runs:
 
 - `sh -n build.sh build-interactive.sh sync.sh scripts/build_lib.sh scripts/build_steps.sh tests/smoke_dry_run.sh`
 - `shellcheck -S error -e SC1091,SC2034,SC2154 build.sh build-interactive.sh sync.sh scripts/build_lib.sh scripts/build_steps.sh tests/smoke_dry_run.sh`

@@ -201,6 +201,12 @@ Run all quality gates:
 make check
 ```
 
+Run strict gates (includes lint + format checks):
+
+```bash
+make check-strict
+```
+
 If needed, run each check independently:
 
 ```bash
@@ -208,6 +214,7 @@ make lint
 make fmt-check
 make syntax
 make smoke
+make check-strict
 ```
 
 ## Documentation

@@ -32,3 +32,4 @@ The format is inspired by Keep a Changelog and this project follows a simple dat
 - Added CI fallback installation for `shellcheck`/`shfmt` when runner images do not preinstall both tools.
 - Fixed `sync.sh` with a POSIX shebang and robust remote execution flow (mkdir/scp/remote run).
 - Applied shfmt-compatible spacing/formatting updates across scripts to satisfy `make fmt-check` in CI.
+- Added `make check-strict` for full lint/format gates and made `make check` a lightweight syntax+smoke local path.

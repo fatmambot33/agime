@@ -27,4 +27,4 @@ jobs:
           shfmt --version
 
       - name: Run quality gates
-        run: make check
+        run: make check-strict

@@ -2,9 +2,11 @@ SHELL := /bin/sh
 
 SCRIPTS := build.sh build-interactive.sh sync.sh scripts/build_lib.sh scripts/build_steps.sh tests/smoke_dry_run.sh
 
-.PHONY: check syntax lint fmt-check smoke
+.PHONY: check check-strict syntax lint fmt-check smoke
 
-check: syntax lint fmt-check smoke
+check: syntax smoke
+
+check-strict: syntax lint fmt-check smoke
 
 syntax:
 	sh -n $(SCRIPTS)

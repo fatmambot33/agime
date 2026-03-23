@@ -45,6 +45,49 @@ OVH_ENDPOINT_API_KEY=xxxxx \
 ./build.sh
 ```
 
+## Start using OpenClaw after deploy
+
+### `ssh-tunnel` mode
+
+1. Keep an SSH tunnel open from your workstation to the VPS:
+
+   ```bash
+   ssh -N -L 18789:127.0.0.1:18789 <user>@<host>
+   ```
+
+2. Open OpenClaw in your local browser:
+
+   ```text
+   http://127.0.0.1:18789
+   ```
+
+### `public` mode
+
+1. Open OpenClaw in your browser:
+
+   ```text
+   https://<OPENCLAW_DOMAIN>
+   ```
+
+2. If the site is not immediately reachable, check DNS and certificate progress:
+   - `docker logs traefik`
+   - `docker logs openclaw`
+
+## Pairing and approving devices
+
+After OpenClaw is up, pair from the client app/flow you intend to use.
+
+- New devices remain subject to gateway approvals in token mode.
+- List pending/known devices on the VPS:
+
+  ```bash
+  docker exec -it openclaw node dist/index.js devices list
+  ```
+
+- Use the corresponding `devices` subcommands in that CLI to approve/reject as needed.
+
+Operational note: pairing by itself is not a network exposure boundary; prefer `ssh-tunnel` unless public access is explicitly required.
+
 ## Access mode behavior
 
 ### `ssh-tunnel` (default)

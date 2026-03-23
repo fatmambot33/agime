@@ -81,17 +81,25 @@ OPENCLAW_USER=ubuntu
 
 Optional hardening (advanced): you can create a dedicated system user and pass that user as `OPENCLAW_USER`, but this is not required for a normal setup.
 
-## OpenClaw JSON template
+## Template files (JSON + Compose)
 
-The OpenClaw config JSON is now stored as a template file at:
+The generated config files are now stored as templates:
 
+- `templates/traefik-compose.yml.tmpl`
+- `templates/openclaw-compose.yml.tmpl`
 - `templates/openclaw.json.tmpl`
 
-`build.sh` renders this template into `~/.openclaw/openclaw.json` (or your configured `OPENCLAW_CONFIG_DIR`) using environment values.
+`build.sh` renders these templates into:
 
-If needed, you can override the template path with:
+- `$TRAEFIK_DIR/docker-compose.yml`
+- `$OPENCLAW_DIR/docker-compose.yml`
+- `$OPENCLAW_CONFIG_DIR/openclaw.json`
+
+If needed, you can override template paths with:
 
 ```bash
+TRAEFIK_COMPOSE_TEMPLATE=/path/to/traefik-compose.yml.tmpl
+OPENCLAW_COMPOSE_TEMPLATE=/path/to/openclaw-compose.yml.tmpl
 OPENCLAW_JSON_TEMPLATE=/path/to/openclaw.json.tmpl
 ```
 

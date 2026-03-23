@@ -39,6 +39,8 @@ Optional environment variables:
  OVH_ENDPOINT_BASE_URL Default: https://oai.endpoints.kepler.ai.cloud.ovh.net/v1
  OVH_ENDPOINT_MODEL Default: gpt-oss-120b
  OPENCLAW_USER Default: current user
+ TRAEFIK_COMPOSE_TEMPLATE Optional template path. Default: \$SCRIPT_DIR/templates/traefik-compose.yml.tmpl
+ OPENCLAW_COMPOSE_TEMPLATE Optional template path. Default: \$SCRIPT_DIR/templates/openclaw-compose.yml.tmpl
  OPENCLAW_JSON_TEMPLATE Optional template path. Default: \$SCRIPT_DIR/templates/openclaw.json.tmpl
  SKIP_DOCKER_GROUP_SETUP Default: 0. Set to 1 to skip docker group changes.
  SKIP_OPENCLAW_WIZARD Default: 0. Set to 1 if .env already exists.
@@ -86,7 +88,7 @@ escape_sed_replacement() {
  printf '%s' "$1" | sed 's/[\/&]/\\&/g'
 }
 
-write_openclaw_json() {
+render_template() {
  target=$1
  template=$2
 
@@ -95,9 +97,13 @@ write_openclaw_json() {
   return 0
  fi
 
- [ -f "$template" ] || fail "OpenClaw JSON template not found: $template"
+ [ -f "$template" ] || fail "Template not found: $template"
  tmp_file="${target}.tmp"
  sed \
+  -e "s/__TRAEFIK_ACME_EMAIL__/$(escape_sed_replacement "$TRAEFIK_ACME_EMAIL")/g" \
+  -e "s/__OPENCLAW_IMAGE__/$(escape_sed_replacement "$OPENCLAW_IMAGE")/g" \
+  -e "s/__OPENCLAW_GATEWAY_BIND__/$(escape_sed_replacement "$OPENCLAW_GATEWAY_BIND")/g" \
+  -e "s/__OPENCLAW_DOMAIN__/$(escape_sed_replacement "$OPENCLAW_DOMAIN")/g" \
   -e "s/__OPENCLAW_ALLOWED_ORIGIN__/$(escape_sed_replacement "$OPENCLAW_ALLOWED_ORIGIN")/g" \
   -e "s/__OPENCLAW_TOKEN__/$(escape_sed_replacement "$OPENCLAW_TOKEN")/g" \
   -e "s/__OVH_ENDPOINT_BASE_URL__/$(escape_sed_replacement "$OVH_ENDPOINT_BASE_URL")/g" \
@@ -136,6 +142,8 @@ OPENCLAW_GATEWAY_BIND=${OPENCLAW_GATEWAY_BIND:-"lan"}
 OVH_ENDPOINT_BASE_URL=${OVH_ENDPOINT_BASE_URL:-"https://oai.endpoints.kepler.ai.cloud.ovh.net/v1"}
 OVH_ENDPOINT_MODEL=${OVH_ENDPOINT_MODEL:-"gpt-oss-120b"}
 OPENCLAW_USER=${OPENCLAW_USER:-"$CURRENT_USER"}
+TRAEFIK_COMPOSE_TEMPLATE=${TRAEFIK_COMPOSE_TEMPLATE:-"$SCRIPT_DIR/templates/traefik-compose.yml.tmpl"}
+OPENCLAW_COMPOSE_TEMPLATE=${OPENCLAW_COMPOSE_TEMPLATE:-"$SCRIPT_DIR/templates/openclaw-compose.yml.tmpl"}
 OPENCLAW_JSON_TEMPLATE=${OPENCLAW_JSON_TEMPLATE:-"$SCRIPT_DIR/templates/openclaw.json.tmpl"}
 SKIP_DOCKER_GROUP_SETUP=${SKIP_DOCKER_GROUP_SETUP:-"0"}
 SKIP_OPENCLAW_WIZARD=${SKIP_OPENCLAW_WIZARD:-"0"}
@@ -174,35 +182,7 @@ run_cmd mkdir -p "$TRAEFIK_DIR/letsencrypt"
 run_cmd chmod 700 "$TRAEFIK_DIR/letsencrypt"
 run_cmd touch "$TRAEFIK_DIR/letsencrypt/acme.json"
 run_cmd chmod 600 "$TRAEFIK_DIR/letsencrypt/acme.json"
-write_file "$TRAEFIK_DIR/docker-compose.yml" <<EOF
-services:
-  traefik:
-    image: traefik:v2.11
-    container_name: traefik
-    restart: unless-stopped
-    command:
-      - "--api.dashboard=true"
-      - "--providers.docker=true"
-      - "--providers.docker.exposedbydefault=false"
-      - "--entrypoints.web.address=:80"
-      - "--entrypoints.websecure.address=:443"
-      - "--certificatesresolvers.myresolver.acme.httpchallenge=true"
-      - "--certificatesresolvers.myresolver.acme.httpchallenge.entrypoint=web"
-      - "--certificatesresolvers.myresolver.acme.email=${TRAEFIK_ACME_EMAIL}"
-      - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - "/var/run/docker.sock:/var/run/docker.sock:ro"
-      - "./letsencrypt:/letsencrypt"
-    networks:
-      - proxy
-
-networks:
-  proxy:
-    external: true
-EOF
+render_template "$TRAEFIK_DIR/docker-compose.yml" "$TRAEFIK_COMPOSE_TEMPLATE"
 
 if [ "$DRY_RUN" = "1" ]; then
  log "[DRY_RUN] (cd $TRAEFIK_DIR && docker compose up -d)"
@@ -253,46 +233,7 @@ fi
 [ -n "${OPENCLAW_TOKEN:-}" ] || fail "Unable to determine OPENCLAW_TOKEN from $OPENCLAW_DIR/.env"
 
 log "Writing OpenClaw docker-compose.yml"
-write_file "$OPENCLAW_DIR/docker-compose.yml" <<EOF
-services:
-  openclaw-gateway:
-    container_name: openclaw
-    image: \${OPENCLAW_IMAGE:-${OPENCLAW_IMAGE}}
-    environment:
-      HOME: /home/node
-      TERM: xterm-256color
-      OPENCLAW_GATEWAY_TOKEN: \${OPENCLAW_GATEWAY_TOKEN}
-      CLAUDE_AI_SESSION_KEY: \${CLAUDE_AI_SESSION_KEY}
-      CLAUDE_WEB_SESSION_KEY: \${CLAUDE_WEB_SESSION_KEY}
-      CLAUDE_WEB_COOKIE: \${CLAUDE_WEB_COOKIE}
-    volumes:
-      - \${OPENCLAW_CONFIG_DIR}:/home/node/.openclaw
-      - \${OPENCLAW_WORKSPACE_DIR}:/home/node/.openclaw/workspace
-    init: true
-    restart: unless-stopped
-    command:
-      [
-        "node",
-        "dist/index.js",
-        "gateway",
-        "--bind",
-        "\${OPENCLAW_GATEWAY_BIND:-${OPENCLAW_GATEWAY_BIND}}",
-        "--port",
-        "18789"
-      ]
-    networks:
-      - proxy
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.openclaw.rule=Host(\`${OPENCLAW_DOMAIN}\`)"
-      - "traefik.http.routers.openclaw.entrypoints=websecure"
-      - "traefik.http.routers.openclaw.tls.certresolver=myresolver"
-      - "traefik.http.services.openclaw.loadbalancer.server.port=18789"
-
-networks:
-  proxy:
-    external: true
-EOF
+render_template "$OPENCLAW_DIR/docker-compose.yml" "$OPENCLAW_COMPOSE_TEMPLATE"
 
 log "Ensuring OpenClaw .env contains local path overrides"
 if [ "$DRY_RUN" = "1" ]; then
@@ -314,7 +255,7 @@ fi
 
 log "Writing $OPENCLAW_JSON"
 run_cmd mkdir -p "$OPENCLAW_CONFIG_DIR"
-write_openclaw_json "$OPENCLAW_JSON" "$OPENCLAW_JSON_TEMPLATE"
+render_template "$OPENCLAW_JSON" "$OPENCLAW_JSON_TEMPLATE"
 
 if [ "$DRY_RUN" = "1" ]; then
  log "[DRY_RUN] (cd $OPENCLAW_DIR && docker compose down && docker compose up -d)"

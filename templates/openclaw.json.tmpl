@@ -1,0 +1,52 @@
+{
+  "messages": {
+    "ackReactionScope": "group-mentions"
+  },
+  "commands": {
+    "native": "auto",
+    "nativeSkills": "auto"
+  },
+  "gateway": {
+    "port": 18789,
+    "mode": "local",
+    "bind": "lan",
+    "controlUi": {
+      "allowedOrigins": [
+        "__OPENCLAW_ALLOWED_ORIGIN__"
+      ]
+    },
+    "auth": {
+      "mode": "token",
+      "token": "__OPENCLAW_TOKEN__"
+    }
+  },
+  "models": {
+    "mode": "merge",
+    "providers": {
+      "ovhcloud": {
+        "baseUrl": "__OVH_ENDPOINT_BASE_URL__",
+        "apiKey": "__OVH_ENDPOINT_API_KEY__",
+        "api": "openai-completions",
+        "models": [
+          {
+            "id": "__OVH_ENDPOINT_MODEL__",
+            "name": "__OVH_ENDPOINT_MODEL__",
+            "compat": {
+              "supportsStore": false
+            }
+          }
+        ]
+      }
+    }
+  },
+  "agents": {
+    "defaults": {
+      "model": {
+        "primary": "ovhcloud/__OVH_ENDPOINT_MODEL__"
+      },
+      "models": {
+        "ovhcloud/__OVH_ENDPOINT_MODEL__": {}
+      }
+    }
+  }
+}

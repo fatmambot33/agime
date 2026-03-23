@@ -1,0 +1,30 @@
+name: Shell checks
+
+on:
+  push:
+  pull_request:
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
+jobs:
+  shell-checks:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Verify preinstalled tooling
+        run: |
+          set -eu
+          if ! command -v shellcheck >/dev/null 2>&1 || ! command -v shfmt >/dev/null 2>&1; then
+            sudo apt-get update
+            sudo apt-get install -y shellcheck shfmt
+          fi
+          command -v shellcheck
+          command -v shfmt
+          shellcheck --version
+          shfmt --version
+
+      - name: Run quality gates
+        run: make check-strict

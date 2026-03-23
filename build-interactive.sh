@@ -51,11 +51,12 @@ ask_var OPENCLAW_DIR "Optional output directory for OpenClaw" "$HOME/openclaw"
 ask_var OPENCLAW_CONFIG_DIR "Optional OpenClaw config directory" "$HOME/.openclaw"
 ask_var OPENCLAW_WORKSPACE_DIR "Optional workspace directory" "$HOME/.openclaw/workspace"
 ask_var TRAEFIK_DIR "Optional traefik directory" "$HOME/docker/traefik"
-ask_var OPENCLAW_USER "System user for chown operations" "$(id -un)"
+ask_var OPENCLAW_USER "System user that should own OpenClaw files (usually your SSH user)" "$(id -un)"
+ask_var DRY_RUN "Dry-run mode (1=yes, 0=no)" "0"
 
 milestone "Configuration complete - reviewing values"
 
-cat <<EOF
+cat << EOF
 TRAEFIK_ACME_EMAIL=$TRAEFIK_ACME_EMAIL
 OPENCLAW_DOMAIN=$OPENCLAW_DOMAIN
 OVH_ENDPOINT_API_KEY=$OVH_ENDPOINT_API_KEY
@@ -65,13 +66,13 @@ OPENCLAW_CONFIG_DIR=$OPENCLAW_CONFIG_DIR
 OPENCLAW_WORKSPACE_DIR=$OPENCLAW_WORKSPACE_DIR
 TRAEFIK_DIR=$TRAEFIK_DIR
 OPENCLAW_USER=$OPENCLAW_USER
+DRY_RUN=$DRY_RUN
 EOF
 
 printf 'Proceed with these settings? [y/N]: '
 read answer
 case "$(printf '%s' "$answer" | tr 'A-Z' 'a-z')" in
-  y|yes)
-    ;;
+  y | yes) ;;
   *)
     fail 'User aborted.'
     ;;
@@ -82,6 +83,7 @@ milestone "Exporting environment variables"
 export TRAEFIK_ACME_EMAIL OPENCLAW_DOMAIN OVH_ENDPOINT_API_KEY
 export OPENCLAW_TOKEN
 export OPENCLAW_DIR OPENCLAW_CONFIG_DIR OPENCLAW_WORKSPACE_DIR TRAEFIK_DIR OPENCLAW_USER
+export DRY_RUN
 
 # optional variables for compatibility with build.sh
 export OPENCLAW_REPO=${OPENCLAW_REPO:-https://github.com/openclaw/openclaw.git}
@@ -99,7 +101,7 @@ sh "$BUILD_SCRIPT"
 
 milestone "Interactive setup completed."
 
-cat <<EOF
+cat << EOF
 Success: OpenClaw should now be deployed.
 - Access: https://$OPENCLAW_DOMAIN
 - Check container logs: docker logs openclaw

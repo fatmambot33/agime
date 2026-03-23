@@ -23,6 +23,7 @@ Transform the repo from a practical setup script collection into a maintainable,
 - Added deterministic dry-run idempotency test script (`tests/idempotency_dry_run.sh`) to assert stable repeated output.
 - Added CI/local idempotency validation through `make idempotency`.
 - Added deterministic security template checks (`tests/security_template_checks.sh`) and CI coverage via `make security`.
+- Added cron-installable OpenClaw security audit runner (`scripts/run_security_audit.sh`, `scripts/install_security_audit_cron.sh`) with daily scheduling support.
 
 ---
 

@@ -1,8 +1,8 @@
 SHELL := /bin/sh
 
-SCRIPTS := build.sh build-interactive.sh sync.sh scripts/build_lib.sh scripts/build_steps.sh tests/smoke_dry_run.sh tests/idempotency_dry_run.sh tests/security_template_checks.sh
+SCRIPTS := build.sh build-interactive.sh sync.sh scripts/build_lib.sh scripts/build_steps.sh scripts/run_security_audit.sh scripts/install_security_audit_cron.sh tests/smoke_dry_run.sh tests/idempotency_dry_run.sh tests/security_template_checks.sh
 
-.PHONY: check check-strict ensure-tools syntax lint fmt-check smoke idempotency security
+.PHONY: check check-strict ensure-tools syntax lint fmt-check smoke idempotency security security-audit install-security-cron
 
 check: syntax smoke idempotency security
 
@@ -36,3 +36,9 @@ idempotency:
 
 security:
 	sh tests/security_template_checks.sh
+
+security-audit:
+	sh scripts/run_security_audit.sh
+
+install-security-cron:
+	sh scripts/install_security_audit_cron.sh

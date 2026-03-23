@@ -12,8 +12,6 @@ run_dry_run() {
   (
     cd "$SCRIPT_DIR"
     DRY_RUN=1 \
-      TRAEFIK_ACME_EMAIL=admin@example.com \
-      OPENCLAW_DOMAIN=openclaw.example.com \
       OVH_ENDPOINT_API_KEY=dummy-key \
       sh ./build.sh > "$output_file"
   )

@@ -26,3 +26,4 @@ The format is inspired by Keep a Changelog and this project follows a simple dat
 - Added deterministic dry-run smoke check (`tests/smoke_dry_run.sh`) and wired it into `make check`.
 - Split `build.sh` into sourced modules (`scripts/build_lib.sh`, `scripts/build_steps.sh`) as Phase 2 step 1.
 - Added shellcheck source/undefined-var annotations for sourced module linting stability in CI.
+- Tuned lint/format commands to use module-friendly shellcheck excludes and explicit shfmt style flags.

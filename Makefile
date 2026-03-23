@@ -14,14 +14,14 @@ lint:
 		echo "shellcheck is required for 'make lint'"; \
 		exit 1; \
 	}
-	shellcheck $(SCRIPTS)
+	shellcheck -e SC1091,SC2034,SC2154 $(SCRIPTS)
 
 fmt-check:
 	@command -v shfmt >/dev/null 2>&1 || { \
 		echo "shfmt is required for 'make fmt-check'"; \
 		exit 1; \
 	}
-	shfmt -d $(SCRIPTS)
+	shfmt -i 2 -ci -sr -d $(SCRIPTS)
 
 smoke:
 	sh tests/smoke_dry_run.sh

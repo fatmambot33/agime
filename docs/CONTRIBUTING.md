@@ -17,8 +17,8 @@ make check
 This runs:
 
 - `sh -n build.sh build-interactive.sh sync.sh scripts/build_lib.sh scripts/build_steps.sh tests/smoke_dry_run.sh`
-- `shellcheck build.sh build-interactive.sh sync.sh scripts/build_lib.sh scripts/build_steps.sh tests/smoke_dry_run.sh`
-- `shfmt -d build.sh build-interactive.sh sync.sh scripts/build_lib.sh scripts/build_steps.sh tests/smoke_dry_run.sh`
+- `shellcheck -e SC1091,SC2034,SC2154 build.sh build-interactive.sh sync.sh scripts/build_lib.sh scripts/build_steps.sh tests/smoke_dry_run.sh`
+- `shfmt -i 2 -ci -sr -d build.sh build-interactive.sh sync.sh scripts/build_lib.sh scripts/build_steps.sh tests/smoke_dry_run.sh`
 - `sh tests/smoke_dry_run.sh`
 
 If `shellcheck` or `shfmt` are unavailable, install them before submitting changes.

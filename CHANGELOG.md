@@ -15,3 +15,4 @@ The format is inspired by Keep a Changelog and this project follows a simple dat
 - Updated contribution guidance to require changelog updates and standardized local checks.
 - Updated roadmap status to remove completed follow-up items from the prioritized backlog.
 - Added explicit reinstall procedure to README and operations runbook.
+- Added `DRY_RUN=1` planning mode to `build.sh` and exposed the option in `build-interactive.sh`.

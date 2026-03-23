@@ -40,6 +40,7 @@ Optional environment variables:
  OPENCLAW_USER Default: current user
  SKIP_DOCKER_GROUP_SETUP Default: 0. Set to 1 to skip docker group changes.
  SKIP_OPENCLAW_WIZARD Default: 0. Set to 1 if .env already exists.
+ DRY_RUN Default: 0. Set to 1 to print planned actions without applying changes.
 
 Notes:
  - This script automates the OVHcloud guide published on 2026-02-25:
@@ -59,8 +60,21 @@ require_env() {
  [ -n "$var_value" ] || fail "Environment variable $var_name is required"
 }
 
+run_cmd() {
+ if [ "$DRY_RUN" = "1" ]; then
+ log "[DRY_RUN] $*"
+ return 0
+ fi
+ "$@"
+}
+
 write_file() {
  target=$1
+ if [ "$DRY_RUN" = "1" ]; then
+  log "[DRY_RUN] write file $target"
+  cat >/dev/null
+  return 0
+ fi
  tmp_file="${target}.tmp"
  cat >"$tmp_file"
  mv "$tmp_file" "$target"
@@ -83,11 +97,6 @@ require_env TRAEFIK_ACME_EMAIL
 require_env OPENCLAW_DOMAIN
 require_env OVH_ENDPOINT_API_KEY
 
-require_command docker
-require_command git
-
-docker compose version >/dev/null 2>&1 || fail "docker compose is required"
-
 CURRENT_USER=$(id -un)
 HOME_DIR=${HOME:-"$(getent passwd "$CURRENT_USER" | cut -d : -f 6 2>/dev/null || printf '/home/%s' "$CURRENT_USER")"}
 OPENCLAW_DIR=${OPENCLAW_DIR:-"$HOME_DIR/openclaw"}
@@ -103,28 +112,40 @@ OPENCLAW_USER=${OPENCLAW_USER:-"$CURRENT_USER"}
 SKIP_DOCKER_GROUP_SETUP=${SKIP_DOCKER_GROUP_SETUP:-"0"}
 SKIP_OPENCLAW_WIZARD=${SKIP_OPENCLAW_WIZARD:-"0"}
 OPENCLAW_ALLOWED_ORIGIN=${OPENCLAW_ALLOWED_ORIGIN:-"https://$OPENCLAW_DOMAIN"}
+DRY_RUN=${DRY_RUN:-"0"}
 
-log "Checking Docker access"
-if ! docker ps >/dev/null 2>&1; then
- if [ "$SKIP_DOCKER_GROUP_SETUP" = "1" ]; then
- fail "docker ps failed and SKIP_DOCKER_GROUP_SETUP=1"
+if [ "$DRY_RUN" = "1" ]; then
+ log "DRY_RUN=1 enabled; no system or Docker changes will be applied"
+else
+ require_command docker
+ require_command git
+ docker compose version >/dev/null 2>&1 || fail "docker compose is required"
+
+ log "Checking Docker access"
+ if ! docker ps >/dev/null 2>&1; then
+  if [ "$SKIP_DOCKER_GROUP_SETUP" = "1" ]; then
+  fail "docker ps failed and SKIP_DOCKER_GROUP_SETUP=1"
+  fi
+
+  log "Adding $CURRENT_USER to the docker group"
+  sudo usermod -aG docker "$CURRENT_USER"
+  fail "Docker permissions updated. Reconnect or run 'newgrp docker', then rerun the script."
  fi
-
- log "Adding $CURRENT_USER to the docker group"
- sudo usermod -aG docker "$CURRENT_USER"
- fail "Docker permissions updated. Reconnect or run 'newgrp docker', then rerun the script."
 fi
 
 log "Creating shared Docker network"
-if ! docker network inspect proxy >/dev/null 2>&1; then
- docker network create proxy >/dev/null
+if [ "$DRY_RUN" = "1" ]; then
+ log "[DRY_RUN] docker network inspect proxy"
+ log "[DRY_RUN] docker network create proxy"
+elif ! docker network inspect proxy >/dev/null 2>&1; then
+ run_cmd docker network create proxy >/dev/null
 fi
 
 log "Writing Traefik configuration into $TRAEFIK_DIR"
-mkdir -p "$TRAEFIK_DIR/letsencrypt"
-chmod 700 "$TRAEFIK_DIR/letsencrypt"
-touch "$TRAEFIK_DIR/letsencrypt/acme.json"
-chmod 600 "$TRAEFIK_DIR/letsencrypt/acme.json"
+run_cmd mkdir -p "$TRAEFIK_DIR/letsencrypt"
+run_cmd chmod 700 "$TRAEFIK_DIR/letsencrypt"
+run_cmd touch "$TRAEFIK_DIR/letsencrypt/acme.json"
+run_cmd chmod 600 "$TRAEFIK_DIR/letsencrypt/acme.json"
 write_file "$TRAEFIK_DIR/docker-compose.yml" <<EOF
 services:
  traefik:
@@ -155,37 +176,51 @@ networks:
  external: true
 EOF
 
-(
+if [ "$DRY_RUN" = "1" ]; then
+ log "[DRY_RUN] (cd $TRAEFIK_DIR && docker compose up -d)"
+else
+ (
  cd "$TRAEFIK_DIR"
  log "Starting Traefik"
- docker compose up -d
-)
+ run_cmd docker compose up -d
+ )
+fi
 
 log "Preparing OpenClaw repository in $OPENCLAW_DIR"
 if [ -d "$OPENCLAW_DIR/.git" ]; then
  (
  cd "$OPENCLAW_DIR"
- git pull --ff-only
+ run_cmd git pull --ff-only
  )
 else
- git clone "$OPENCLAW_REPO" "$OPENCLAW_DIR"
+ run_cmd git clone "$OPENCLAW_REPO" "$OPENCLAW_DIR"
 fi
 
-mkdir -p "$OPENCLAW_WORKSPACE_DIR"
-sudo chown -R "$OPENCLAW_USER:$OPENCLAW_USER" "$OPENCLAW_DIR" "$OPENCLAW_CONFIG_DIR"
+run_cmd mkdir -p "$OPENCLAW_WORKSPACE_DIR"
+run_cmd sudo chown -R "$OPENCLAW_USER:$OPENCLAW_USER" "$OPENCLAW_DIR" "$OPENCLAW_CONFIG_DIR"
 
 if [ ! -f "$OPENCLAW_DIR/.env" ] && [ "$SKIP_OPENCLAW_WIZARD" != "1" ]; then
  log "Running OpenClaw's docker setup wizard"
- (
- cd "$OPENCLAW_DIR"
- ./docker-setup.sh
- )
+ if [ "$DRY_RUN" = "1" ]; then
+  log "[DRY_RUN] (cd $OPENCLAW_DIR && ./docker-setup.sh)"
+ else
+  (
+  cd "$OPENCLAW_DIR"
+  ./docker-setup.sh
+  )
+ fi
 fi
 
-[ -f "$OPENCLAW_DIR/.env" ] || fail "OpenClaw .env not found in $OPENCLAW_DIR. Run ./docker-setup.sh first."
+if [ "$DRY_RUN" != "1" ]; then
+ [ -f "$OPENCLAW_DIR/.env" ] || fail "OpenClaw .env not found in $OPENCLAW_DIR. Run ./docker-setup.sh first."
+fi
 
 if [ -z "${OPENCLAW_TOKEN:-}" ]; then
- OPENCLAW_TOKEN=$(extract_openclaw_token "$OPENCLAW_DIR/.env" || true)
+ if [ "$DRY_RUN" = "1" ]; then
+  OPENCLAW_TOKEN="dry-run-token"
+ else
+  OPENCLAW_TOKEN=$(extract_openclaw_token "$OPENCLAW_DIR/.env" || true)
+ fi
 fi
 [ -n "${OPENCLAW_TOKEN:-}" ] || fail "Unable to determine OPENCLAW_TOKEN from $OPENCLAW_DIR/.env"
 
@@ -232,20 +267,25 @@ networks:
 EOF
 
 log "Ensuring OpenClaw .env contains local path overrides"
-if ! grep -q '^OPENCLAW_CONFIG_DIR=' "$OPENCLAW_DIR/.env"; then
- printf '\nOPENCLAW_CONFIG_DIR=%s\n' "$OPENCLAW_CONFIG_DIR" >>"$OPENCLAW_DIR/.env"
-fi
-if ! grep -q '^OPENCLAW_WORKSPACE_DIR=' "$OPENCLAW_DIR/.env"; then
- printf 'OPENCLAW_WORKSPACE_DIR=%s\n' "$OPENCLAW_WORKSPACE_DIR" >>"$OPENCLAW_DIR/.env"
+if [ "$DRY_RUN" = "1" ]; then
+ log "[DRY_RUN] append OPENCLAW_CONFIG_DIR to $OPENCLAW_DIR/.env when missing"
+ log "[DRY_RUN] append OPENCLAW_WORKSPACE_DIR to $OPENCLAW_DIR/.env when missing"
+else
+ if ! grep -q '^OPENCLAW_CONFIG_DIR=' "$OPENCLAW_DIR/.env"; then
+  printf '\nOPENCLAW_CONFIG_DIR=%s\n' "$OPENCLAW_CONFIG_DIR" >>"$OPENCLAW_DIR/.env"
+ fi
+ if ! grep -q '^OPENCLAW_WORKSPACE_DIR=' "$OPENCLAW_DIR/.env"; then
+  printf 'OPENCLAW_WORKSPACE_DIR=%s\n' "$OPENCLAW_WORKSPACE_DIR" >>"$OPENCLAW_DIR/.env"
+ fi
 fi
 
 OPENCLAW_JSON="$OPENCLAW_CONFIG_DIR/openclaw.json"
 if [ -f "$OPENCLAW_JSON" ]; then
- cp "$OPENCLAW_JSON" "${OPENCLAW_JSON}.bak"
+ run_cmd cp "$OPENCLAW_JSON" "${OPENCLAW_JSON}.bak"
 fi
 
 log "Writing $OPENCLAW_JSON"
-mkdir -p "$OPENCLAW_CONFIG_DIR"
+run_cmd mkdir -p "$OPENCLAW_CONFIG_DIR"
 write_file "$OPENCLAW_JSON" <<EOF
 {
  "messages": {
@@ -301,12 +341,16 @@ write_file "$OPENCLAW_JSON" <<EOF
 }
 EOF
 
-(
+if [ "$DRY_RUN" = "1" ]; then
+ log "[DRY_RUN] (cd $OPENCLAW_DIR && docker compose down && docker compose up -d)"
+else
+ (
  cd "$OPENCLAW_DIR"
  log "Restarting OpenClaw"
- docker compose down
- docker compose up -d
-)
+ run_cmd docker compose down
+ run_cmd docker compose up -d
+ )
+fi
 
 log "OpenClaw deployment finished"
 log "URL: https://${OPENCLAW_DOMAIN}"

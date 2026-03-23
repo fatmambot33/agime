@@ -1,7 +1,7 @@
 # Follow-up Evolution Plan
 
 Date: 2026-03-22
-Last Updated: 2026-03-22
+Last Updated: 2026-03-23
 
 ## Goal
 Transform the repo from a practical setup script collection into a maintainable, testable, and safer deployment toolkit.
@@ -11,11 +11,12 @@ Transform the repo from a practical setup script collection into a maintainable,
 ## Completed this cycle
 
 - Added shell quality tooling guidance and executable checks via `Makefile`.
-- Enforced script syntax checks through `make check` (`sh -n build.sh build-interactive.sh`).
+- Enforced script syntax checks through `make check` (`sh -n build.sh build-interactive.sh sync.sh`).
 - Added minimal changelog policy with `CHANGELOG.md` and contribution requirements.
 - Expanded README with prerequisites, known limitations, post-deploy checks, and uninstall notes.
 - Added `docs/OPERATIONS.md` with troubleshooting, backup, restore, and rollback guidance.
 - Added GitHub Actions workflow for shell checks.
+- Implemented `DRY_RUN=1` path in `build.sh` and exposed it through `build-interactive.sh`.
 
 ---
 
@@ -28,11 +29,9 @@ Transform the repo from a practical setup script collection into a maintainable,
 ### Tasks
 1. Refactor `build.sh` into composable functions/files
    - Separate concerns: prerequisites, Traefik, OpenClaw, endpoint wiring.
-2. Add dry-run mode
-   - `DRY_RUN=1` prints planned changes without applying them.
-3. Add idempotency checks
+2. Add idempotency checks
    - Validate repeated runs do not break existing installations.
-4. Introduce smoke tests
+3. Introduce smoke tests
    - Use containerized test harness (or Bats) for non-destructive validation.
 
 ### Exit criteria
@@ -64,8 +63,8 @@ Transform the repo from a practical setup script collection into a maintainable,
 
 ## Prioritized backlog (next 5 items)
 
-1. Implement `DRY_RUN=1` path in `build.sh`.
-2. Split `build.sh` into logical modules (or sourced helper script).
-3. Add idempotency validation checks for repeat runs.
-4. Add deterministic smoke test harness for non-destructive checks.
-5. Document version compatibility matrix for Docker/Traefik/OpenClaw.
+1. Split `build.sh` into logical modules (or sourced helper script).
+2. Add idempotency validation checks for repeat runs.
+3. Add deterministic smoke test harness for non-destructive checks.
+4. Document version compatibility matrix for Docker/Traefik/OpenClaw.
+5. Add CI validation for `DRY_RUN=1` output expectations.

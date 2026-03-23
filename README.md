@@ -36,9 +36,23 @@ chmod +x build-interactive.sh
 
 ## Known limitations
 
-- `build.sh` is still monolithic and does not yet support `DRY_RUN=1`.
+- `build.sh` is still monolithic and not yet split into smaller sourced modules.
 - The OpenClaw upstream wizard can still require interactive input unless `SKIP_OPENCLAW_WIZARD=1` and `.env` is pre-seeded.
 - The scripts assume Docker is already installed and operational.
+
+## Dry-run planning mode
+
+Preview planned actions without changing host state:
+
+```bash
+DRY_RUN=1 \
+TRAEFIK_ACME_EMAIL=admin@example.com \
+OPENCLAW_DOMAIN=openclaw.example.com \
+OVH_ENDPOINT_API_KEY=xxxxx \
+./build.sh
+```
+
+In dry-run mode, `build.sh` logs planned commands and file writes, skips Docker and filesystem changes, and uses a placeholder token when needed for config rendering.
 
 ## Post-deploy checks
 

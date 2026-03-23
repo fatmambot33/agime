@@ -16,7 +16,7 @@ make check
 
 This runs:
 
-- `sh -n build.sh build-interactive.sh`
+- `sh -n build.sh build-interactive.sh sync.sh`
 - `shellcheck build.sh build-interactive.sh sync.sh`
 - `shfmt -d build.sh build-interactive.sh sync.sh`
 

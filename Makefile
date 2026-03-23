@@ -7,7 +7,7 @@ SCRIPTS := build.sh build-interactive.sh sync.sh
 check: syntax lint fmt-check
 
 syntax:
-	sh -n build.sh build-interactive.sh
+	sh -n $(SCRIPTS)
 
 lint:
 	@command -v shellcheck >/dev/null 2>&1 || { \

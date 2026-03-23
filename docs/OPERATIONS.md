@@ -23,6 +23,20 @@
   2. Verify `.env` exists in `OPENCLAW_DIR`.
   3. Verify gateway token and OVH variables in `$HOME/.openclaw/openclaw.json`.
 
+## Dry-run validation
+
+Use dry-run mode to preview deployment actions safely before touching host state:
+
+```sh
+DRY_RUN=1 \
+TRAEFIK_ACME_EMAIL=admin@example.com \
+OPENCLAW_DOMAIN=openclaw.example.com \
+OVH_ENDPOINT_API_KEY=xxxxx \
+./build.sh
+```
+
+Dry-run output prefixes planned operations with `[DRY_RUN]` and does not apply Docker, sudo, or filesystem changes.
+
 ## Backup
 
 Create a timestamped backup before upgrades or major configuration changes:

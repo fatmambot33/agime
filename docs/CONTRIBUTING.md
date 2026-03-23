@@ -29,3 +29,4 @@ If `shellcheck` or `shfmt` are unavailable, install them before submitting chang
 - Update `CHANGELOG.md` under `Unreleased` for every merged change.
 - Update `docs/FOLLOW_UP_PLAN.md` when scope or priorities shift.
 - Include a brief test/verification summary in PR description.
+- Keep script execute bits correct (`chmod +x`) when adding/updating runnable `.sh` entrypoints.

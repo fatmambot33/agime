@@ -34,6 +34,22 @@ chmod +x build-interactive.sh
 ./build-interactive.sh
 ```
 
+## Shell script execution setup
+
+If you get `Permission denied` when running a script, mark it executable once:
+
+```bash
+chmod +x build.sh build-interactive.sh sync.sh
+```
+
+Then run scripts with either:
+
+```bash
+./build.sh
+# or
+sh ./build.sh
+```
+
 ## Known limitations
 
 - `build.sh` is still monolithic and not yet split into smaller sourced modules.

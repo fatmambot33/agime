@@ -31,5 +31,4 @@ Maintain and evolve this repo as a reliable, auditable deployment toolkit for Op
 
 - Root: executable scripts and short entrypoint docs.
 - `docs/`: deep-dive docs (reviews, plans, runbooks).
-- `tests/` (future): script-level automated checks.
-
+- `tests/`: script-level automated checks (dry-run smoke and idempotency coverage today; expand over time).

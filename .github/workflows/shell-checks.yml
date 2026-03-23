@@ -28,3 +28,12 @@ jobs:
 
       - name: Run quality gates
         run: make check-strict
+
+  dry-run-idempotency:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Verify dry-run output remains stable across repeated runs
+        run: make idempotency

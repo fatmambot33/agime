@@ -207,6 +207,8 @@ Run strict gates (includes lint + format checks):
 make check-strict
 ```
 
+`make check-strict` will attempt to install `shellcheck` and `shfmt` via `apt-get` if they are missing.
+
 If needed, run each check independently:
 
 ```bash

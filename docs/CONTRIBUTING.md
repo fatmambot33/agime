@@ -23,7 +23,7 @@ make check-strict
 - `shfmt -i 2 -ci -sr -d build.sh build-interactive.sh sync.sh scripts/build_lib.sh scripts/build_steps.sh tests/smoke_dry_run.sh`
 - `sh tests/smoke_dry_run.sh`
 
-If `shellcheck` or `shfmt` are unavailable, install them before submitting changes.
+If `shellcheck` or `shfmt` are unavailable, `make check-strict` will try to install them via `apt-get`.
 
 ## Change requirements
 

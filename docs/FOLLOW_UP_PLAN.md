@@ -22,6 +22,7 @@ Transform the repo from a practical setup script collection into a maintainable,
 - Split `build.sh` into sourced modules (`scripts/build_lib.sh`, `scripts/build_steps.sh`) to reduce core script complexity.
 - Added deterministic dry-run idempotency test script (`tests/idempotency_dry_run.sh`) to assert stable repeated output.
 - Added CI/local idempotency validation through `make idempotency`.
+- Added deterministic security template checks (`tests/security_template_checks.sh`) and CI coverage via `make security`.
 
 ---
 

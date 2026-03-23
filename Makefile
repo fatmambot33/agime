@@ -1,12 +1,12 @@
 SHELL := /bin/sh
 
-SCRIPTS := build.sh build-interactive.sh sync.sh scripts/build_lib.sh scripts/build_steps.sh tests/smoke_dry_run.sh tests/idempotency_dry_run.sh
+SCRIPTS := build.sh build-interactive.sh sync.sh scripts/build_lib.sh scripts/build_steps.sh tests/smoke_dry_run.sh tests/idempotency_dry_run.sh tests/security_template_checks.sh
 
-.PHONY: check check-strict ensure-tools syntax lint fmt-check smoke idempotency
+.PHONY: check check-strict ensure-tools syntax lint fmt-check smoke idempotency security
 
-check: syntax smoke idempotency
+check: syntax smoke idempotency security
 
-check-strict: syntax lint fmt-check smoke idempotency
+check-strict: syntax lint fmt-check smoke idempotency security
 
 ensure-tools:
 	@if ! command -v shellcheck >/dev/null 2>&1 || ! command -v shfmt >/dev/null 2>&1; then \
@@ -33,3 +33,6 @@ smoke:
 
 idempotency:
 	sh tests/idempotency_dry_run.sh
+
+security:
+	sh tests/security_template_checks.sh

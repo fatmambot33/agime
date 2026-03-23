@@ -8,7 +8,7 @@ Automation scripts for deploying an OpenClaw gateway behind Traefik on a VPS.
 - `build-interactive.sh`: guided wrapper that collects inputs and runs `build.sh`.
 - `sync.sh`: minimal helper to copy and run setup scripts over SSH.
 - `scripts/build_lib.sh` + `scripts/build_steps.sh`: shared helpers and modular deployment steps used by `build.sh`.
-- `Makefile`: local quality checks (`make check`, `make lint`, `make fmt-check`, `make smoke`, `make idempotency`).
+- `Makefile`: local quality checks (`make check`, `make lint`, `make fmt-check`, `make smoke`, `make idempotency`, `make security`).
 
 ## Prerequisites
 
@@ -217,7 +217,15 @@ make fmt-check
 make syntax
 make smoke
 make idempotency
+make security
 make check-strict
+```
+
+Recommended runtime audit on a deployed gateway (from OpenClaw security docs):
+
+```bash
+openclaw security audit
+openclaw security audit --deep
 ```
 
 ## Documentation

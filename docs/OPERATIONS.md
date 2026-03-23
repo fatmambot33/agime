@@ -47,7 +47,7 @@ make install-security-cron
 
 Installed cron behavior:
 
-- Runs `scripts/run_security_audit.sh` once per day (`17 3 * * *` by default).
+- Runs `scripts/run_security_audit.sh` once per day at **12:00 GMT** by default (`CRON_TZ=Etc/GMT` + `0 12 * * *`).
 - Executes:
   - `openclaw security audit`
   - `openclaw security audit --deep`
@@ -57,7 +57,9 @@ Installed cron behavior:
 To change schedule, reinstall with:
 
 ```sh
-OPENCLAW_SECURITY_AUDIT_CRON_SCHEDULE="0 2 * * *" make install-security-cron
+OPENCLAW_SECURITY_AUDIT_CRON_SCHEDULE="0 2 * * *" \
+OPENCLAW_SECURITY_AUDIT_CRON_TZ="Etc/GMT" \
+make install-security-cron
 ```
 
 To enable automated `--fix` (use with caution), edit the installed cron line and set:

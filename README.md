@@ -236,7 +236,7 @@ Automate this daily with cron:
 make install-security-cron
 ```
 
-This installs a daily cron entry that runs `scripts/run_security_audit.sh` (default: `03:17` UTC/local server time), executes `audit`, `audit --deep`, and stores a JSON report. By default it does **not** run `--fix`; set `OPENCLAW_SECURITY_AUDIT_FIX=1` in crontab only if you explicitly want automated remediation.
+This installs a daily cron entry that runs `scripts/run_security_audit.sh` at **12:00 GMT** by default (`CRON_TZ=Etc/GMT` + `0 12 * * *`), executes `audit`, `audit --deep`, and stores a JSON report. By default it does **not** run `--fix`; set `OPENCLAW_SECURITY_AUDIT_FIX=1` in crontab only if you explicitly want automated remediation.
 
 ## Documentation
 

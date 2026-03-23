@@ -4,8 +4,9 @@ set -eu
 
 SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 RUNNER="$SCRIPT_DIR/run_security_audit.sh"
-CRON_SCHEDULE=${OPENCLAW_SECURITY_AUDIT_CRON_SCHEDULE:-"17 3 * * *"}
+CRON_SCHEDULE=${OPENCLAW_SECURITY_AUDIT_CRON_SCHEDULE:-"0 12 * * *"}
 CRON_MARKER="# agime-openclaw-security-audit"
+CRON_TIMEZONE=${OPENCLAW_SECURITY_AUDIT_CRON_TZ:-"Etc/GMT"}
 
 [ -x "$RUNNER" ] || chmod +x "$RUNNER"
 
@@ -29,10 +30,11 @@ grep -v 'agime-openclaw-security-audit' "$CURRENT_CRON" > "$FILTERED_CRON" || tr
 
 {
   cat "$FILTERED_CRON"
-  echo "$CRON_MARKER"
-  echo "$CRON_SCHEDULE OPENCLAW_SECURITY_AUDIT_FIX=0 $RUNNER"
+  echo "CRON_TZ=$CRON_TIMEZONE $CRON_MARKER"
+  echo "$CRON_SCHEDULE OPENCLAW_SECURITY_AUDIT_FIX=0 $RUNNER $CRON_MARKER"
 } | crontab -
 
-echo "Installed daily OpenClaw security audit cron:"
+echo "Installed OpenClaw security audit cron:"
+echo "  CRON_TZ=$CRON_TIMEZONE"
 echo "  $CRON_SCHEDULE OPENCLAW_SECURITY_AUDIT_FIX=0 $RUNNER"
 echo "To enable --fix in cron, edit crontab and set OPENCLAW_SECURITY_AUDIT_FIX=1 (use with caution)."

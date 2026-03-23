@@ -20,5 +20,10 @@ grep -q 'render .*traefik-compose.yml.tmpl' "$OUTPUT_FILE"
 grep -q 'render .*openclaw-compose.yml.tmpl' "$OUTPUT_FILE"
 grep -q 'render .*openclaw.json.tmpl' "$OUTPUT_FILE"
 grep -q 'OpenClaw deployment finished' "$OUTPUT_FILE"
+grep -q 'Gateway token: <redacted>' "$OUTPUT_FILE"
+if grep -q 'Gateway token: dry-run-token' "$OUTPUT_FILE"; then
+  echo "Gateway token leaked in output" >&2
+  exit 1
+fi
 
 echo "DRY_RUN smoke test passed"

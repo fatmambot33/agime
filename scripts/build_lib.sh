@@ -17,7 +17,7 @@ require_command() {
 
 require_env() {
   var_name=$1
-  eval "var_value=\${$var_name-}"
+  var_value=$(printenv "$var_name" 2> /dev/null || true)
   [ -n "$var_value" ] || fail "Environment variable $var_name is required"
 }
 

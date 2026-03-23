@@ -3,6 +3,7 @@
 set -eu
 
 SCRIPT_NAME=$(basename "$0")
+SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 
 log() {
  printf '%s\n' "$*"
@@ -38,6 +39,7 @@ Optional environment variables:
  OVH_ENDPOINT_BASE_URL Default: https://oai.endpoints.kepler.ai.cloud.ovh.net/v1
  OVH_ENDPOINT_MODEL Default: gpt-oss-120b
  OPENCLAW_USER Default: current user
+ OPENCLAW_JSON_TEMPLATE Optional template path. Default: \$SCRIPT_DIR/templates/openclaw.json.tmpl
  SKIP_DOCKER_GROUP_SETUP Default: 0. Set to 1 to skip docker group changes.
  SKIP_OPENCLAW_WIZARD Default: 0. Set to 1 if .env already exists.
  DRY_RUN Default: 0. Set to 1 to print planned actions without applying changes.
@@ -80,6 +82,31 @@ write_file() {
  mv "$tmp_file" "$target"
 }
 
+escape_sed_replacement() {
+ printf '%s' "$1" | sed 's/[\/&]/\\&/g'
+}
+
+write_openclaw_json() {
+ target=$1
+ template=$2
+
+ if [ "$DRY_RUN" = "1" ]; then
+  log "[DRY_RUN] render $template to $target"
+  return 0
+ fi
+
+ [ -f "$template" ] || fail "OpenClaw JSON template not found: $template"
+ tmp_file="${target}.tmp"
+ sed \
+  -e "s/__OPENCLAW_ALLOWED_ORIGIN__/$(escape_sed_replacement "$OPENCLAW_ALLOWED_ORIGIN")/g" \
+  -e "s/__OPENCLAW_TOKEN__/$(escape_sed_replacement "$OPENCLAW_TOKEN")/g" \
+  -e "s/__OVH_ENDPOINT_BASE_URL__/$(escape_sed_replacement "$OVH_ENDPOINT_BASE_URL")/g" \
+  -e "s/__OVH_ENDPOINT_API_KEY__/$(escape_sed_replacement "$OVH_ENDPOINT_API_KEY")/g" \
+  -e "s/__OVH_ENDPOINT_MODEL__/$(escape_sed_replacement "$OVH_ENDPOINT_MODEL")/g" \
+  "$template" >"$tmp_file"
+ mv "$tmp_file" "$target"
+}
+
 extract_openclaw_token() {
  env_file=$1
  [ -f "$env_file" ] || return 1
@@ -109,6 +136,7 @@ OPENCLAW_GATEWAY_BIND=${OPENCLAW_GATEWAY_BIND:-"lan"}
 OVH_ENDPOINT_BASE_URL=${OVH_ENDPOINT_BASE_URL:-"https://oai.endpoints.kepler.ai.cloud.ovh.net/v1"}
 OVH_ENDPOINT_MODEL=${OVH_ENDPOINT_MODEL:-"gpt-oss-120b"}
 OPENCLAW_USER=${OPENCLAW_USER:-"$CURRENT_USER"}
+OPENCLAW_JSON_TEMPLATE=${OPENCLAW_JSON_TEMPLATE:-"$SCRIPT_DIR/templates/openclaw.json.tmpl"}
 SKIP_DOCKER_GROUP_SETUP=${SKIP_DOCKER_GROUP_SETUP:-"0"}
 SKIP_OPENCLAW_WIZARD=${SKIP_OPENCLAW_WIZARD:-"0"}
 OPENCLAW_ALLOWED_ORIGIN=${OPENCLAW_ALLOWED_ORIGIN:-"https://$OPENCLAW_DOMAIN"}
@@ -286,60 +314,7 @@ fi
 
 log "Writing $OPENCLAW_JSON"
 run_cmd mkdir -p "$OPENCLAW_CONFIG_DIR"
-write_file "$OPENCLAW_JSON" <<EOF
-{
- "messages": {
- "ackReactionScope": "group-mentions"
- },
- "commands": {
- "native": "auto",
- "nativeSkills": "auto"
- },
- "gateway": {
- "port": 18789,
- "mode": "local",
- "bind": "lan",
- "controlUi": {
- "allowedOrigins": [
- "${OPENCLAW_ALLOWED_ORIGIN}"
- ]
- },
- "auth": {
- "mode": "token",
- "token": "${OPENCLAW_TOKEN}"
- }
- },
- "models": {
- "mode": "merge",
- "providers": {
- "ovhcloud": {
- "baseUrl": "${OVH_ENDPOINT_BASE_URL}",
- "apiKey": "${OVH_ENDPOINT_API_KEY}",
- "api": "openai-completions",
- "models": [
- {
- "id": "${OVH_ENDPOINT_MODEL}",
- "name": "${OVH_ENDPOINT_MODEL}",
- "compat": {
- "supportsStore": false
- }
- }
- ]
- }
- }
- },
- "agents": {
- "defaults": {
- "model": {
- "primary": "ovhcloud/${OVH_ENDPOINT_MODEL}"
- },
- "models": {
- "ovhcloud/${OVH_ENDPOINT_MODEL}": {}
- }
- }
- }
-}
-EOF
+write_openclaw_json "$OPENCLAW_JSON" "$OPENCLAW_JSON_TEMPLATE"
 
 if [ "$DRY_RUN" = "1" ]; then
  log "[DRY_RUN] (cd $OPENCLAW_DIR && docker compose down && docker compose up -d)"

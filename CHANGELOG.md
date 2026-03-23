@@ -20,3 +20,4 @@ The format is inspired by Keep a Changelog and this project follows a simple dat
 - Added script execution setup guidance and aligned execute permissions on shell entrypoints.
 - Clarified `OPENCLAW_USER` behavior and recommended values in README and interactive prompt.
 - Clarified that `OPENCLAW_USER` usually does not require creating a new Linux account.
+- Moved embedded OpenClaw JSON content from `build.sh` to `templates/openclaw.json.tmpl` with template rendering.

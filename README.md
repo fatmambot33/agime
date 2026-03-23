@@ -81,6 +81,20 @@ OPENCLAW_USER=ubuntu
 
 Optional hardening (advanced): you can create a dedicated system user and pass that user as `OPENCLAW_USER`, but this is not required for a normal setup.
 
+## OpenClaw JSON template
+
+The OpenClaw config JSON is now stored as a template file at:
+
+- `templates/openclaw.json.tmpl`
+
+`build.sh` renders this template into `~/.openclaw/openclaw.json` (or your configured `OPENCLAW_CONFIG_DIR`) using environment values.
+
+If needed, you can override the template path with:
+
+```bash
+OPENCLAW_JSON_TEMPLATE=/path/to/openclaw.json.tmpl
+```
+
 ## Known limitations
 
 - `build.sh` is still monolithic and not yet split into smaller sourced modules.

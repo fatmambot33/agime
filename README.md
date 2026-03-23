@@ -67,6 +67,7 @@ Recommended value:
 
 - Set `OPENCLAW_USER` to the Linux account that should own and manage the OpenClaw files (usually your SSH login user).
 - If you're unsure, use the default behavior (current user from `id -un`).
+- You do **not** need to create a new account for most installs.
 
 Examples:
 
@@ -77,6 +78,8 @@ OPENCLAW_USER="$(id -un)"
 # explicit service/admin user
 OPENCLAW_USER=ubuntu
 ```
+
+Optional hardening (advanced): you can create a dedicated system user and pass that user as `OPENCLAW_USER`, but this is not required for a normal setup.
 
 ## Known limitations
 

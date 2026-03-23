@@ -19,3 +19,4 @@ The format is inspired by Keep a Changelog and this project follows a simple dat
 - Fixed generated Docker Compose YAML indentation in `build.sh` so services parse correctly.
 - Added script execution setup guidance and aligned execute permissions on shell entrypoints.
 - Clarified `OPENCLAW_USER` behavior and recommended values in README and interactive prompt.
+- Clarified that `OPENCLAW_USER` usually does not require creating a new Linux account.

@@ -29,6 +29,7 @@ Transform the repo from a practical setup script collection into a maintainable,
 - Hardened generated secret file permissions for `openclaw.json` and backups.
 - Added safety guards before recursive ownership changes (`chown -R`) to reject unsafe paths.
 - Added hermetic tests for `sync.sh` and security audit/cron installer scripts.
+- Added automated post-build HTTPS/TLS validation with configurable retry controls to fail fast on SSL readiness issues.
 
 ---
 

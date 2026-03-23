@@ -21,3 +21,5 @@ The format is inspired by Keep a Changelog and this project follows a simple dat
 - Clarified `OPENCLAW_USER` behavior and recommended values in README and interactive prompt.
 - Clarified that `OPENCLAW_USER` usually does not require creating a new Linux account.
 - Moved embedded OpenClaw JSON and Docker Compose YAML content from `build.sh` to template files with rendering (`templates/*.tmpl`).
+- Updated `docs/REPO_REVIEW.md` with a current professional assessment and prioritized recommendations.
+- Hardened template rendering by escaping backslashes in sed replacements.

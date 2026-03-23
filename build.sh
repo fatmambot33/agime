@@ -72,20 +72,8 @@ run_cmd() {
  "$@"
 }
 
-write_file() {
- target=$1
- if [ "$DRY_RUN" = "1" ]; then
-  log "[DRY_RUN] write file $target"
-  cat >/dev/null
-  return 0
- fi
- tmp_file="${target}.tmp"
- cat >"$tmp_file"
- mv "$tmp_file" "$target"
-}
-
 escape_sed_replacement() {
- printf '%s' "$1" | sed 's/[\/&]/\\&/g'
+ printf '%s' "$1" | sed 's/[\\\/&]/\\&/g'
 }
 
 render_template() {

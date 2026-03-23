@@ -35,6 +35,12 @@ chmod +x build-interactive.sh
 ./build-interactive.sh
 ```
 
+Or sync scripts to a remote host and run interactive setup there:
+
+```bash
+REMOTE_HOST=my-vps REMOTE_DIR=/tmp/agime ./sync.sh
+```
+
 ## Shell script execution setup
 
 If you get `Permission denied` when running a script, mark it executable once:

@@ -65,3 +65,18 @@ extract_openclaw_token() {
   [ -n "$token" ] || return 1
   printf '%s' "$token"
 }
+
+ensure_safe_chown_path() {
+  target_path=$1
+  [ -n "$target_path" ] || fail "Refusing chown with empty path"
+
+  case "$target_path" in
+    / | "." | "..")
+      fail "Refusing unsafe chown target: $target_path"
+      ;;
+  esac
+
+  if [ ! -e "$target_path" ]; then
+    fail "Refusing chown for missing path: $target_path"
+  fi
+}

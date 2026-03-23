@@ -24,6 +24,11 @@ Transform the repo from a practical setup script collection into a maintainable,
 - Added CI/local idempotency validation through `make idempotency`.
 - Added deterministic security template checks (`tests/security_template_checks.sh`) and CI coverage via `make security`.
 - Added cron-installable OpenClaw security audit runner (`scripts/run_security_audit.sh`, `scripts/install_security_audit_cron.sh`) with daily scheduling support.
+- Removed `eval` usage from the interactive wrapper variable collection path.
+- Redacted secrets from interactive/setup summaries to reduce accidental leakage in terminal logs.
+- Hardened generated secret file permissions for `openclaw.json` and backups.
+- Added safety guards before recursive ownership changes (`chown -R`) to reject unsafe paths.
+- Added hermetic tests for `sync.sh` and security audit/cron installer scripts.
 
 ---
 

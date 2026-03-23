@@ -51,7 +51,7 @@ ask_var OPENCLAW_DIR "Optional output directory for OpenClaw" "$HOME/openclaw"
 ask_var OPENCLAW_CONFIG_DIR "Optional OpenClaw config directory" "$HOME/.openclaw"
 ask_var OPENCLAW_WORKSPACE_DIR "Optional workspace directory" "$HOME/.openclaw/workspace"
 ask_var TRAEFIK_DIR "Optional traefik directory" "$HOME/docker/traefik"
-ask_var OPENCLAW_USER "System user for chown operations" "$(id -un)"
+ask_var OPENCLAW_USER "System user that should own OpenClaw files (usually your SSH user)" "$(id -un)"
 ask_var DRY_RUN "Dry-run mode (1=yes, 0=no)" "0"
 
 milestone "Configuration complete - reviewing values"

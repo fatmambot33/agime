@@ -50,6 +50,34 @@ Then run scripts with either:
 sh ./build.sh
 ```
 
+## `OPENCLAW_USER`: what it does and what to set
+
+`OPENCLAW_USER` controls ownership for OpenClaw paths during setup:
+
+- `$OPENCLAW_DIR`
+- `$OPENCLAW_CONFIG_DIR`
+
+Internally, `build.sh` runs:
+
+```sh
+sudo chown -R "$OPENCLAW_USER:$OPENCLAW_USER" "$OPENCLAW_DIR" "$OPENCLAW_CONFIG_DIR"
+```
+
+Recommended value:
+
+- Set `OPENCLAW_USER` to the Linux account that should own and manage the OpenClaw files (usually your SSH login user).
+- If you're unsure, use the default behavior (current user from `id -un`).
+
+Examples:
+
+```bash
+# default/current user (recommended for most setups)
+OPENCLAW_USER="$(id -un)"
+
+# explicit service/admin user
+OPENCLAW_USER=ubuntu
+```
+
 ## Known limitations
 
 - `build.sh` is still monolithic and not yet split into smaller sourced modules.

@@ -18,3 +18,4 @@ The format is inspired by Keep a Changelog and this project follows a simple dat
 - Added `DRY_RUN=1` planning mode to `build.sh` and exposed the option in `build-interactive.sh`.
 - Fixed generated Docker Compose YAML indentation in `build.sh` so services parse correctly.
 - Added script execution setup guidance and aligned execute permissions on shell entrypoints.
+- Clarified `OPENCLAW_USER` behavior and recommended values in README and interactive prompt.

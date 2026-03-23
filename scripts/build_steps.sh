@@ -20,6 +20,9 @@ initialize_defaults() {
   OPENCLAW_JSON_TEMPLATE=${OPENCLAW_JSON_TEMPLATE:-"$SCRIPT_DIR/templates/openclaw.json.tmpl"}
   SKIP_DOCKER_GROUP_SETUP=${SKIP_DOCKER_GROUP_SETUP:-"0"}
   SKIP_OPENCLAW_WIZARD=${SKIP_OPENCLAW_WIZARD:-"0"}
+  POST_BUILD_TEST=${POST_BUILD_TEST:-"1"}
+  POST_BUILD_TEST_ATTEMPTS=${POST_BUILD_TEST_ATTEMPTS:-"20"}
+  POST_BUILD_TEST_DELAY_SECONDS=${POST_BUILD_TEST_DELAY_SECONDS:-"3"}
   OPENCLAW_ALLOWED_ORIGIN=${OPENCLAW_ALLOWED_ORIGIN:-"https://$OPENCLAW_DOMAIN"}
   DRY_RUN=${DRY_RUN:-"0"}
 }
@@ -173,6 +176,37 @@ restart_openclaw() {
     run_cmd docker compose down
     run_cmd docker compose up -d
   )
+}
+
+post_build_tls_test() {
+  if [ "$POST_BUILD_TEST" = "0" ]; then
+    log "Skipping post-build HTTPS/TLS validation (POST_BUILD_TEST=0)"
+    return 0
+  fi
+
+  if [ "$DRY_RUN" = "1" ]; then
+    log "[DRY_RUN] validate https://$OPENCLAW_DOMAIN with curl (${POST_BUILD_TEST_ATTEMPTS} attempts)"
+    return 0
+  fi
+
+  require_command curl
+  attempts_left=$POST_BUILD_TEST_ATTEMPTS
+  [ "$attempts_left" -gt 0 ] 2> /dev/null || fail "POST_BUILD_TEST_ATTEMPTS must be a positive integer"
+  [ "$POST_BUILD_TEST_DELAY_SECONDS" -ge 0 ] 2> /dev/null || fail "POST_BUILD_TEST_DELAY_SECONDS must be an integer >= 0"
+
+  log "Validating HTTPS/TLS availability for https://$OPENCLAW_DOMAIN"
+  while [ "$attempts_left" -gt 0 ]; do
+    if curl --fail --silent --show-error --location "https://$OPENCLAW_DOMAIN" > /dev/null; then
+      log "Post-build HTTPS/TLS validation passed"
+      return 0
+    fi
+
+    attempts_left=$((attempts_left - 1))
+    [ "$attempts_left" -gt 0 ] || break
+    sleep "$POST_BUILD_TEST_DELAY_SECONDS"
+  done
+
+  fail "HTTPS/TLS validation failed for https://$OPENCLAW_DOMAIN after ${POST_BUILD_TEST_ATTEMPTS} attempts"
 }
 
 print_summary() {

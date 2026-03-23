@@ -132,6 +132,27 @@ OVH_ENDPOINT_API_KEY=xxxxx \
 
 In dry-run mode, `build.sh` logs planned commands and file writes, skips Docker and filesystem changes, and uses a placeholder token when needed for config rendering.
 
+## Post-build HTTPS/TLS validation
+
+`build.sh` performs an automated HTTPS/TLS validation against `https://$OPENCLAW_DOMAIN` after services are restarted. This catches common SSL issues immediately after deployment.
+
+Behavior:
+
+- Enabled by default (`POST_BUILD_TEST=1`).
+- Uses `curl` retry checks before failing the run.
+- Tunable retries (`POST_BUILD_TEST_ATTEMPTS`, default `20`).
+- Tunable delay between attempts (`POST_BUILD_TEST_DELAY_SECONDS`, default `3`).
+
+To skip in constrained/staged environments:
+
+```bash
+POST_BUILD_TEST=0 \
+TRAEFIK_ACME_EMAIL=admin@example.com \
+OPENCLAW_DOMAIN=openclaw.example.com \
+OVH_ENDPOINT_API_KEY=xxxxx \
+./build.sh
+```
+
 ## Secret handling and file permissions
 
 - `build-interactive.sh` redacts secret values in the confirmation summary.

@@ -40,6 +40,9 @@ Optional environment variables:
  OPENCLAW_JSON_TEMPLATE Optional template path. Default: \$SCRIPT_DIR/templates/openclaw.json.tmpl
  SKIP_DOCKER_GROUP_SETUP Default: 0. Set to 1 to skip docker group changes.
  SKIP_OPENCLAW_WIZARD Default: 0. Set to 1 if .env already exists.
+ POST_BUILD_TEST Default: 1. Set to 0 to skip post-build HTTPS/TLS validation.
+ POST_BUILD_TEST_ATTEMPTS Default: 20. Number of HTTPS validation attempts.
+ POST_BUILD_TEST_DELAY_SECONDS Default: 3. Delay between HTTPS validation attempts.
  DRY_RUN Default: 0. Set to 1 to print planned actions without applying changes.
 
 Notes:
@@ -71,4 +74,5 @@ write_openclaw_compose
 ensure_openclaw_env_overrides
 write_openclaw_json_config
 restart_openclaw
+post_build_tls_test
 print_summary

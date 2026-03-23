@@ -15,6 +15,10 @@
   1. Confirm `OPENCLAW_DOMAIN` A/AAAA record points to the host.
   2. Confirm ports `80` and `443` are publicly reachable.
   3. Check Traefik logs: `docker logs traefik`.
+  4. Re-run with explicit post-build test tuning if issuance is slow:
+     - `POST_BUILD_TEST_ATTEMPTS=40`
+     - `POST_BUILD_TEST_DELAY_SECONDS=5`
+  5. As a temporary bypass (not recommended for routine use), set `POST_BUILD_TEST=0`.
 
 ### 3) OpenClaw container exits immediately
 - Symptom: `openclaw` container keeps restarting.
@@ -36,6 +40,17 @@ OVH_ENDPOINT_API_KEY=xxxxx \
 ```
 
 Dry-run output prefixes planned operations with `[DRY_RUN]` and does not apply Docker, sudo, or filesystem changes.
+
+## Automated post-build HTTPS validation
+
+Non-dry runs execute an HTTPS/TLS validation after restarting services:
+
+- Target URL: `https://$OPENCLAW_DOMAIN`
+- Default retries: `POST_BUILD_TEST_ATTEMPTS=20`
+- Default delay: `POST_BUILD_TEST_DELAY_SECONDS=3`
+- Skip switch: `POST_BUILD_TEST=0`
+
+This check fails fast when DNS, firewall, or certificate issuance issues block HTTPS readiness.
 
 ## Security defaults and safeguards
 

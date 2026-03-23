@@ -8,7 +8,7 @@ Automation scripts for deploying an OpenClaw gateway behind Traefik on a VPS.
 - `build-interactive.sh`: guided wrapper that collects inputs and runs `build.sh`.
 - `sync.sh`: helper to copy setup scripts plus required `scripts/` and `templates/` dependencies over SSH, then run setup remotely.
 - `scripts/build_lib.sh` + `scripts/build_steps.sh`: shared helpers and modular deployment steps used by `build.sh`.
-- `Makefile`: local quality checks (`make check`, `make lint`, `make fmt-check`, `make smoke`, `make idempotency`, `make security`) plus runtime audit helpers (`make security-audit`, `make install-security-cron`).
+- `Makefile`: local quality checks (`make check`, `make lint`, `make fmt-check`, `make smoke`, `make idempotency`, `make security`, `make sync-test`, `make security-audit-scripts`) plus runtime audit helpers (`make security-audit`, `make install-security-cron`).
 
 ## Prerequisites
 
@@ -70,6 +70,8 @@ Internally, `build.sh` runs:
 sudo chown -R "$OPENCLAW_USER:$OPENCLAW_USER" "$OPENCLAW_DIR" "$OPENCLAW_CONFIG_DIR"
 ```
 
+Before ownership updates are applied, the script validates each target path and refuses unsafe values (empty, `.`, `..`, `/`, or missing paths).
+
 Recommended value:
 
 - Set `OPENCLAW_USER` to the Linux account that should own and manage the OpenClaw files (usually your SSH login user).
@@ -129,6 +131,13 @@ OVH_ENDPOINT_API_KEY=xxxxx \
 ```
 
 In dry-run mode, `build.sh` logs planned commands and file writes, skips Docker and filesystem changes, and uses a placeholder token when needed for config rendering.
+
+## Secret handling and file permissions
+
+- `build-interactive.sh` redacts secret values in the confirmation summary.
+- `build.sh` redacts gateway token output in the completion summary.
+- Generated `$OPENCLAW_CONFIG_DIR/openclaw.json` and backup files are forced to mode `600`.
+- `$OPENCLAW_CONFIG_DIR` is forced to mode `700` when config is rendered.
 
 ## Post-deploy checks
 
@@ -218,6 +227,8 @@ make syntax
 make smoke
 make idempotency
 make security
+make sync-test
+make security-audit-scripts
 make check-strict
 ```
 

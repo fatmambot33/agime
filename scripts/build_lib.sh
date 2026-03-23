@@ -17,7 +17,7 @@ require_command() {
 
 require_env() {
   var_name=$1
-  eval "var_value=\${$var_name-}"
+  var_value=$(printenv "$var_name" 2> /dev/null || true)
   [ -n "$var_value" ] || fail "Environment variable $var_name is required"
 }
 
@@ -64,4 +64,19 @@ extract_openclaw_token() {
   token=$(grep '^OPENCLAW_GATEWAY_TOKEN=' "$env_file" | tail -n 1 | cut -d '=' -f 2- || true)
   [ -n "$token" ] || return 1
   printf '%s' "$token"
+}
+
+ensure_safe_chown_path() {
+  target_path=$1
+  [ -n "$target_path" ] || fail "Refusing chown with empty path"
+
+  case "$target_path" in
+    / | "." | "..")
+      fail "Refusing unsafe chown target: $target_path"
+      ;;
+  esac
+
+  if [ ! -e "$target_path" ]; then
+    fail "Refusing chown for missing path: $target_path"
+  fi
 }

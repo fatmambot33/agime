@@ -90,6 +90,10 @@ prepare_openclaw_repo() {
   fi
 
   run_cmd mkdir -p "$OPENCLAW_WORKSPACE_DIR"
+  if [ "$DRY_RUN" != "1" ]; then
+    ensure_safe_chown_path "$OPENCLAW_DIR"
+    ensure_safe_chown_path "$OPENCLAW_CONFIG_DIR"
+  fi
   run_cmd sudo chown -R "$OPENCLAW_USER:$OPENCLAW_USER" "$OPENCLAW_DIR" "$OPENCLAW_CONFIG_DIR"
 }
 
@@ -147,11 +151,14 @@ write_openclaw_json_config() {
   OPENCLAW_JSON="$OPENCLAW_CONFIG_DIR/openclaw.json"
   if [ -f "$OPENCLAW_JSON" ]; then
     run_cmd cp "$OPENCLAW_JSON" "${OPENCLAW_JSON}.bak"
+    run_cmd chmod 600 "${OPENCLAW_JSON}.bak"
   fi
 
   log "Writing $OPENCLAW_JSON"
   run_cmd mkdir -p "$OPENCLAW_CONFIG_DIR"
+  run_cmd chmod 700 "$OPENCLAW_CONFIG_DIR"
   render_template "$OPENCLAW_JSON" "$OPENCLAW_JSON_TEMPLATE"
+  run_cmd chmod 600 "$OPENCLAW_JSON"
 }
 
 restart_openclaw() {
@@ -171,7 +178,7 @@ restart_openclaw() {
 print_summary() {
   log "OpenClaw deployment finished"
   log "URL: https://${OPENCLAW_DOMAIN}"
-  log "Gateway token: ${OPENCLAW_TOKEN}"
+  log "Gateway token: <redacted>"
   log "Container logs: docker logs openclaw"
   log "Pending device approvals: docker exec -it openclaw node dist/index.js devices list"
 }

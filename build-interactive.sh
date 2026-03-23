@@ -29,7 +29,21 @@ ask_var() {
     read value
   fi
 
-  eval "$var_name=\"$value\""
+  case "$var_name" in
+    TRAEFIK_ACME_EMAIL) TRAEFIK_ACME_EMAIL=$value ;;
+    OPENCLAW_DOMAIN) OPENCLAW_DOMAIN=$value ;;
+    OVH_ENDPOINT_API_KEY) OVH_ENDPOINT_API_KEY=$value ;;
+    OPENCLAW_TOKEN) OPENCLAW_TOKEN=$value ;;
+    OPENCLAW_DIR) OPENCLAW_DIR=$value ;;
+    OPENCLAW_CONFIG_DIR) OPENCLAW_CONFIG_DIR=$value ;;
+    OPENCLAW_WORKSPACE_DIR) OPENCLAW_WORKSPACE_DIR=$value ;;
+    TRAEFIK_DIR) TRAEFIK_DIR=$value ;;
+    OPENCLAW_USER) OPENCLAW_USER=$value ;;
+    DRY_RUN) DRY_RUN=$value ;;
+    *)
+      fail "Unsupported variable requested: $var_name"
+      ;;
+  esac
 }
 
 milestone() {
@@ -59,8 +73,8 @@ milestone "Configuration complete - reviewing values"
 cat << EOF
 TRAEFIK_ACME_EMAIL=$TRAEFIK_ACME_EMAIL
 OPENCLAW_DOMAIN=$OPENCLAW_DOMAIN
-OVH_ENDPOINT_API_KEY=$OVH_ENDPOINT_API_KEY
-OPENCLAW_TOKEN=${OPENCLAW_TOKEN:-<not set>}
+OVH_ENDPOINT_API_KEY=<redacted>
+OPENCLAW_TOKEN=<redacted>
 OPENCLAW_DIR=$OPENCLAW_DIR
 OPENCLAW_CONFIG_DIR=$OPENCLAW_CONFIG_DIR
 OPENCLAW_WORKSPACE_DIR=$OPENCLAW_WORKSPACE_DIR

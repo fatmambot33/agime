@@ -37,6 +37,16 @@ OVH_ENDPOINT_API_KEY=xxxxx \
 
 Dry-run output prefixes planned operations with `[DRY_RUN]` and does not apply Docker, sudo, or filesystem changes.
 
+## Security defaults and safeguards
+
+- Interactive confirmation output redacts `OVH_ENDPOINT_API_KEY` and `OPENCLAW_TOKEN`.
+- Deployment summary redacts gateway token output.
+- Ownership changes validate chown targets before `sudo chown -R` is invoked, and the script refuses unsafe paths (`/`, `.`, `..`, empty, or missing paths).
+- Generated secret-bearing config files are hardened:
+  - `$OPENCLAW_CONFIG_DIR` -> mode `700`
+  - `$OPENCLAW_CONFIG_DIR/openclaw.json` -> mode `600`
+  - `$OPENCLAW_CONFIG_DIR/openclaw.json.bak` -> mode `600` (if created)
+
 ## Scheduled security audits (daily cron)
 
 You can schedule OpenClaw security audits to run daily:

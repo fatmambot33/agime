@@ -299,3 +299,32 @@ OVH_ENDPOINT_API_KEY=xxxxx \
 ```
 
 This lets you inject credentials/config from your secret manager at runtime instead of running `himalaya account configure` interactively.
+
+## Coding-agent skill prerequisites
+
+If you plan to use the coding-agent skill, enable prerequisite handling in the build:
+
+```bash
+OPENCLAW_ENABLE_CODING_AGENT_SKILL=1 \
+OPENCLAW_CODING_AGENT_BACKEND=codex \
+OVH_ENDPOINT_API_KEY=xxxxx \
+./build.sh
+```
+
+Supported backends (`OPENCLAW_CODING_AGENT_BACKEND`):
+
+- `claude` → auto-install with `npm i -g @anthropic-ai/claude-code`
+- `codex` → auto-install with `npm i -g @openai/codex`
+- `pi` → auto-install with `npm i -g @mariozechner/pi-coding-agent`
+- `opencode` → manual install required (script validates binary only)
+
+Behavior when enabled:
+
+- Validates backend binary presence and auto-installs when supported.
+- Optionally enforces `<backend> --version` (`OPENCLAW_CODING_AGENT_REQUIRE_VERSION_CHECK=1`, default).
+- Requires `npm` for auto-installable backends.
+
+Safety guidance:
+
+- Do not run coding-agent commands against `~/.openclaw/...` paths.
+- For Codex workflows, point `workdir` to a real git repo (or initialize one first).

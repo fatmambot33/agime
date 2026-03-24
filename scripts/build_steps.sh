@@ -45,6 +45,9 @@ initialize_defaults() {
   OPENCLAW_HIMALAYA_REQUIRE_CONFIG=${OPENCLAW_HIMALAYA_REQUIRE_CONFIG:-"1"}
   OPENCLAW_HIMALAYA_CONFIG_PATH=${OPENCLAW_HIMALAYA_CONFIG_PATH:-"$HOME_DIR/.config/himalaya/config.toml"}
   OPENCLAW_HIMALAYA_CONFIG_TOML_BASE64=${OPENCLAW_HIMALAYA_CONFIG_TOML_BASE64:-""}
+  OPENCLAW_ENABLE_CODING_AGENT_SKILL=${OPENCLAW_ENABLE_CODING_AGENT_SKILL:-"0"}
+  OPENCLAW_CODING_AGENT_BACKEND=${OPENCLAW_CODING_AGENT_BACKEND:-"codex"}
+  OPENCLAW_CODING_AGENT_REQUIRE_VERSION_CHECK=${OPENCLAW_CODING_AGENT_REQUIRE_VERSION_CHECK:-"1"}
 }
 
 validate_access_mode() {
@@ -106,6 +109,27 @@ validate_access_mode() {
     0 | 1) ;;
     *)
       fail "OPENCLAW_HIMALAYA_REQUIRE_CONFIG must be either '0' or '1'"
+      ;;
+  esac
+
+  case "$OPENCLAW_ENABLE_CODING_AGENT_SKILL" in
+    0 | 1) ;;
+    *)
+      fail "OPENCLAW_ENABLE_CODING_AGENT_SKILL must be either '0' or '1'"
+      ;;
+  esac
+
+  case "$OPENCLAW_CODING_AGENT_BACKEND" in
+    claude | codex | opencode | pi) ;;
+    *)
+      fail "OPENCLAW_CODING_AGENT_BACKEND must be one of: claude, codex, opencode, pi"
+      ;;
+  esac
+
+  case "$OPENCLAW_CODING_AGENT_REQUIRE_VERSION_CHECK" in
+    0 | 1) ;;
+    *)
+      fail "OPENCLAW_CODING_AGENT_REQUIRE_VERSION_CHECK must be either '0' or '1'"
       ;;
   esac
 
@@ -274,6 +298,65 @@ write_himalaya_config_from_env_if_provided() {
   run_cmd mkdir -p "$(dirname "$OPENCLAW_HIMALAYA_CONFIG_PATH")"
   printf '%s' "$OPENCLAW_HIMALAYA_CONFIG_TOML_BASE64" | base64 -d > "$OPENCLAW_HIMALAYA_CONFIG_PATH"
   run_cmd chmod 600 "$OPENCLAW_HIMALAYA_CONFIG_PATH"
+}
+
+setup_coding_agent_skill_prerequisites() {
+  if [ "$OPENCLAW_ENABLE_CODING_AGENT_SKILL" != "1" ]; then
+    return 0
+  fi
+
+  resolve_coding_agent_backend
+  log "Coding-agent skill enabled; validating backend '$OPENCLAW_CODING_AGENT_BACKEND' (binary: $OPENCLAW_CODING_AGENT_BIN)"
+
+  if ! command -v "$OPENCLAW_CODING_AGENT_BIN" > /dev/null 2>&1; then
+    install_coding_agent_backend
+  fi
+
+  if [ "$OPENCLAW_CODING_AGENT_REQUIRE_VERSION_CHECK" = "1" ]; then
+    if [ "$DRY_RUN" = "1" ]; then
+      log "[DRY_RUN] validate coding-agent backend version: $OPENCLAW_CODING_AGENT_BIN --version"
+    else
+      "$OPENCLAW_CODING_AGENT_BIN" --version > /dev/null 2>&1 || fail "Failed to run '$OPENCLAW_CODING_AGENT_BIN --version' after installation/check."
+    fi
+  fi
+}
+
+resolve_coding_agent_backend() {
+  case "$OPENCLAW_CODING_AGENT_BACKEND" in
+    claude)
+      OPENCLAW_CODING_AGENT_BIN=claude
+      OPENCLAW_CODING_AGENT_INSTALL_COMMAND="npm i -g @anthropic-ai/claude-code"
+      ;;
+    codex)
+      OPENCLAW_CODING_AGENT_BIN=codex
+      OPENCLAW_CODING_AGENT_INSTALL_COMMAND="npm i -g @openai/codex"
+      ;;
+    pi)
+      OPENCLAW_CODING_AGENT_BIN=pi
+      OPENCLAW_CODING_AGENT_INSTALL_COMMAND="npm i -g @mariozechner/pi-coding-agent"
+      ;;
+    opencode)
+      OPENCLAW_CODING_AGENT_BIN=opencode
+      OPENCLAW_CODING_AGENT_INSTALL_COMMAND=""
+      ;;
+    *)
+      fail "Unsupported coding-agent backend: $OPENCLAW_CODING_AGENT_BACKEND"
+      ;;
+  esac
+}
+
+install_coding_agent_backend() {
+  if [ -z "$OPENCLAW_CODING_AGENT_INSTALL_COMMAND" ]; then
+    fail "Backend '$OPENCLAW_CODING_AGENT_BACKEND' does not support automatic install in this script. Install '$OPENCLAW_CODING_AGENT_BIN' manually and rerun."
+  fi
+
+  if [ "$DRY_RUN" = "1" ]; then
+    log "[DRY_RUN] install coding-agent backend: $OPENCLAW_CODING_AGENT_INSTALL_COMMAND"
+    return 0
+  fi
+
+  require_command npm
+  sh -c "$OPENCLAW_CODING_AGENT_INSTALL_COMMAND"
 }
 
 install_signal_cli() {

@@ -17,6 +17,7 @@ All notable changes to this repository are documented in this file.
   - `OPENCLAW_SIGNAL_CLI_PATH`
   - `OPENCLAW_SIGNAL_AUTO_INSTALL`
 - Added automatic `signal-cli` dependency check/installation flow (opt-out via `OPENCLAW_SIGNAL_AUTO_INSTALL=0`) when Signal is enabled.
+- Added `backup.sh` and `restore.sh` mechanics for reproducible backup/restore of deployment data with explicit restore safety guard (`RESTORE_FORCE=1` for `/`).
 
 ### Changed
 - Changed default deployment posture to private mode (`ssh-tunnel`) with loopback-only binding on `127.0.0.1:18789`.
@@ -29,3 +30,4 @@ All notable changes to this repository are documented in this file.
 - Updated README, operations runbook, and follow-up plan to reflect private-first guidance.
 - Updated OpenClaw JSON template defaults to include a `channels.signal` section with explicit `enabled`, `account`, `cliPath`, and DM pairing-oriented defaults.
 - Updated Signal auto-install validation to verify the configured `OPENCLAW_SIGNAL_CLI_PATH` (including custom command/path values) after installation.
+- Updated README and operations runbook with backup/restore usage and safe restore workflow.

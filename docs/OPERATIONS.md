@@ -57,6 +57,32 @@
 - `public` mode backup targets include the above plus:
   - `$HOME/docker/traefik`
 
+Use repo-provided helpers:
+
+```sh
+# backup (default targets)
+sh ./backup.sh
+
+# include Traefik state for public mode
+INCLUDE_TRAEFIK=1 sh ./backup.sh
+```
+
+Restore safely to a sandbox path first:
+
+```sh
+RESTORE_ARCHIVE="$HOME/openclaw-backup.tgz" \
+RESTORE_ROOT="/tmp/openclaw-restore-check" \
+sh ./restore.sh
+```
+
+Restore into `/` only when ready:
+
+```sh
+RESTORE_ARCHIVE="$HOME/openclaw-backup.tgz" \
+RESTORE_FORCE=1 \
+sh ./restore.sh
+```
+
 Reinstall clean reset:
 
 ```sh

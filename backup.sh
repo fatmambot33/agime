@@ -10,6 +10,13 @@ INCLUDE_OPENCLAW_REPO=${INCLUDE_OPENCLAW_REPO:-0}
 EXTRA_BACKUP_PATHS=${EXTRA_BACKUP_PATHS:-}
 BACKUP_OUTPUT=${BACKUP_OUTPUT:-"$PWD/openclaw-backup-$(date +%Y%m%d-%H%M%S).tar.gz"}
 
+case "$BACKUP_OUTPUT" in
+  /*) ;;
+  *)
+    BACKUP_OUTPUT="$PWD/$BACKUP_OUTPUT"
+    ;;
+esac
+
 TMP_DIR=$(mktemp -d)
 trap 'rm -rf "$TMP_DIR"' EXIT
 STAGE_DIR="$TMP_DIR/stage"

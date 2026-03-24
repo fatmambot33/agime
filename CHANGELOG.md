@@ -32,3 +32,5 @@ All notable changes to this repository are documented in this file.
 - Updated Signal auto-install validation to verify the configured `OPENCLAW_SIGNAL_CLI_PATH` (including custom command/path values) after installation.
 - Updated README and operations runbook with backup/restore usage and safe restore workflow.
 - Expanded backup coverage/options to include `docker-compose.yml` by default plus opt-in full repo capture (`INCLUDE_OPENCLAW_REPO=1`) and arbitrary extra paths (`EXTRA_BACKUP_PATHS`).
+- Fixed `backup.sh` handling for relative `BACKUP_OUTPUT` so archives are written relative to caller working directory (not staging temp dir).
+- Hardened `restore.sh` root safety check by normalizing `RESTORE_ROOT` path variants (for example `//`) before enforcing `RESTORE_FORCE=1`.

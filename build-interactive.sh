@@ -241,16 +241,6 @@ if [ "${OPENCLAW_ENABLE_SIGNAL:-0}" = "1" ]; then
 EOF2
 fi
 
-# optional variables for compatibility with build.sh
-export OPENCLAW_REPO=${OPENCLAW_REPO:-https://github.com/openclaw/openclaw.git}
-export OPENCLAW_IMAGE=${OPENCLAW_IMAGE:-openclaw:local}
-export OPENCLAW_GATEWAY_BIND=${OPENCLAW_GATEWAY_BIND:-lan}
-export OVH_ENDPOINT_BASE_URL=${OVH_ENDPOINT_BASE_URL:-https://oai.endpoints.kepler.ai.cloud.ovh.net/v1}
-export OVH_ENDPOINT_MODEL=${OVH_ENDPOINT_MODEL:-gpt-oss-120b}
-export SKIP_DOCKER_GROUP_SETUP=${SKIP_DOCKER_GROUP_SETUP:-0}
-export SKIP_OPENCLAW_WIZARD=${SKIP_OPENCLAW_WIZARD:-0}
-export SKIP_OPENCLAW_IMAGE_BUILD=${SKIP_OPENCLAW_IMAGE_BUILD:-0}
-
 milestone "Running core setup script on SSH-capable host"
 
 if [ "$PRE_DEPLOY_BACKUP" = "1" ]; then

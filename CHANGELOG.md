@@ -36,3 +36,4 @@ All notable changes to this repository are documented in this file.
 - Hardened `restore.sh` root safety check by normalizing `RESTORE_ROOT` path variants (for example `//`) before enforcing `RESTORE_FORCE=1`.
 - Integrated pre-deploy backup flow into `build-interactive.sh` with explicit operator prompts and backup option passthrough.
 - Fixed backup staging path merge behavior so `INCLUDE_OPENCLAW_REPO=1` no longer nests restore paths as `<OPENCLAW_DIR>/openclaw/...`.
+- Removed legacy compatibility exports from `build-interactive.sh` so `build.sh` owns all default resolution directly.

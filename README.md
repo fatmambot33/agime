@@ -10,6 +10,8 @@ Automation scripts for deploying OpenClaw on a VPS with two explicit access mode
 - `build.sh`: non-interactive end-to-end setup script (environment-variable driven).
 - `build-interactive.sh`: guided wrapper that collects inputs and runs `build.sh`.
 - `sync.sh`: helper to copy setup scripts plus required `scripts/` and `templates/` dependencies over SSH, then run setup remotely.
+- `backup.sh`: creates a tarball backup of OpenClaw runtime data (`$OPENCLAW_CONFIG_DIR`, `$OPENCLAW_DIR/.env`, optional Traefik state).
+- `restore.sh`: restores a backup tarball into a chosen root path (requires explicit force flag for `/`).
 - `scripts/build_lib.sh` + `scripts/build_steps.sh`: shared helpers and modular deployment steps used by `build.sh`.
 - `templates/openclaw-compose.ssh-tunnel.yml.tmpl`: private/local compose template.
 - `templates/openclaw-compose.public.yml.tmpl`: Traefik-integrated compose template.
@@ -170,7 +172,55 @@ make check
 Or run the minimum syntax check directly:
 
 ```bash
-sh -n build.sh build-interactive.sh sync.sh scripts/build_lib.sh scripts/build_steps.sh tests/smoke_dry_run.sh tests/idempotency_dry_run.sh tests/security_template_checks.sh tests/sync_hermetic.sh tests/security_audit_scripts_hermetic.sh
+sh -n build.sh build-interactive.sh sync.sh backup.sh restore.sh scripts/build_lib.sh scripts/build_steps.sh tests/smoke_dry_run.sh tests/idempotency_dry_run.sh tests/security_template_checks.sh tests/sync_hermetic.sh tests/security_audit_scripts_hermetic.sh tests/backup_restore_hermetic.sh
+```
+
+## Backup and restore mechanic
+
+Backup defaults:
+- Includes `$OPENCLAW_CONFIG_DIR` (default `$HOME/.openclaw`).
+- Includes `$OPENCLAW_DIR/.env` (default `$HOME/openclaw/.env`).
+- Includes `$OPENCLAW_DIR/docker-compose.yml` when present.
+- Excludes Traefik data by default unless `INCLUDE_TRAEFIK=1`.
+- Excludes full OpenClaw git checkout by default unless `INCLUDE_OPENCLAW_REPO=1`.
+- Supports additional paths via `EXTRA_BACKUP_PATHS` (space-separated).
+
+Create a backup:
+
+```bash
+sh ./backup.sh
+```
+
+Tune backup location and include Traefik:
+
+```bash
+INCLUDE_TRAEFIK=1 \
+BACKUP_OUTPUT="$HOME/openclaw-backup.tgz" \
+sh ./backup.sh
+```
+
+Include the full local OpenClaw checkout plus extra files:
+
+```bash
+INCLUDE_OPENCLAW_REPO=1 \
+EXTRA_BACKUP_PATHS="$HOME/notes/IDENTITY.md $HOME/.config/openclaw/custom.env" \
+sh ./backup.sh
+```
+
+Restore to a safe sandbox path first (recommended):
+
+```bash
+RESTORE_ARCHIVE="$HOME/openclaw-backup.tgz" \
+RESTORE_ROOT="/tmp/openclaw-restore-check" \
+sh ./restore.sh
+```
+
+Restore into the real filesystem root (requires explicit opt-in):
+
+```bash
+RESTORE_ARCHIVE="$HOME/openclaw-backup.tgz" \
+RESTORE_FORCE=1 \
+sh ./restore.sh
 ```
 
 ## Signal docs

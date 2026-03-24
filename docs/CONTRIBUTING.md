@@ -18,10 +18,12 @@ make check-strict
 
 `make check-strict` runs:
 
-- `sh -n build.sh build-interactive.sh sync.sh scripts/build_lib.sh scripts/build_steps.sh tests/smoke_dry_run.sh`
-- `shellcheck -S error -e SC1091,SC2034,SC2154 build.sh build-interactive.sh sync.sh scripts/build_lib.sh scripts/build_steps.sh tests/smoke_dry_run.sh`
-- `shfmt -i 2 -ci -sr -d build.sh build-interactive.sh sync.sh scripts/build_lib.sh scripts/build_steps.sh tests/smoke_dry_run.sh`
+- `sh -n build.sh build-interactive.sh sync.sh backup.sh restore.sh scripts/build_lib.sh scripts/build_steps.sh tests/smoke_dry_run.sh tests/backup_restore_hermetic.sh tests/build_interactive_backup_hermetic.sh`
+- `shellcheck -S error -e SC1091,SC2034,SC2154 build.sh build-interactive.sh sync.sh backup.sh restore.sh scripts/build_lib.sh scripts/build_steps.sh tests/smoke_dry_run.sh tests/backup_restore_hermetic.sh tests/build_interactive_backup_hermetic.sh`
+- `shfmt -i 2 -ci -sr -d build.sh build-interactive.sh sync.sh backup.sh restore.sh scripts/build_lib.sh scripts/build_steps.sh tests/smoke_dry_run.sh tests/backup_restore_hermetic.sh tests/build_interactive_backup_hermetic.sh`
 - `sh tests/smoke_dry_run.sh`
+- `sh tests/backup_restore_hermetic.sh`
+- `sh tests/build_interactive_backup_hermetic.sh`
 
 If `shellcheck` or `shfmt` are unavailable, `make check-strict` will try to install them via `apt-get`.
 

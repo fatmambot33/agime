@@ -139,6 +139,10 @@ setup_signal_channel_prerequisites() {
 install_signal_cli() {
   if [ "$DRY_RUN" = "1" ]; then
     log "[DRY_RUN] install signal-cli (Linux native build) from upstream GitHub releases"
+    if [ "$OPENCLAW_SIGNAL_CLI_PATH" != "signal-cli" ]; then
+      log "[DRY_RUN] link installed signal-cli to configured OPENCLAW_SIGNAL_CLI_PATH=$OPENCLAW_SIGNAL_CLI_PATH"
+      log "[DRY_RUN] validate configured Signal CLI path: $OPENCLAW_SIGNAL_CLI_PATH"
+    fi
     return 0
   fi
 
@@ -157,12 +161,25 @@ install_signal_cli() {
   log "Installing signal-cli ${version}"
   run_cmd curl -fsSL "$download_url" -o "$tmp_dir/$archive"
   run_cmd sudo tar xf "$tmp_dir/$archive" -C /opt
-  run_cmd sudo ln -sfn "/opt/signal-cli-${version}/bin/signal-cli" /usr/local/bin/signal-cli
+  installed_signal_cli="/opt/signal-cli-${version}/bin/signal-cli"
+  run_cmd sudo ln -sfn "$installed_signal_cli" /usr/local/bin/signal-cli
+
+  if [ "$OPENCLAW_SIGNAL_CLI_PATH" != "signal-cli" ]; then
+    case "$OPENCLAW_SIGNAL_CLI_PATH" in
+      */*)
+        run_cmd sudo mkdir -p "$(dirname "$OPENCLAW_SIGNAL_CLI_PATH")"
+        run_cmd sudo ln -sfn "$installed_signal_cli" "$OPENCLAW_SIGNAL_CLI_PATH"
+        ;;
+      *)
+        run_cmd sudo ln -sfn "$installed_signal_cli" "/usr/local/bin/$OPENCLAW_SIGNAL_CLI_PATH"
+        ;;
+    esac
+  fi
 
   rm -rf "$tmp_dir"
   trap - EXIT INT HUP TERM
 
-  command -v signal-cli > /dev/null 2>&1 || fail "signal-cli installation completed but command is still unavailable"
+  command -v "$OPENCLAW_SIGNAL_CLI_PATH" > /dev/null 2>&1 || fail "signal-cli installation completed but configured OPENCLAW_SIGNAL_CLI_PATH '$OPENCLAW_SIGNAL_CLI_PATH' is still unavailable"
 }
 
 setup_access_mode_prerequisites() {

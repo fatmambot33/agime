@@ -34,11 +34,14 @@ echo "DRY_RUN smoke test passed"
     OVH_ENDPOINT_API_KEY=dummy-key \
     OPENCLAW_ENABLE_SIGNAL=1 \
     OPENCLAW_SIGNAL_ACCOUNT=+15551234567 \
+    OPENCLAW_SIGNAL_CLI_PATH=signal-cli-custom \
     sh ./build.sh > "$OUTPUT_SIGNAL_FILE"
 )
 
 grep -q 'Signal channel enabled; validating signal-cli dependency' "$OUTPUT_SIGNAL_FILE"
 grep -q '\[DRY_RUN\] install signal-cli (Linux native build) from upstream GitHub releases' "$OUTPUT_SIGNAL_FILE"
+grep -q '\[DRY_RUN\] link installed signal-cli to configured OPENCLAW_SIGNAL_CLI_PATH=signal-cli-custom' "$OUTPUT_SIGNAL_FILE"
+grep -q '\[DRY_RUN\] validate configured Signal CLI path: signal-cli-custom' "$OUTPUT_SIGNAL_FILE"
 grep -q 'OpenClaw deployment finished' "$OUTPUT_SIGNAL_FILE"
 
 echo "DRY_RUN signal smoke test passed"

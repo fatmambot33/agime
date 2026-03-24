@@ -28,3 +28,4 @@ All notable changes to this repository are documented in this file.
 - Updated interactive setup prompts and completion output to reflect selected mode.
 - Updated README, operations runbook, and follow-up plan to reflect private-first guidance.
 - Updated OpenClaw JSON template defaults to include a `channels.signal` section with explicit `enabled`, `account`, `cliPath`, and DM pairing-oriented defaults.
+- Updated Signal auto-install validation to verify the configured `OPENCLAW_SIGNAL_CLI_PATH` (including custom command/path values) after installation.

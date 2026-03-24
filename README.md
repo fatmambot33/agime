@@ -228,3 +228,30 @@ sh ./restore.sh
 ## Signal docs
 
 - <https://docs.openclaw.ai/channels/signal>
+
+## GitHub skill prerequisites
+
+If you plan to use the OpenClaw GitHub skill, enable prerequisite handling in the build:
+
+```bash
+OPENCLAW_ENABLE_GITHUB_SKILL=1 \
+OVH_ENDPOINT_API_KEY=xxxxx \
+./build.sh
+```
+
+Behavior when enabled:
+
+- Validates `gh` availability (`OPENCLAW_GH_CLI_PATH`, default `gh`).
+- Auto-installs `gh` when missing (`OPENCLAW_GH_AUTO_INSTALL=1`, default) using `apt-get`.
+- Enforces authentication by running `gh auth status` (`OPENCLAW_GH_REQUIRE_AUTH=1`, default).
+
+If you prefer to install/auth manually, use the following:
+
+1. Install `gh`:
+   - Ubuntu/Debian: `sudo apt update && sudo apt install -y gh`
+2. Authenticate once: `gh auth login`
+3. Verify runtime visibility and auth state:
+   - `which gh`
+   - `gh auth status`
+
+If auth validation fails, run `gh auth login` and rerun `build.sh`.

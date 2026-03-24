@@ -51,6 +51,10 @@ Optional environment variables:
  OPENCLAW_SIGNAL_ALLOW_FROM Optional DM allowlist sender (single E.164 or uuid:<id> entry).
  OPENCLAW_SIGNAL_CLI_PATH Default: signal-cli. Path/command used by OpenClaw for Signal.
  OPENCLAW_SIGNAL_AUTO_INSTALL Default: 1. Set to 0 to disable automatic signal-cli installation.
+ OPENCLAW_ENABLE_GITHUB_SKILL Default: 0. Set to 1 to validate/install GitHub CLI (`gh`) for GitHub skill usage.
+ OPENCLAW_GH_CLI_PATH Default: gh. Path/command used to invoke GitHub CLI.
+ OPENCLAW_GH_AUTO_INSTALL Default: 1. Set to 0 to disable automatic GitHub CLI installation.
+ OPENCLAW_GH_REQUIRE_AUTH Default: 1. Set to 0 to skip `gh auth status` validation.
  SKIP_DOCKER_GROUP_SETUP Default: 0. Set to 1 to skip docker group changes.
  SKIP_OPENCLAW_WIZARD Default: 0. Set to 1 if .env already exists.
  SKIP_OPENCLAW_IMAGE_BUILD Default: 0. Set to 1 to skip rebuilding local OpenClaw image.
@@ -65,6 +69,9 @@ Notes:
  - This script automates the OVHcloud guide published on 2026-02-25:
  https://help.ovhcloud.com/csm/fr-vps-install-openclaw?id=kb_article_view&sysparm_article=KB0074788
  - Docker and Docker Compose must already be installed.
+ - If OPENCLAW_ENABLE_GITHUB_SKILL=1, this script can auto-install GitHub CLI (`gh`) when missing
+   (apt-get only) and, by default, enforces successful `gh auth status`.
+ - If auth is missing, run: `gh auth login` and rerun the script.
  - If the OpenClaw setup wizard runs, it remains interactive.
 EOF2
 }
@@ -80,6 +87,7 @@ require_env OVH_ENDPOINT_API_KEY
 require_public_env_if_needed
 check_docker_access
 setup_signal_channel_prerequisites
+setup_github_skill_prerequisites
 setup_access_mode_prerequisites
 prepare_openclaw_repo
 run_openclaw_wizard_if_needed

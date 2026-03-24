@@ -37,6 +37,10 @@ initialize_defaults() {
   OPENCLAW_SIGNAL_ALLOW_FROM=${OPENCLAW_SIGNAL_ALLOW_FROM:-""}
   OPENCLAW_SIGNAL_CLI_PATH=${OPENCLAW_SIGNAL_CLI_PATH:-"signal-cli"}
   OPENCLAW_SIGNAL_AUTO_INSTALL=${OPENCLAW_SIGNAL_AUTO_INSTALL:-"1"}
+  OPENCLAW_ENABLE_GITHUB_SKILL=${OPENCLAW_ENABLE_GITHUB_SKILL:-"0"}
+  OPENCLAW_GH_CLI_PATH=${OPENCLAW_GH_CLI_PATH:-"gh"}
+  OPENCLAW_GH_AUTO_INSTALL=${OPENCLAW_GH_AUTO_INSTALL:-"1"}
+  OPENCLAW_GH_REQUIRE_AUTH=${OPENCLAW_GH_REQUIRE_AUTH:-"1"}
 }
 
 validate_access_mode() {
@@ -70,6 +74,27 @@ validate_access_mode() {
     0 | 1) ;;
     *)
       fail "OPENCLAW_SIGNAL_AUTO_INSTALL must be either '0' or '1'"
+      ;;
+  esac
+
+  case "$OPENCLAW_ENABLE_GITHUB_SKILL" in
+    0 | 1) ;;
+    *)
+      fail "OPENCLAW_ENABLE_GITHUB_SKILL must be either '0' or '1'"
+      ;;
+  esac
+
+  case "$OPENCLAW_GH_AUTO_INSTALL" in
+    0 | 1) ;;
+    *)
+      fail "OPENCLAW_GH_AUTO_INSTALL must be either '0' or '1'"
+      ;;
+  esac
+
+  case "$OPENCLAW_GH_REQUIRE_AUTH" in
+    0 | 1) ;;
+    *)
+      fail "OPENCLAW_GH_REQUIRE_AUTH must be either '0' or '1'"
       ;;
   esac
 
@@ -134,6 +159,52 @@ setup_signal_channel_prerequisites() {
   fi
 
   install_signal_cli
+}
+
+setup_github_skill_prerequisites() {
+  if [ "$OPENCLAW_ENABLE_GITHUB_SKILL" != "1" ]; then
+    return 0
+  fi
+
+  log "GitHub skill enabled; validating GitHub CLI dependency"
+  if ! command -v "$OPENCLAW_GH_CLI_PATH" > /dev/null 2>&1; then
+    if [ "$OPENCLAW_GH_AUTO_INSTALL" != "1" ]; then
+      fail "GitHub CLI not found at '$OPENCLAW_GH_CLI_PATH' and OPENCLAW_GH_AUTO_INSTALL=0"
+    fi
+    install_github_cli
+  fi
+
+  if [ "$OPENCLAW_GH_REQUIRE_AUTH" = "1" ]; then
+    if [ "$DRY_RUN" = "1" ]; then
+      log "[DRY_RUN] validate GitHub CLI auth state: $OPENCLAW_GH_CLI_PATH auth status"
+      return 0
+    fi
+
+    if ! "$OPENCLAW_GH_CLI_PATH" auth status > /dev/null 2>&1; then
+      fail "GitHub CLI is installed but not authenticated. Run '$OPENCLAW_GH_CLI_PATH auth login' and rerun build."
+    fi
+  fi
+}
+
+install_github_cli() {
+  if [ "$DRY_RUN" = "1" ]; then
+    log "[DRY_RUN] install GitHub CLI using apt-get"
+    return 0
+  fi
+
+  if command -v apt-get > /dev/null 2>&1; then
+    if [ "$(id -u)" = "0" ]; then
+      run_cmd apt-get update
+      run_cmd apt-get install -y gh
+    else
+      require_command sudo
+      run_cmd sudo apt-get update
+      run_cmd sudo apt-get install -y gh
+    fi
+    return 0
+  fi
+
+  fail "Unable to auto-install GitHub CLI (gh): apt-get is required."
 }
 
 install_signal_cli() {

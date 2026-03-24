@@ -37,6 +37,17 @@ initialize_defaults() {
   OPENCLAW_SIGNAL_ALLOW_FROM=${OPENCLAW_SIGNAL_ALLOW_FROM:-""}
   OPENCLAW_SIGNAL_CLI_PATH=${OPENCLAW_SIGNAL_CLI_PATH:-"signal-cli"}
   OPENCLAW_SIGNAL_AUTO_INSTALL=${OPENCLAW_SIGNAL_AUTO_INSTALL:-"1"}
+  OPENCLAW_ENABLE_GITHUB_SKILL=${OPENCLAW_ENABLE_GITHUB_SKILL:-"0"}
+  OPENCLAW_GH_CLI_PATH=${OPENCLAW_GH_CLI_PATH:-"gh"}
+  OPENCLAW_GH_REQUIRE_AUTH=${OPENCLAW_GH_REQUIRE_AUTH:-"1"}
+  OPENCLAW_ENABLE_HIMALAYA_SKILL=${OPENCLAW_ENABLE_HIMALAYA_SKILL:-"0"}
+  OPENCLAW_HIMALAYA_CLI_PATH=${OPENCLAW_HIMALAYA_CLI_PATH:-"himalaya"}
+  OPENCLAW_HIMALAYA_REQUIRE_CONFIG=${OPENCLAW_HIMALAYA_REQUIRE_CONFIG:-"1"}
+  OPENCLAW_HIMALAYA_CONFIG_PATH=${OPENCLAW_HIMALAYA_CONFIG_PATH:-"$HOME_DIR/.config/himalaya/config.toml"}
+  OPENCLAW_HIMALAYA_CONFIG_TOML_BASE64=${OPENCLAW_HIMALAYA_CONFIG_TOML_BASE64:-""}
+  OPENCLAW_ENABLE_CODING_AGENT_SKILL=${OPENCLAW_ENABLE_CODING_AGENT_SKILL:-"0"}
+  OPENCLAW_CODING_AGENT_BACKEND=${OPENCLAW_CODING_AGENT_BACKEND:-"codex"}
+  OPENCLAW_CODING_AGENT_REQUIRE_VERSION_CHECK=${OPENCLAW_CODING_AGENT_REQUIRE_VERSION_CHECK:-"1"}
 }
 
 validate_access_mode() {
@@ -70,6 +81,55 @@ validate_access_mode() {
     0 | 1) ;;
     *)
       fail "OPENCLAW_SIGNAL_AUTO_INSTALL must be either '0' or '1'"
+      ;;
+  esac
+
+  case "$OPENCLAW_ENABLE_GITHUB_SKILL" in
+    0 | 1) ;;
+    *)
+      fail "OPENCLAW_ENABLE_GITHUB_SKILL must be either '0' or '1'"
+      ;;
+  esac
+
+  case "$OPENCLAW_GH_REQUIRE_AUTH" in
+    0 | 1) ;;
+    *)
+      fail "OPENCLAW_GH_REQUIRE_AUTH must be either '0' or '1'"
+      ;;
+  esac
+
+  case "$OPENCLAW_ENABLE_HIMALAYA_SKILL" in
+    0 | 1) ;;
+    *)
+      fail "OPENCLAW_ENABLE_HIMALAYA_SKILL must be either '0' or '1'"
+      ;;
+  esac
+
+  case "$OPENCLAW_HIMALAYA_REQUIRE_CONFIG" in
+    0 | 1) ;;
+    *)
+      fail "OPENCLAW_HIMALAYA_REQUIRE_CONFIG must be either '0' or '1'"
+      ;;
+  esac
+
+  case "$OPENCLAW_ENABLE_CODING_AGENT_SKILL" in
+    0 | 1) ;;
+    *)
+      fail "OPENCLAW_ENABLE_CODING_AGENT_SKILL must be either '0' or '1'"
+      ;;
+  esac
+
+  case "$OPENCLAW_CODING_AGENT_BACKEND" in
+    claude | codex | opencode | pi) ;;
+    *)
+      fail "OPENCLAW_CODING_AGENT_BACKEND must be one of: claude, codex, opencode, pi"
+      ;;
+  esac
+
+  case "$OPENCLAW_CODING_AGENT_REQUIRE_VERSION_CHECK" in
+    0 | 1) ;;
+    *)
+      fail "OPENCLAW_CODING_AGENT_REQUIRE_VERSION_CHECK must be either '0' or '1'"
       ;;
   esac
 
@@ -134,6 +194,175 @@ setup_signal_channel_prerequisites() {
   fi
 
   install_signal_cli
+}
+
+setup_github_skill_prerequisites() {
+  if [ "$OPENCLAW_ENABLE_GITHUB_SKILL" != "1" ]; then
+    return 0
+  fi
+
+  log "GitHub skill enabled; validating GitHub CLI dependency"
+  if ! command -v "$OPENCLAW_GH_CLI_PATH" > /dev/null 2>&1; then
+    install_github_cli
+  fi
+
+  if [ "$DRY_RUN" = "1" ]; then
+    log "[DRY_RUN] validate configured GitHub CLI path is resolvable: $OPENCLAW_GH_CLI_PATH"
+  elif ! command -v "$OPENCLAW_GH_CLI_PATH" > /dev/null 2>&1; then
+    fail "GitHub CLI installation/check completed, but OPENCLAW_GH_CLI_PATH '$OPENCLAW_GH_CLI_PATH' is still unavailable."
+  fi
+
+  if [ "$OPENCLAW_GH_REQUIRE_AUTH" = "1" ]; then
+    if [ "$DRY_RUN" = "1" ]; then
+      log "[DRY_RUN] validate GitHub CLI auth state: $OPENCLAW_GH_CLI_PATH auth status"
+      return 0
+    fi
+
+    if ! "$OPENCLAW_GH_CLI_PATH" auth status > /dev/null 2>&1; then
+      fail "GitHub CLI is installed but not authenticated. Run '$OPENCLAW_GH_CLI_PATH auth login' and rerun build."
+    fi
+  fi
+}
+
+install_github_cli() {
+  if [ "$DRY_RUN" = "1" ]; then
+    log "[DRY_RUN] install GitHub CLI using apt-get"
+    return 0
+  fi
+
+  if command -v apt-get > /dev/null 2>&1; then
+    if [ "$(id -u)" = "0" ]; then
+      run_cmd apt-get update
+      run_cmd apt-get install -y gh
+    else
+      require_command sudo
+      run_cmd sudo apt-get update
+      run_cmd sudo apt-get install -y gh
+    fi
+    return 0
+  fi
+
+  fail "Unable to auto-install GitHub CLI (gh): apt-get is required."
+}
+
+setup_himalaya_skill_prerequisites() {
+  if [ "$OPENCLAW_ENABLE_HIMALAYA_SKILL" != "1" ]; then
+    return 0
+  fi
+
+  log "Himalaya skill enabled; validating Himalaya CLI dependency"
+  if ! command -v "$OPENCLAW_HIMALAYA_CLI_PATH" > /dev/null 2>&1; then
+    install_himalaya_cli
+  fi
+
+  write_himalaya_config_from_env_if_provided
+
+  if [ "$OPENCLAW_HIMALAYA_REQUIRE_CONFIG" = "1" ]; then
+    if [ "$DRY_RUN" = "1" ]; then
+      log "[DRY_RUN] validate Himalaya config exists: $OPENCLAW_HIMALAYA_CONFIG_PATH"
+      return 0
+    fi
+
+    if [ ! -f "$OPENCLAW_HIMALAYA_CONFIG_PATH" ]; then
+      fail "Himalaya config not found at '$OPENCLAW_HIMALAYA_CONFIG_PATH'. Run '$OPENCLAW_HIMALAYA_CLI_PATH account configure' and rerun build."
+    fi
+  fi
+}
+
+install_himalaya_cli() {
+  if [ "$DRY_RUN" = "1" ]; then
+    log "[DRY_RUN] install Himalaya CLI using apt-get"
+    return 0
+  fi
+
+  if command -v apt-get > /dev/null 2>&1; then
+    if [ "$(id -u)" = "0" ]; then
+      run_cmd apt-get update
+      run_cmd apt-get install -y himalaya
+    else
+      require_command sudo
+      run_cmd sudo apt-get update
+      run_cmd sudo apt-get install -y himalaya
+    fi
+    return 0
+  fi
+
+  fail "Unable to auto-install Himalaya CLI (himalaya): apt-get is required."
+}
+
+write_himalaya_config_from_env_if_provided() {
+  if [ -z "${OPENCLAW_HIMALAYA_CONFIG_TOML_BASE64:-}" ]; then
+    return 0
+  fi
+
+  if [ "$DRY_RUN" = "1" ]; then
+    log "[DRY_RUN] write Himalaya config from OPENCLAW_HIMALAYA_CONFIG_TOML_BASE64 to $OPENCLAW_HIMALAYA_CONFIG_PATH"
+    return 0
+  fi
+
+  require_command base64
+  run_cmd mkdir -p "$(dirname "$OPENCLAW_HIMALAYA_CONFIG_PATH")"
+  printf '%s' "$OPENCLAW_HIMALAYA_CONFIG_TOML_BASE64" | base64 -d > "$OPENCLAW_HIMALAYA_CONFIG_PATH"
+  run_cmd chmod 600 "$OPENCLAW_HIMALAYA_CONFIG_PATH"
+}
+
+setup_coding_agent_skill_prerequisites() {
+  if [ "$OPENCLAW_ENABLE_CODING_AGENT_SKILL" != "1" ]; then
+    return 0
+  fi
+
+  resolve_coding_agent_backend
+  log "Coding-agent skill enabled; validating backend '$OPENCLAW_CODING_AGENT_BACKEND' (binary: $OPENCLAW_CODING_AGENT_BIN)"
+
+  if ! command -v "$OPENCLAW_CODING_AGENT_BIN" > /dev/null 2>&1; then
+    install_coding_agent_backend
+  fi
+
+  if [ "$OPENCLAW_CODING_AGENT_REQUIRE_VERSION_CHECK" = "1" ]; then
+    if [ "$DRY_RUN" = "1" ]; then
+      log "[DRY_RUN] validate coding-agent backend version: $OPENCLAW_CODING_AGENT_BIN --version"
+    else
+      "$OPENCLAW_CODING_AGENT_BIN" --version > /dev/null 2>&1 || fail "Failed to run '$OPENCLAW_CODING_AGENT_BIN --version' after installation/check."
+    fi
+  fi
+}
+
+resolve_coding_agent_backend() {
+  case "$OPENCLAW_CODING_AGENT_BACKEND" in
+    claude)
+      OPENCLAW_CODING_AGENT_BIN=claude
+      OPENCLAW_CODING_AGENT_INSTALL_COMMAND="npm i -g @anthropic-ai/claude-code"
+      ;;
+    codex)
+      OPENCLAW_CODING_AGENT_BIN=codex
+      OPENCLAW_CODING_AGENT_INSTALL_COMMAND="npm i -g @openai/codex"
+      ;;
+    pi)
+      OPENCLAW_CODING_AGENT_BIN=pi
+      OPENCLAW_CODING_AGENT_INSTALL_COMMAND="npm i -g @mariozechner/pi-coding-agent"
+      ;;
+    opencode)
+      OPENCLAW_CODING_AGENT_BIN=opencode
+      OPENCLAW_CODING_AGENT_INSTALL_COMMAND=""
+      ;;
+    *)
+      fail "Unsupported coding-agent backend: $OPENCLAW_CODING_AGENT_BACKEND"
+      ;;
+  esac
+}
+
+install_coding_agent_backend() {
+  if [ -z "$OPENCLAW_CODING_AGENT_INSTALL_COMMAND" ]; then
+    fail "Backend '$OPENCLAW_CODING_AGENT_BACKEND' does not support automatic install in this script. Install '$OPENCLAW_CODING_AGENT_BIN' manually and rerun."
+  fi
+
+  if [ "$DRY_RUN" = "1" ]; then
+    log "[DRY_RUN] install coding-agent backend: $OPENCLAW_CODING_AGENT_INSTALL_COMMAND"
+    return 0
+  fi
+
+  require_command npm
+  sh -c "$OPENCLAW_CODING_AGENT_INSTALL_COMMAND"
 }
 
 install_signal_cli() {

@@ -228,3 +228,103 @@ sh ./restore.sh
 ## Signal docs
 
 - <https://docs.openclaw.ai/channels/signal>
+
+## GitHub skill prerequisites
+
+If you plan to use the OpenClaw GitHub skill, enable prerequisite handling in the build:
+
+```bash
+OPENCLAW_ENABLE_GITHUB_SKILL=1 \
+OVH_ENDPOINT_API_KEY=xxxxx \
+./build.sh
+```
+
+Behavior when enabled:
+
+- Validates `gh` availability (`OPENCLAW_GH_CLI_PATH`, default `gh`).
+- Auto-installs `gh` when missing (automatic; apt-get only).
+- Enforces authentication by running `gh auth status` (`OPENCLAW_GH_REQUIRE_AUTH=1`, default).
+
+If you prefer to install/auth manually, use the following:
+
+1. Install `gh`:
+   - Ubuntu/Debian: `sudo apt update && sudo apt install -y gh`
+2. Authenticate once: `gh auth login`
+3. Verify runtime visibility and auth state:
+   - `which gh`
+   - `gh auth status`
+
+If auth validation fails, run `gh auth login` and rerun `build.sh`.
+
+## Himalaya skill prerequisites
+
+If you plan to use the OpenClaw Himalaya skill, enable prerequisite handling in the build:
+
+```bash
+OPENCLAW_ENABLE_HIMALAYA_SKILL=1 \
+OVH_ENDPOINT_API_KEY=xxxxx \
+./build.sh
+```
+
+Behavior when enabled:
+
+- Validates `himalaya` availability (`OPENCLAW_HIMALAYA_CLI_PATH`, default `himalaya`).
+- Auto-installs `himalaya` when missing (automatic; apt-get only).
+- If `OPENCLAW_HIMALAYA_CONFIG_TOML_BASE64` is set, the script writes that content to `OPENCLAW_HIMALAYA_CONFIG_PATH` with `chmod 600`.
+- Validates config presence by default (`OPENCLAW_HIMALAYA_REQUIRE_CONFIG=1`) at `OPENCLAW_HIMALAYA_CONFIG_PATH` (default `~/.config/himalaya/config.toml`).
+
+If you prefer to install/configure manually, use the following:
+
+1. Install `himalaya`:
+   - Ubuntu/Debian: `sudo apt update && sudo apt install -y himalaya`
+2. Create account config:
+   - `himalaya account configure`
+3. Verify access:
+   - `which himalaya`
+   - `himalaya --version`
+   - `himalaya folder list`
+
+If config validation fails, run `himalaya account configure` (or set `OPENCLAW_HIMALAYA_CONFIG_PATH` to your existing config) and rerun `build.sh`.
+
+### Providing Himalaya credentials non-interactively
+
+You can provide a fully formed `config.toml` via base64:
+
+```bash
+OPENCLAW_ENABLE_HIMALAYA_SKILL=1 \
+OPENCLAW_HIMALAYA_CONFIG_PATH="$HOME/.config/himalaya/config.toml" \
+OPENCLAW_HIMALAYA_CONFIG_TOML_BASE64="$(base64 -w 0 /path/to/config.toml)" \
+OVH_ENDPOINT_API_KEY=xxxxx \
+./build.sh
+```
+
+This lets you inject credentials/config from your secret manager at runtime instead of running `himalaya account configure` interactively.
+
+## Coding-agent skill prerequisites
+
+If you plan to use the coding-agent skill, enable prerequisite handling in the build:
+
+```bash
+OPENCLAW_ENABLE_CODING_AGENT_SKILL=1 \
+OPENCLAW_CODING_AGENT_BACKEND=codex \
+OVH_ENDPOINT_API_KEY=xxxxx \
+./build.sh
+```
+
+Supported backends (`OPENCLAW_CODING_AGENT_BACKEND`):
+
+- `claude` → auto-install with `npm i -g @anthropic-ai/claude-code`
+- `codex` → auto-install with `npm i -g @openai/codex`
+- `pi` → auto-install with `npm i -g @mariozechner/pi-coding-agent`
+- `opencode` → manual install required (script validates binary only)
+
+Behavior when enabled:
+
+- Validates backend binary presence and auto-installs when supported.
+- Optionally enforces `<backend> --version` (`OPENCLAW_CODING_AGENT_REQUIRE_VERSION_CHECK=1`, default).
+- Requires `npm` for auto-installable backends.
+
+Safety guidance:
+
+- Do not run coding-agent commands against `~/.openclaw/...` paths.
+- For Codex workflows, point `workdir` to a real git repo (or initialize one first).

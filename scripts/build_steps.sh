@@ -206,6 +206,12 @@ setup_github_skill_prerequisites() {
     install_github_cli
   fi
 
+  if [ "$DRY_RUN" = "1" ]; then
+    log "[DRY_RUN] validate configured GitHub CLI path is resolvable: $OPENCLAW_GH_CLI_PATH"
+  elif ! command -v "$OPENCLAW_GH_CLI_PATH" > /dev/null 2>&1; then
+    fail "GitHub CLI installation/check completed, but OPENCLAW_GH_CLI_PATH '$OPENCLAW_GH_CLI_PATH' is still unavailable."
+  fi
+
   if [ "$OPENCLAW_GH_REQUIRE_AUTH" = "1" ]; then
     if [ "$DRY_RUN" = "1" ]; then
       log "[DRY_RUN] validate GitHub CLI auth state: $OPENCLAW_GH_CLI_PATH auth status"

@@ -4,6 +4,7 @@ set -eu
 
 SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
 BUILD_SCRIPT="$SCRIPT_DIR/build.sh"
+BACKUP_SCRIPT="$SCRIPT_DIR/backup.sh"
 
 log() {
   printf '%s\n' "$*"
@@ -12,6 +13,45 @@ log() {
 fail() {
   printf 'Error: %s\n' "$*" >&2
   exit 1
+}
+
+to_lower() {
+  printf '%s' "$1" | tr 'A-Z' 'a-z'
+}
+
+ask_yes_no() {
+  prompt=$1
+  default=$2
+  default_label=Y/n
+  if [ "$default" = "n" ]; then
+    default_label=y/N
+  fi
+
+  printf '%s [%s]: ' "$prompt" "$default_label"
+  read answer
+  answer=$(to_lower "${answer:-$default}")
+  case "$answer" in
+    y | yes) return 0 ;;
+    n | no) return 1 ;;
+    *)
+      fail "Unsupported answer: $answer"
+      ;;
+  esac
+}
+
+ask_optional_assign() {
+  var_name=$1
+  prompt=$2
+  default=$3
+  if [ -n "$default" ]; then
+    printf '%s [%s]: ' "$prompt" "$default"
+    read value
+    value=${value:-$default}
+  else
+    printf '%s (leave blank to skip): ' "$prompt"
+    read value
+  fi
+  eval "$var_name=\$value"
 }
 
 ask_access_mode() {
@@ -76,6 +116,12 @@ fi
 
 milestone "Interactive OpenClaw setup started"
 
+PRE_DEPLOY_BACKUP=0
+BACKUP_INCLUDE_TRAEFIK=0
+BACKUP_INCLUDE_OPENCLAW_REPO=0
+BACKUP_EXTRA_PATHS=""
+BACKUP_OUTPUT_PATH="$PWD/openclaw-backup-$(date +%Y%m%d-%H%M%S).tar.gz"
+
 ask_access_mode
 ask_var OVH_ENDPOINT_API_KEY "OVH endpoint API key" ""
 if [ "$OPENCLAW_ACCESS_MODE" = "public" ]; then
@@ -99,6 +145,25 @@ if [ "${OPENCLAW_ENABLE_SIGNAL:-0}" = "1" ]; then
 fi
 ask_var DRY_RUN "Dry-run mode (1=yes, 0=no)" "0"
 
+if [ "$DRY_RUN" != "1" ]; then
+  milestone "Optional pre-deploy backup"
+  if ask_yes_no "Create a pre-deploy backup before running build.sh?" "y"; then
+    PRE_DEPLOY_BACKUP=1
+    if [ "$OPENCLAW_ACCESS_MODE" = "public" ]; then
+      if ask_yes_no "Include Traefik state ($TRAEFIK_DIR)?" "y"; then
+        BACKUP_INCLUDE_TRAEFIK=1
+      fi
+    fi
+    if ask_yes_no "Include full OpenClaw checkout ($OPENCLAW_DIR)?" "n"; then
+      BACKUP_INCLUDE_OPENCLAW_REPO=1
+    fi
+    ask_optional_assign BACKUP_EXTRA_PATHS "Extra backup paths (space-separated, optional)" ""
+    ask_optional_assign BACKUP_OUTPUT_PATH "Backup output archive path" "$BACKUP_OUTPUT_PATH"
+  fi
+else
+  milestone "DRY_RUN=1 - skipping backup prompt"
+fi
+
 milestone "Configuration complete - reviewing values"
 
 cat << EOF2
@@ -111,6 +176,7 @@ OPENCLAW_WORKSPACE_DIR=$OPENCLAW_WORKSPACE_DIR
 OPENCLAW_USER=$OPENCLAW_USER
 OPENCLAW_ENABLE_SIGNAL=$OPENCLAW_ENABLE_SIGNAL
 DRY_RUN=$DRY_RUN
+PRE_DEPLOY_BACKUP=$PRE_DEPLOY_BACKUP
 EOF2
 
 if [ "$OPENCLAW_ACCESS_MODE" = "public" ]; then
@@ -130,9 +196,18 @@ OPENCLAW_SIGNAL_AUTO_INSTALL=$OPENCLAW_SIGNAL_AUTO_INSTALL
 EOF2
 fi
 
+if [ "$PRE_DEPLOY_BACKUP" = "1" ]; then
+  cat << EOF2
+BACKUP_INCLUDE_TRAEFIK=$BACKUP_INCLUDE_TRAEFIK
+BACKUP_INCLUDE_OPENCLAW_REPO=$BACKUP_INCLUDE_OPENCLAW_REPO
+BACKUP_EXTRA_PATHS=$BACKUP_EXTRA_PATHS
+BACKUP_OUTPUT_PATH=$BACKUP_OUTPUT_PATH
+EOF2
+fi
+
 printf 'Proceed with these settings? [y/N]: '
 read answer
-case "$(printf '%s' "$answer" | tr 'A-Z' 'a-z')" in
+case "$(to_lower "$answer")" in
   y | yes) ;;
   *)
     fail 'User aborted.'
@@ -166,17 +241,20 @@ if [ "${OPENCLAW_ENABLE_SIGNAL:-0}" = "1" ]; then
 EOF2
 fi
 
-# optional variables for compatibility with build.sh
-export OPENCLAW_REPO=${OPENCLAW_REPO:-https://github.com/openclaw/openclaw.git}
-export OPENCLAW_IMAGE=${OPENCLAW_IMAGE:-openclaw:local}
-export OPENCLAW_GATEWAY_BIND=${OPENCLAW_GATEWAY_BIND:-lan}
-export OVH_ENDPOINT_BASE_URL=${OVH_ENDPOINT_BASE_URL:-https://oai.endpoints.kepler.ai.cloud.ovh.net/v1}
-export OVH_ENDPOINT_MODEL=${OVH_ENDPOINT_MODEL:-gpt-oss-120b}
-export SKIP_DOCKER_GROUP_SETUP=${SKIP_DOCKER_GROUP_SETUP:-0}
-export SKIP_OPENCLAW_WIZARD=${SKIP_OPENCLAW_WIZARD:-0}
-export SKIP_OPENCLAW_IMAGE_BUILD=${SKIP_OPENCLAW_IMAGE_BUILD:-0}
-
 milestone "Running core setup script on SSH-capable host"
+
+if [ "$PRE_DEPLOY_BACKUP" = "1" ]; then
+  [ -f "$BACKUP_SCRIPT" ] || fail "backup script not found at $BACKUP_SCRIPT"
+  milestone "Running pre-deploy backup"
+  INCLUDE_TRAEFIK=$BACKUP_INCLUDE_TRAEFIK \
+    INCLUDE_OPENCLAW_REPO=$BACKUP_INCLUDE_OPENCLAW_REPO \
+    EXTRA_BACKUP_PATHS=$BACKUP_EXTRA_PATHS \
+    BACKUP_OUTPUT=$BACKUP_OUTPUT_PATH \
+    OPENCLAW_DIR=$OPENCLAW_DIR \
+    OPENCLAW_CONFIG_DIR=$OPENCLAW_CONFIG_DIR \
+    TRAEFIK_DIR=${TRAEFIK_DIR:-$HOME/docker/traefik} \
+    sh "$BACKUP_SCRIPT"
+fi
 
 sh "$BUILD_SCRIPT"
 

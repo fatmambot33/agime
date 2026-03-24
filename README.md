@@ -242,7 +242,7 @@ OVH_ENDPOINT_API_KEY=xxxxx \
 Behavior when enabled:
 
 - Validates `gh` availability (`OPENCLAW_GH_CLI_PATH`, default `gh`).
-- Auto-installs `gh` when missing (`OPENCLAW_GH_AUTO_INSTALL=1`, default) using `apt-get`.
+- Auto-installs `gh` when missing (automatic; apt-get only).
 - Enforces authentication by running `gh auth status` (`OPENCLAW_GH_REQUIRE_AUTH=1`, default).
 
 If you prefer to install/auth manually, use the following:
@@ -269,7 +269,8 @@ OVH_ENDPOINT_API_KEY=xxxxx \
 Behavior when enabled:
 
 - Validates `himalaya` availability (`OPENCLAW_HIMALAYA_CLI_PATH`, default `himalaya`).
-- Auto-installs `himalaya` when missing (`OPENCLAW_HIMALAYA_AUTO_INSTALL=1`, default) using `apt-get`.
+- Auto-installs `himalaya` when missing (automatic; apt-get only).
+- If `OPENCLAW_HIMALAYA_CONFIG_TOML_BASE64` is set, the script writes that content to `OPENCLAW_HIMALAYA_CONFIG_PATH` with `chmod 600`.
 - Validates config presence by default (`OPENCLAW_HIMALAYA_REQUIRE_CONFIG=1`) at `OPENCLAW_HIMALAYA_CONFIG_PATH` (default `~/.config/himalaya/config.toml`).
 
 If you prefer to install/configure manually, use the following:
@@ -284,3 +285,17 @@ If you prefer to install/configure manually, use the following:
    - `himalaya folder list`
 
 If config validation fails, run `himalaya account configure` (or set `OPENCLAW_HIMALAYA_CONFIG_PATH` to your existing config) and rerun `build.sh`.
+
+### Providing Himalaya credentials non-interactively
+
+You can provide a fully formed `config.toml` via base64:
+
+```bash
+OPENCLAW_ENABLE_HIMALAYA_SKILL=1 \
+OPENCLAW_HIMALAYA_CONFIG_PATH="$HOME/.config/himalaya/config.toml" \
+OPENCLAW_HIMALAYA_CONFIG_TOML_BASE64="$(base64 -w 0 /path/to/config.toml)" \
+OVH_ENDPOINT_API_KEY=xxxxx \
+./build.sh
+```
+
+This lets you inject credentials/config from your secret manager at runtime instead of running `himalaya account configure` interactively.

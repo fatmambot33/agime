@@ -255,3 +255,32 @@ If you prefer to install/auth manually, use the following:
    - `gh auth status`
 
 If auth validation fails, run `gh auth login` and rerun `build.sh`.
+
+## Himalaya skill prerequisites
+
+If you plan to use the OpenClaw Himalaya skill, enable prerequisite handling in the build:
+
+```bash
+OPENCLAW_ENABLE_HIMALAYA_SKILL=1 \
+OVH_ENDPOINT_API_KEY=xxxxx \
+./build.sh
+```
+
+Behavior when enabled:
+
+- Validates `himalaya` availability (`OPENCLAW_HIMALAYA_CLI_PATH`, default `himalaya`).
+- Auto-installs `himalaya` when missing (`OPENCLAW_HIMALAYA_AUTO_INSTALL=1`, default) using `apt-get`.
+- Validates config presence by default (`OPENCLAW_HIMALAYA_REQUIRE_CONFIG=1`) at `OPENCLAW_HIMALAYA_CONFIG_PATH` (default `~/.config/himalaya/config.toml`).
+
+If you prefer to install/configure manually, use the following:
+
+1. Install `himalaya`:
+   - Ubuntu/Debian: `sudo apt update && sudo apt install -y himalaya`
+2. Create account config:
+   - `himalaya account configure`
+3. Verify access:
+   - `which himalaya`
+   - `himalaya --version`
+   - `himalaya folder list`
+
+If config validation fails, run `himalaya account configure` (or set `OPENCLAW_HIMALAYA_CONFIG_PATH` to your existing config) and rerun `build.sh`.

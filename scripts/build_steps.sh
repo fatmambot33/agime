@@ -41,6 +41,11 @@ initialize_defaults() {
   OPENCLAW_GH_CLI_PATH=${OPENCLAW_GH_CLI_PATH:-"gh"}
   OPENCLAW_GH_AUTO_INSTALL=${OPENCLAW_GH_AUTO_INSTALL:-"1"}
   OPENCLAW_GH_REQUIRE_AUTH=${OPENCLAW_GH_REQUIRE_AUTH:-"1"}
+  OPENCLAW_ENABLE_HIMALAYA_SKILL=${OPENCLAW_ENABLE_HIMALAYA_SKILL:-"0"}
+  OPENCLAW_HIMALAYA_CLI_PATH=${OPENCLAW_HIMALAYA_CLI_PATH:-"himalaya"}
+  OPENCLAW_HIMALAYA_AUTO_INSTALL=${OPENCLAW_HIMALAYA_AUTO_INSTALL:-"1"}
+  OPENCLAW_HIMALAYA_REQUIRE_CONFIG=${OPENCLAW_HIMALAYA_REQUIRE_CONFIG:-"1"}
+  OPENCLAW_HIMALAYA_CONFIG_PATH=${OPENCLAW_HIMALAYA_CONFIG_PATH:-"$HOME_DIR/.config/himalaya/config.toml"}
 }
 
 validate_access_mode() {
@@ -95,6 +100,27 @@ validate_access_mode() {
     0 | 1) ;;
     *)
       fail "OPENCLAW_GH_REQUIRE_AUTH must be either '0' or '1'"
+      ;;
+  esac
+
+  case "$OPENCLAW_ENABLE_HIMALAYA_SKILL" in
+    0 | 1) ;;
+    *)
+      fail "OPENCLAW_ENABLE_HIMALAYA_SKILL must be either '0' or '1'"
+      ;;
+  esac
+
+  case "$OPENCLAW_HIMALAYA_AUTO_INSTALL" in
+    0 | 1) ;;
+    *)
+      fail "OPENCLAW_HIMALAYA_AUTO_INSTALL must be either '0' or '1'"
+      ;;
+  esac
+
+  case "$OPENCLAW_HIMALAYA_REQUIRE_CONFIG" in
+    0 | 1) ;;
+    *)
+      fail "OPENCLAW_HIMALAYA_REQUIRE_CONFIG must be either '0' or '1'"
       ;;
   esac
 
@@ -205,6 +231,52 @@ install_github_cli() {
   fi
 
   fail "Unable to auto-install GitHub CLI (gh): apt-get is required."
+}
+
+setup_himalaya_skill_prerequisites() {
+  if [ "$OPENCLAW_ENABLE_HIMALAYA_SKILL" != "1" ]; then
+    return 0
+  fi
+
+  log "Himalaya skill enabled; validating Himalaya CLI dependency"
+  if ! command -v "$OPENCLAW_HIMALAYA_CLI_PATH" > /dev/null 2>&1; then
+    if [ "$OPENCLAW_HIMALAYA_AUTO_INSTALL" != "1" ]; then
+      fail "Himalaya CLI not found at '$OPENCLAW_HIMALAYA_CLI_PATH' and OPENCLAW_HIMALAYA_AUTO_INSTALL=0"
+    fi
+    install_himalaya_cli
+  fi
+
+  if [ "$OPENCLAW_HIMALAYA_REQUIRE_CONFIG" = "1" ]; then
+    if [ "$DRY_RUN" = "1" ]; then
+      log "[DRY_RUN] validate Himalaya config exists: $OPENCLAW_HIMALAYA_CONFIG_PATH"
+      return 0
+    fi
+
+    if [ ! -f "$OPENCLAW_HIMALAYA_CONFIG_PATH" ]; then
+      fail "Himalaya config not found at '$OPENCLAW_HIMALAYA_CONFIG_PATH'. Run '$OPENCLAW_HIMALAYA_CLI_PATH account configure' and rerun build."
+    fi
+  fi
+}
+
+install_himalaya_cli() {
+  if [ "$DRY_RUN" = "1" ]; then
+    log "[DRY_RUN] install Himalaya CLI using apt-get"
+    return 0
+  fi
+
+  if command -v apt-get > /dev/null 2>&1; then
+    if [ "$(id -u)" = "0" ]; then
+      run_cmd apt-get update
+      run_cmd apt-get install -y himalaya
+    else
+      require_command sudo
+      run_cmd sudo apt-get update
+      run_cmd sudo apt-get install -y himalaya
+    fi
+    return 0
+  fi
+
+  fail "Unable to auto-install Himalaya CLI (himalaya): apt-get is required."
 }
 
 install_signal_cli() {

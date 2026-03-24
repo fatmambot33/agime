@@ -55,6 +55,11 @@ Optional environment variables:
  OPENCLAW_GH_CLI_PATH Default: gh. Path/command used to invoke GitHub CLI.
  OPENCLAW_GH_AUTO_INSTALL Default: 1. Set to 0 to disable automatic GitHub CLI installation.
  OPENCLAW_GH_REQUIRE_AUTH Default: 1. Set to 0 to skip `gh auth status` validation.
+ OPENCLAW_ENABLE_HIMALAYA_SKILL Default: 0. Set to 1 to validate/install Himalaya CLI for Himalaya skill usage.
+ OPENCLAW_HIMALAYA_CLI_PATH Default: himalaya. Path/command used to invoke Himalaya CLI.
+ OPENCLAW_HIMALAYA_AUTO_INSTALL Default: 1. Set to 0 to disable automatic Himalaya CLI installation.
+ OPENCLAW_HIMALAYA_REQUIRE_CONFIG Default: 1. Set to 0 to skip config file validation.
+ OPENCLAW_HIMALAYA_CONFIG_PATH Default: \$HOME/.config/himalaya/config.toml
  SKIP_DOCKER_GROUP_SETUP Default: 0. Set to 1 to skip docker group changes.
  SKIP_OPENCLAW_WIZARD Default: 0. Set to 1 if .env already exists.
  SKIP_OPENCLAW_IMAGE_BUILD Default: 0. Set to 1 to skip rebuilding local OpenClaw image.
@@ -72,6 +77,9 @@ Notes:
  - If OPENCLAW_ENABLE_GITHUB_SKILL=1, this script can auto-install GitHub CLI (`gh`) when missing
    (apt-get only) and, by default, enforces successful `gh auth status`.
  - If auth is missing, run: `gh auth login` and rerun the script.
+ - If OPENCLAW_ENABLE_HIMALAYA_SKILL=1, this script can auto-install Himalaya CLI (`himalaya`) when missing
+   (apt-get only) and, by default, requires config at \$HOME/.config/himalaya/config.toml.
+ - If config is missing, run: `himalaya account configure` and rerun the script.
  - If the OpenClaw setup wizard runs, it remains interactive.
 EOF2
 }
@@ -88,6 +96,7 @@ require_public_env_if_needed
 check_docker_access
 setup_signal_channel_prerequisites
 setup_github_skill_prerequisites
+setup_himalaya_skill_prerequisites
 setup_access_mode_prerequisites
 prepare_openclaw_repo
 run_openclaw_wizard_if_needed

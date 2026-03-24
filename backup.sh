@@ -6,6 +6,8 @@ OPENCLAW_DIR=${OPENCLAW_DIR:-"$HOME/openclaw"}
 OPENCLAW_CONFIG_DIR=${OPENCLAW_CONFIG_DIR:-"$HOME/.openclaw"}
 TRAEFIK_DIR=${TRAEFIK_DIR:-"$HOME/docker/traefik"}
 INCLUDE_TRAEFIK=${INCLUDE_TRAEFIK:-0}
+INCLUDE_OPENCLAW_REPO=${INCLUDE_OPENCLAW_REPO:-0}
+EXTRA_BACKUP_PATHS=${EXTRA_BACKUP_PATHS:-}
 BACKUP_OUTPUT=${BACKUP_OUTPUT:-"$PWD/openclaw-backup-$(date +%Y%m%d-%H%M%S).tar.gz"}
 
 TMP_DIR=$(mktemp -d)
@@ -31,9 +33,20 @@ copy_path() {
 
 copy_path "$OPENCLAW_CONFIG_DIR"
 copy_path "$OPENCLAW_DIR/.env"
+copy_path "$OPENCLAW_DIR/docker-compose.yml"
 
 if [ "$INCLUDE_TRAEFIK" = "1" ]; then
   copy_path "$TRAEFIK_DIR"
+fi
+
+if [ "$INCLUDE_OPENCLAW_REPO" = "1" ]; then
+  copy_path "$OPENCLAW_DIR"
+fi
+
+if [ -n "$EXTRA_BACKUP_PATHS" ]; then
+  for extra_path in $EXTRA_BACKUP_PATHS; do
+    copy_path "$extra_path"
+  done
 fi
 
 if [ "$COPIED_COUNT" -eq 0 ]; then

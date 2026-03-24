@@ -180,7 +180,10 @@ sh -n build.sh build-interactive.sh sync.sh backup.sh restore.sh scripts/build_l
 Backup defaults:
 - Includes `$OPENCLAW_CONFIG_DIR` (default `$HOME/.openclaw`).
 - Includes `$OPENCLAW_DIR/.env` (default `$HOME/openclaw/.env`).
+- Includes `$OPENCLAW_DIR/docker-compose.yml` when present.
 - Excludes Traefik data by default unless `INCLUDE_TRAEFIK=1`.
+- Excludes full OpenClaw git checkout by default unless `INCLUDE_OPENCLAW_REPO=1`.
+- Supports additional paths via `EXTRA_BACKUP_PATHS` (space-separated).
 
 Create a backup:
 
@@ -193,6 +196,14 @@ Tune backup location and include Traefik:
 ```bash
 INCLUDE_TRAEFIK=1 \
 BACKUP_OUTPUT="$HOME/openclaw-backup.tgz" \
+sh ./backup.sh
+```
+
+Include the full local OpenClaw checkout plus extra files:
+
+```bash
+INCLUDE_OPENCLAW_REPO=1 \
+EXTRA_BACKUP_PATHS="$HOME/notes/IDENTITY.md $HOME/.config/openclaw/custom.env" \
 sh ./backup.sh
 ```
 

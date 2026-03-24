@@ -65,6 +65,11 @@ sh ./backup.sh
 
 # include Traefik state for public mode
 INCLUDE_TRAEFIK=1 sh ./backup.sh
+
+# include full OpenClaw checkout and extra custom files
+INCLUDE_OPENCLAW_REPO=1 \
+EXTRA_BACKUP_PATHS="$HOME/notes/IDENTITY.md" \
+sh ./backup.sh
 ```
 
 Restore safely to a sandbox path first:

@@ -21,6 +21,18 @@
      - `POST_BUILD_TEST_ATTEMPTS=60`
      - `POST_BUILD_TEST_DELAY_SECONDS=5`
 
+### 3) Signal channel is enabled but not receiving messages
+- Symptom: deploy succeeds, but Signal DMs do not produce replies.
+- Fix:
+  1. Confirm `signal-cli` exists on host and is executable:
+     `signal-cli --version`.
+  2. Confirm `openclaw.json` has a valid E.164 Signal account under `channels.signal.account`.
+  3. Complete Signal link/register flow, then restart gateway:
+     `systemctl --user restart openclaw-gateway` (or restart your container/service).
+  4. Check pairing queue and approve pending codes:
+     `openclaw pairing list signal`
+     `openclaw pairing approve signal <CODE>`
+
 ## Connectivity validation behavior
 
 - `ssh-tunnel`: validates `http://127.0.0.1:18789/healthz`.

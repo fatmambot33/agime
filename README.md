@@ -131,6 +131,26 @@ Enabled by default (`POST_BUILD_TEST=1`). Tunables:
 
 Public-mode retry logic treats temporary default/self-signed cert states as transient while ACME issuance finishes.
 
+## Signal channel setup (optional)
+
+This toolkit can bootstrap Signal prerequisites and preconfigure `channels.signal` in `openclaw.json`.
+
+```bash
+OPENCLAW_ENABLE_SIGNAL=1 \
+OPENCLAW_SIGNAL_ACCOUNT=+15551234567 \
+OPENCLAW_SIGNAL_ALLOW_FROM=+15557654321 \
+OVH_ENDPOINT_API_KEY=xxxxx \
+./build.sh
+```
+
+Behavior:
+
+- When `OPENCLAW_ENABLE_SIGNAL=1`, the script validates `signal-cli` and can auto-install it from upstream GitHub releases (`OPENCLAW_SIGNAL_AUTO_INSTALL=1`, default).
+- Rendered config includes `channels.signal.enabled=true`, the configured account, `cliPath`, and optional single-entry DM allowlist.
+- After deployment, complete Signal registration/linking and approve pairing codes from the host:
+  - `openclaw pairing list signal`
+  - `openclaw pairing approve signal <CODE>`
+
 ## Security checklist (validated defaults)
 
 - [x] Default access path is private (`OPENCLAW_ACCESS_MODE=ssh-tunnel`).
@@ -152,3 +172,7 @@ Or run the minimum syntax check directly:
 ```bash
 sh -n build.sh build-interactive.sh sync.sh scripts/build_lib.sh scripts/build_steps.sh tests/smoke_dry_run.sh tests/idempotency_dry_run.sh tests/security_template_checks.sh tests/sync_hermetic.sh tests/security_audit_scripts_hermetic.sh
 ```
+
+## Signal docs
+
+- <https://docs.openclaw.ai/channels/signal>

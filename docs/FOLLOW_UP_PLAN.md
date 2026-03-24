@@ -13,6 +13,7 @@ Transform the repo into a maintainable, testable, and secure deployment toolkit 
 - Added change-aware `openclaw:local` rebuild logic with revision stamp tracking.
 - Hardened post-build validation for both modes (local health in ssh-tunnel, HTTPS/TLS retry logic in public).
 - Updated interactive setup and docs to be mode-aware and private-by-default.
+- Added optional Signal channel bootstrap (`OPENCLAW_ENABLE_SIGNAL`) with `signal-cli` dependency checks/auto-install and template-backed `channels.signal` rendering.
 
 ## Prioritized backlog (next 5 items)
 

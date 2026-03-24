@@ -54,6 +54,11 @@ ask_var() {
     TRAEFIK_DIR) TRAEFIK_DIR=$value ;;
     OPENCLAW_USER) OPENCLAW_USER=$value ;;
     DRY_RUN) DRY_RUN=$value ;;
+    OPENCLAW_ENABLE_SIGNAL) OPENCLAW_ENABLE_SIGNAL=$value ;;
+    OPENCLAW_SIGNAL_ACCOUNT) OPENCLAW_SIGNAL_ACCOUNT=$value ;;
+    OPENCLAW_SIGNAL_ALLOW_FROM) OPENCLAW_SIGNAL_ALLOW_FROM=$value ;;
+    OPENCLAW_SIGNAL_CLI_PATH) OPENCLAW_SIGNAL_CLI_PATH=$value ;;
+    OPENCLAW_SIGNAL_AUTO_INSTALL) OPENCLAW_SIGNAL_AUTO_INSTALL=$value ;;
     *)
       fail "Unsupported variable requested: $var_name"
       ;;
@@ -85,6 +90,13 @@ if [ "$OPENCLAW_ACCESS_MODE" = "public" ]; then
   ask_var TRAEFIK_DIR "Optional Traefik directory" "$HOME/docker/traefik"
 fi
 ask_var OPENCLAW_USER "System user that should own OpenClaw files (usually your SSH user)" "$(id -un)"
+ask_var OPENCLAW_ENABLE_SIGNAL "Enable Signal channel setup (1=yes, 0=no)" "0"
+if [ "${OPENCLAW_ENABLE_SIGNAL:-0}" = "1" ]; then
+  ask_var OPENCLAW_SIGNAL_ACCOUNT "Signal bot account number (E.164, e.g. +15551234567)" ""
+  ask_var OPENCLAW_SIGNAL_ALLOW_FROM "Signal DM allowlist sender (optional E.164 or uuid:<id>)" ""
+  ask_var OPENCLAW_SIGNAL_CLI_PATH "Signal CLI command/path" "signal-cli"
+  ask_var OPENCLAW_SIGNAL_AUTO_INSTALL "Auto-install signal-cli if missing (1=yes, 0=no)" "1"
+fi
 ask_var DRY_RUN "Dry-run mode (1=yes, 0=no)" "0"
 
 milestone "Configuration complete - reviewing values"
@@ -97,6 +109,7 @@ OPENCLAW_DIR=$OPENCLAW_DIR
 OPENCLAW_CONFIG_DIR=$OPENCLAW_CONFIG_DIR
 OPENCLAW_WORKSPACE_DIR=$OPENCLAW_WORKSPACE_DIR
 OPENCLAW_USER=$OPENCLAW_USER
+OPENCLAW_ENABLE_SIGNAL=$OPENCLAW_ENABLE_SIGNAL
 DRY_RUN=$DRY_RUN
 EOF2
 
@@ -105,6 +118,15 @@ if [ "$OPENCLAW_ACCESS_MODE" = "public" ]; then
 TRAEFIK_ACME_EMAIL=$TRAEFIK_ACME_EMAIL
 OPENCLAW_DOMAIN=$OPENCLAW_DOMAIN
 TRAEFIK_DIR=$TRAEFIK_DIR
+EOF2
+fi
+
+if [ "${OPENCLAW_ENABLE_SIGNAL:-0}" = "1" ]; then
+  cat << EOF2
+OPENCLAW_SIGNAL_ACCOUNT=$OPENCLAW_SIGNAL_ACCOUNT
+OPENCLAW_SIGNAL_ALLOW_FROM=$OPENCLAW_SIGNAL_ALLOW_FROM
+OPENCLAW_SIGNAL_CLI_PATH=$OPENCLAW_SIGNAL_CLI_PATH
+OPENCLAW_SIGNAL_AUTO_INSTALL=$OPENCLAW_SIGNAL_AUTO_INSTALL
 EOF2
 fi
 
@@ -122,13 +144,26 @@ milestone "Exporting environment variables"
 export OPENCLAW_ACCESS_MODE OVH_ENDPOINT_API_KEY
 export OPENCLAW_TOKEN
 export OPENCLAW_DIR OPENCLAW_CONFIG_DIR OPENCLAW_WORKSPACE_DIR OPENCLAW_USER
+export OPENCLAW_ENABLE_SIGNAL
 export DRY_RUN
+
+if [ "${OPENCLAW_ENABLE_SIGNAL:-0}" = "1" ]; then
+  export OPENCLAW_SIGNAL_ACCOUNT OPENCLAW_SIGNAL_ALLOW_FROM OPENCLAW_SIGNAL_CLI_PATH OPENCLAW_SIGNAL_AUTO_INSTALL
+fi
 
 if [ "$OPENCLAW_ACCESS_MODE" = "public" ]; then
   export TRAEFIK_ACME_EMAIL OPENCLAW_DOMAIN TRAEFIK_DIR
   export OPENCLAW_ALLOWED_ORIGIN=${OPENCLAW_ALLOWED_ORIGIN:-https://$OPENCLAW_DOMAIN}
 else
   export OPENCLAW_ALLOWED_ORIGIN=${OPENCLAW_ALLOWED_ORIGIN:-http://127.0.0.1:18789}
+fi
+
+if [ "${OPENCLAW_ENABLE_SIGNAL:-0}" = "1" ]; then
+  cat << 'EOF2'
+- Signal setup enabled. Next steps after deploy:
+  - Verify signal-cli registration/linking on host.
+  - Run: openclaw pairing list signal
+EOF2
 fi
 
 # optional variables for compatibility with build.sh

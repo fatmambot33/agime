@@ -46,6 +46,11 @@ Optional environment variables:
    - ssh-tunnel: \$SCRIPT_DIR/templates/openclaw-compose.ssh-tunnel.yml.tmpl
    - public: \$SCRIPT_DIR/templates/openclaw-compose.public.yml.tmpl
  OPENCLAW_JSON_TEMPLATE Optional template path. Default: \$SCRIPT_DIR/templates/openclaw.json.tmpl
+ OPENCLAW_ENABLE_SIGNAL Default: 0. Set to 1 to enable Signal channel setup.
+ OPENCLAW_SIGNAL_ACCOUNT Required when OPENCLAW_ENABLE_SIGNAL=1. Signal account number in E.164 format.
+ OPENCLAW_SIGNAL_ALLOW_FROM Optional DM allowlist sender (single E.164 or uuid:<id> entry).
+ OPENCLAW_SIGNAL_CLI_PATH Default: signal-cli. Path/command used by OpenClaw for Signal.
+ OPENCLAW_SIGNAL_AUTO_INSTALL Default: 1. Set to 0 to disable automatic signal-cli installation.
  SKIP_DOCKER_GROUP_SETUP Default: 0. Set to 1 to skip docker group changes.
  SKIP_OPENCLAW_WIZARD Default: 0. Set to 1 if .env already exists.
  SKIP_OPENCLAW_IMAGE_BUILD Default: 0. Set to 1 to skip rebuilding local OpenClaw image.
@@ -74,6 +79,7 @@ validate_access_mode
 require_env OVH_ENDPOINT_API_KEY
 require_public_env_if_needed
 check_docker_access
+setup_signal_channel_prerequisites
 setup_access_mode_prerequisites
 prepare_openclaw_repo
 run_openclaw_wizard_if_needed

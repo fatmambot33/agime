@@ -10,6 +10,13 @@ All notable changes to this repository are documented in this file.
   - `templates/openclaw-compose.ssh-tunnel.yml.tmpl`
   - `templates/openclaw-compose.public.yml.tmpl`
 - Added change-aware local image rebuild logic with revision stamp tracking at `$OPENCLAW_CONFIG_DIR/openclaw-image-revision.txt`.
+- Added optional Signal bootstrap controls:
+  - `OPENCLAW_ENABLE_SIGNAL`
+  - `OPENCLAW_SIGNAL_ACCOUNT`
+  - `OPENCLAW_SIGNAL_ALLOW_FROM`
+  - `OPENCLAW_SIGNAL_CLI_PATH`
+  - `OPENCLAW_SIGNAL_AUTO_INSTALL`
+- Added automatic `signal-cli` dependency check/installation flow (opt-out via `OPENCLAW_SIGNAL_AUTO_INSTALL=0`) when Signal is enabled.
 
 ### Changed
 - Changed default deployment posture to private mode (`ssh-tunnel`) with loopback-only binding on `127.0.0.1:18789`.
@@ -20,3 +27,5 @@ All notable changes to this repository are documented in this file.
 - Accepted successful TLS/connectivity even when app root returns HTTP `404`.
 - Updated interactive setup prompts and completion output to reflect selected mode.
 - Updated README, operations runbook, and follow-up plan to reflect private-first guidance.
+- Updated OpenClaw JSON template defaults to include a `channels.signal` section with explicit `enabled`, `account`, `cliPath`, and DM pairing-oriented defaults.
+- Updated Signal auto-install validation to verify the configured `OPENCLAW_SIGNAL_CLI_PATH` (including custom command/path values) after installation.

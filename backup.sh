@@ -26,19 +26,24 @@ COPIED_COUNT=0
 
 copy_path() {
   src_path=$1
-  dest_path=$STAGE_DIR$src_path
   if [ ! -e "$src_path" ]; then
     echo "[skip] missing: $src_path"
     return 0
   fi
 
-  if [ -d "$src_path" ]; then
+  case "$src_path" in
+    /*) src_abs=$src_path ;;
+    *) src_abs=$PWD/$src_path ;;
+  esac
+  dest_path=$STAGE_DIR$src_abs
+
+  if [ -d "$src_abs" ]; then
     mkdir -p "$dest_path"
-    cp -a "$src_path"/. "$dest_path"/
+    cp -a "$src_abs"/. "$dest_path"/
   else
-    parent_dir=$(dirname "$src_path")
+    parent_dir=$(dirname "$src_abs")
     mkdir -p "$STAGE_DIR$parent_dir"
-    cp -a "$src_path" "$dest_path"
+    cp -a "$src_abs" "$dest_path"
   fi
   COPIED_COUNT=$((COPIED_COUNT + 1))
   echo "[add] $src_path"

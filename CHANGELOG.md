@@ -37,3 +37,4 @@ All notable changes to this repository are documented in this file.
 - Integrated pre-deploy backup flow into `build-interactive.sh` with explicit operator prompts and backup option passthrough.
 - Fixed backup staging path merge behavior so `INCLUDE_OPENCLAW_REPO=1` no longer nests restore paths as `<OPENCLAW_DIR>/openclaw/...`.
 - Removed legacy compatibility exports from `build-interactive.sh` so `build.sh` owns all default resolution directly.
+- Fixed backup staging for relative source paths so archives include relative `OPENCLAW_DIR`, `OPENCLAW_CONFIG_DIR`, and `EXTRA_BACKUP_PATHS` entries correctly.

@@ -2,6 +2,15 @@
 # shellcheck shell=sh
 # shellcheck disable=SC2154
 
+# shellcheck source=scripts/optional_tools/common.sh
+. "$SCRIPT_DIR/scripts/optional_tools/common.sh"
+# shellcheck source=scripts/optional_tools/github.sh
+. "$SCRIPT_DIR/scripts/optional_tools/github.sh"
+# shellcheck source=scripts/optional_tools/himalaya.sh
+. "$SCRIPT_DIR/scripts/optional_tools/himalaya.sh"
+# shellcheck source=scripts/optional_tools/coding_agent.sh
+. "$SCRIPT_DIR/scripts/optional_tools/coding_agent.sh"
+
 initialize_defaults() {
   CURRENT_USER=$(id -un)
   HOME_DIR=${HOME:-"$(getent passwd "$CURRENT_USER" | cut -d : -f 6 2> /dev/null || printf '/home/%s' "$CURRENT_USER")"}
@@ -43,7 +52,7 @@ initialize_defaults() {
   OPENCLAW_ENABLE_HIMALAYA_SKILL=${OPENCLAW_ENABLE_HIMALAYA_SKILL:-"0"}
   OPENCLAW_HIMALAYA_CLI_PATH=${OPENCLAW_HIMALAYA_CLI_PATH:-"himalaya"}
   OPENCLAW_HIMALAYA_REQUIRE_CONFIG=${OPENCLAW_HIMALAYA_REQUIRE_CONFIG:-"1"}
-  OPENCLAW_HIMALAYA_CONFIG_PATH=${OPENCLAW_HIMALAYA_CONFIG_PATH:-"$HOME_DIR/.config/himalaya/config.toml"}
+  OPENCLAW_HIMALAYA_CONFIG_PATH=${OPENCLAW_HIMALAYA_CONFIG_PATH:-"$OPENCLAW_CONFIG_DIR/himalaya/config.toml"}
   OPENCLAW_HIMALAYA_CONFIG_TOML_BASE64=${OPENCLAW_HIMALAYA_CONFIG_TOML_BASE64:-""}
   OPENCLAW_ENABLE_CODING_AGENT_SKILL=${OPENCLAW_ENABLE_CODING_AGENT_SKILL:-"0"}
   OPENCLAW_CODING_AGENT_BACKEND=${OPENCLAW_CODING_AGENT_BACKEND:-"codex"}
@@ -197,172 +206,15 @@ setup_signal_channel_prerequisites() {
 }
 
 setup_github_skill_prerequisites() {
-  if [ "$OPENCLAW_ENABLE_GITHUB_SKILL" != "1" ]; then
-    return 0
-  fi
-
-  log "GitHub skill enabled; validating GitHub CLI dependency"
-  if ! command -v "$OPENCLAW_GH_CLI_PATH" > /dev/null 2>&1; then
-    install_github_cli
-  fi
-
-  if [ "$DRY_RUN" = "1" ]; then
-    log "[DRY_RUN] validate configured GitHub CLI path is resolvable: $OPENCLAW_GH_CLI_PATH"
-  elif ! command -v "$OPENCLAW_GH_CLI_PATH" > /dev/null 2>&1; then
-    fail "GitHub CLI installation/check completed, but OPENCLAW_GH_CLI_PATH '$OPENCLAW_GH_CLI_PATH' is still unavailable."
-  fi
-
-  if [ "$OPENCLAW_GH_REQUIRE_AUTH" = "1" ]; then
-    if [ "$DRY_RUN" = "1" ]; then
-      log "[DRY_RUN] validate GitHub CLI auth state: $OPENCLAW_GH_CLI_PATH auth status"
-      return 0
-    fi
-
-    if ! "$OPENCLAW_GH_CLI_PATH" auth status > /dev/null 2>&1; then
-      fail "GitHub CLI is installed but not authenticated. Run '$OPENCLAW_GH_CLI_PATH auth login' and rerun build."
-    fi
-  fi
-}
-
-install_github_cli() {
-  if [ "$DRY_RUN" = "1" ]; then
-    log "[DRY_RUN] install GitHub CLI using apt-get"
-    return 0
-  fi
-
-  if command -v apt-get > /dev/null 2>&1; then
-    if [ "$(id -u)" = "0" ]; then
-      run_cmd apt-get update
-      run_cmd apt-get install -y gh
-    else
-      require_command sudo
-      run_cmd sudo apt-get update
-      run_cmd sudo apt-get install -y gh
-    fi
-    return 0
-  fi
-
-  fail "Unable to auto-install GitHub CLI (gh): apt-get is required."
+  optional_tool_github_prepare
 }
 
 setup_himalaya_skill_prerequisites() {
-  if [ "$OPENCLAW_ENABLE_HIMALAYA_SKILL" != "1" ]; then
-    return 0
-  fi
-
-  log "Himalaya skill enabled; validating Himalaya CLI dependency"
-  if ! command -v "$OPENCLAW_HIMALAYA_CLI_PATH" > /dev/null 2>&1; then
-    install_himalaya_cli
-  fi
-
-  write_himalaya_config_from_env_if_provided
-
-  if [ "$OPENCLAW_HIMALAYA_REQUIRE_CONFIG" = "1" ]; then
-    if [ "$DRY_RUN" = "1" ]; then
-      log "[DRY_RUN] validate Himalaya config exists: $OPENCLAW_HIMALAYA_CONFIG_PATH"
-      return 0
-    fi
-
-    if [ ! -f "$OPENCLAW_HIMALAYA_CONFIG_PATH" ]; then
-      fail "Himalaya config not found at '$OPENCLAW_HIMALAYA_CONFIG_PATH'. Run '$OPENCLAW_HIMALAYA_CLI_PATH account configure' and rerun build."
-    fi
-  fi
-}
-
-install_himalaya_cli() {
-  if [ "$DRY_RUN" = "1" ]; then
-    log "[DRY_RUN] install Himalaya CLI using apt-get"
-    return 0
-  fi
-
-  if command -v apt-get > /dev/null 2>&1; then
-    if [ "$(id -u)" = "0" ]; then
-      run_cmd apt-get update
-      run_cmd apt-get install -y himalaya
-    else
-      require_command sudo
-      run_cmd sudo apt-get update
-      run_cmd sudo apt-get install -y himalaya
-    fi
-    return 0
-  fi
-
-  fail "Unable to auto-install Himalaya CLI (himalaya): apt-get is required."
-}
-
-write_himalaya_config_from_env_if_provided() {
-  if [ -z "${OPENCLAW_HIMALAYA_CONFIG_TOML_BASE64:-}" ]; then
-    return 0
-  fi
-
-  if [ "$DRY_RUN" = "1" ]; then
-    log "[DRY_RUN] write Himalaya config from OPENCLAW_HIMALAYA_CONFIG_TOML_BASE64 to $OPENCLAW_HIMALAYA_CONFIG_PATH"
-    return 0
-  fi
-
-  require_command base64
-  run_cmd mkdir -p "$(dirname "$OPENCLAW_HIMALAYA_CONFIG_PATH")"
-  printf '%s' "$OPENCLAW_HIMALAYA_CONFIG_TOML_BASE64" | base64 -d > "$OPENCLAW_HIMALAYA_CONFIG_PATH"
-  run_cmd chmod 600 "$OPENCLAW_HIMALAYA_CONFIG_PATH"
+  optional_tool_himalaya_prepare
 }
 
 setup_coding_agent_skill_prerequisites() {
-  if [ "$OPENCLAW_ENABLE_CODING_AGENT_SKILL" != "1" ]; then
-    return 0
-  fi
-
-  resolve_coding_agent_backend
-  log "Coding-agent skill enabled; validating backend '$OPENCLAW_CODING_AGENT_BACKEND' (binary: $OPENCLAW_CODING_AGENT_BIN)"
-
-  if ! command -v "$OPENCLAW_CODING_AGENT_BIN" > /dev/null 2>&1; then
-    install_coding_agent_backend
-  fi
-
-  if [ "$OPENCLAW_CODING_AGENT_REQUIRE_VERSION_CHECK" = "1" ]; then
-    if [ "$DRY_RUN" = "1" ]; then
-      log "[DRY_RUN] validate coding-agent backend version: $OPENCLAW_CODING_AGENT_BIN --version"
-    else
-      "$OPENCLAW_CODING_AGENT_BIN" --version > /dev/null 2>&1 || fail "Failed to run '$OPENCLAW_CODING_AGENT_BIN --version' after installation/check."
-    fi
-  fi
-}
-
-resolve_coding_agent_backend() {
-  case "$OPENCLAW_CODING_AGENT_BACKEND" in
-    claude)
-      OPENCLAW_CODING_AGENT_BIN=claude
-      OPENCLAW_CODING_AGENT_INSTALL_COMMAND="npm i -g @anthropic-ai/claude-code"
-      ;;
-    codex)
-      OPENCLAW_CODING_AGENT_BIN=codex
-      OPENCLAW_CODING_AGENT_INSTALL_COMMAND="npm i -g @openai/codex"
-      ;;
-    pi)
-      OPENCLAW_CODING_AGENT_BIN=pi
-      OPENCLAW_CODING_AGENT_INSTALL_COMMAND="npm i -g @mariozechner/pi-coding-agent"
-      ;;
-    opencode)
-      OPENCLAW_CODING_AGENT_BIN=opencode
-      OPENCLAW_CODING_AGENT_INSTALL_COMMAND=""
-      ;;
-    *)
-      fail "Unsupported coding-agent backend: $OPENCLAW_CODING_AGENT_BACKEND"
-      ;;
-  esac
-}
-
-install_coding_agent_backend() {
-  if [ -z "$OPENCLAW_CODING_AGENT_INSTALL_COMMAND" ]; then
-    fail "Backend '$OPENCLAW_CODING_AGENT_BACKEND' does not support automatic install in this script. Install '$OPENCLAW_CODING_AGENT_BIN' manually and rerun."
-  fi
-
-  if [ "$DRY_RUN" = "1" ]; then
-    log "[DRY_RUN] install coding-agent backend: $OPENCLAW_CODING_AGENT_INSTALL_COMMAND"
-    return 0
-  fi
-
-  require_command npm
-  sh -c "$OPENCLAW_CODING_AGENT_INSTALL_COMMAND"
+  optional_tool_coding_agent_prepare
 }
 
 install_signal_cli() {
@@ -377,8 +229,6 @@ install_signal_cli() {
 
   require_command curl
   require_command tar
-  require_command sudo
-
   tmp_dir=$(mktemp -d)
   trap 'rm -rf "$tmp_dir"' EXIT INT HUP TERM
 
@@ -389,18 +239,18 @@ install_signal_cli() {
 
   log "Installing signal-cli ${version}"
   run_cmd curl -fsSL "$download_url" -o "$tmp_dir/$archive"
-  run_cmd sudo tar xf "$tmp_dir/$archive" -C /opt
+  run_with_optional_sudo tar xf "$tmp_dir/$archive" -C /opt
   installed_signal_cli="/opt/signal-cli-${version}/bin/signal-cli"
-  run_cmd sudo ln -sfn "$installed_signal_cli" /usr/local/bin/signal-cli
+  run_with_optional_sudo ln -sfn "$installed_signal_cli" /usr/local/bin/signal-cli
 
   if [ "$OPENCLAW_SIGNAL_CLI_PATH" != "signal-cli" ]; then
     case "$OPENCLAW_SIGNAL_CLI_PATH" in
       */*)
-        run_cmd sudo mkdir -p "$(dirname "$OPENCLAW_SIGNAL_CLI_PATH")"
-        run_cmd sudo ln -sfn "$installed_signal_cli" "$OPENCLAW_SIGNAL_CLI_PATH"
+        run_with_optional_sudo mkdir -p "$(dirname "$OPENCLAW_SIGNAL_CLI_PATH")"
+        run_with_optional_sudo ln -sfn "$installed_signal_cli" "$OPENCLAW_SIGNAL_CLI_PATH"
         ;;
       *)
-        run_cmd sudo ln -sfn "$installed_signal_cli" "/usr/local/bin/$OPENCLAW_SIGNAL_CLI_PATH"
+        run_with_optional_sudo ln -sfn "$installed_signal_cli" "/usr/local/bin/$OPENCLAW_SIGNAL_CLI_PATH"
         ;;
     esac
   fi
@@ -465,12 +315,13 @@ prepare_openclaw_repo() {
     run_cmd git clone "$OPENCLAW_REPO" "$OPENCLAW_DIR"
   fi
 
+  run_cmd mkdir -p "$OPENCLAW_CONFIG_DIR"
   run_cmd mkdir -p "$OPENCLAW_WORKSPACE_DIR"
   if [ "$DRY_RUN" != "1" ]; then
     ensure_safe_chown_path "$OPENCLAW_DIR"
     ensure_safe_chown_path "$OPENCLAW_CONFIG_DIR"
   fi
-  run_cmd sudo chown -R "$OPENCLAW_USER:$OPENCLAW_USER" "$OPENCLAW_DIR" "$OPENCLAW_CONFIG_DIR"
+  run_with_optional_sudo chown -R "$OPENCLAW_USER:$OPENCLAW_USER" "$OPENCLAW_DIR" "$OPENCLAW_CONFIG_DIR"
 }
 
 run_openclaw_wizard_if_needed() {
@@ -512,6 +363,7 @@ ensure_openclaw_env_overrides() {
   if [ "$DRY_RUN" = "1" ]; then
     log "[DRY_RUN] append OPENCLAW_CONFIG_DIR to $OPENCLAW_DIR/.env when missing"
     log "[DRY_RUN] append OPENCLAW_WORKSPACE_DIR to $OPENCLAW_DIR/.env when missing"
+    log "[DRY_RUN] append OPENCLAW_HIMALAYA_CONFIG_PATH to $OPENCLAW_DIR/.env when missing"
     return 0
   fi
 
@@ -521,6 +373,21 @@ ensure_openclaw_env_overrides() {
   if ! grep -q '^OPENCLAW_WORKSPACE_DIR=' "$OPENCLAW_DIR/.env"; then
     printf 'OPENCLAW_WORKSPACE_DIR=%s\n' "$OPENCLAW_WORKSPACE_DIR" >> "$OPENCLAW_DIR/.env"
   fi
+  if ! grep -q '^OPENCLAW_HIMALAYA_CONFIG_PATH=' "$OPENCLAW_DIR/.env"; then
+    printf 'OPENCLAW_HIMALAYA_CONFIG_PATH=%s\n' "$OPENCLAW_HIMALAYA_CONFIG_PATH" >> "$OPENCLAW_DIR/.env"
+  fi
+}
+
+install_optional_skill_container_runtime_dependencies() {
+  optional_tool_github_install_runtime
+  optional_tool_himalaya_install_runtime
+  optional_tool_coding_agent_install_runtime
+}
+
+validate_optional_skill_container_runtime() {
+  optional_tool_github_validate_runtime
+  optional_tool_himalaya_validate_runtime
+  optional_tool_coding_agent_validate_runtime
 }
 
 write_openclaw_json_config() {

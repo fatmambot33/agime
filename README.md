@@ -13,6 +13,7 @@ Automation scripts for deploying OpenClaw on a VPS with two explicit access mode
 - `backup.sh`: creates a tarball backup of OpenClaw runtime data (`$OPENCLAW_CONFIG_DIR`, `$OPENCLAW_DIR/.env`, optional Traefik state).
 - `restore.sh`: restores a backup tarball into a chosen root path (requires explicit force flag for `/`).
 - `scripts/build_lib.sh` + `scripts/build_steps.sh`: shared helpers and modular deployment steps used by `build.sh`.
+- `scripts/optional_tools/*.sh`: per-tool optional runtime handlers (GitHub, Himalaya, coding-agent) plus shared container install/validation helpers.
 - `templates/openclaw-compose.ssh-tunnel.yml.tmpl`: private/local compose template.
 - `templates/openclaw-compose.public.yml.tmpl`: Traefik-integrated compose template.
 - `templates/traefik-compose.yml.tmpl`: Traefik compose template (public mode only).
@@ -165,14 +166,20 @@ Behavior:
 
 ## Developer checks
 
+Primary validation target is Linux (OVH VPS runtime profile).
+
 ```bash
 make check
 ```
 
-Or run the minimum syntax check directly:
+`make check` runs syntax + hermetic script checks that model the supported Linux deployment flow.
+
+`make check-strict` adds `shellcheck` + `shfmt` validation on top of `make check`.
+
+Or run the syntax checks directly:
 
 ```bash
-sh -n build.sh build-interactive.sh sync.sh backup.sh restore.sh scripts/build_lib.sh scripts/build_steps.sh tests/smoke_dry_run.sh tests/idempotency_dry_run.sh tests/security_template_checks.sh tests/sync_hermetic.sh tests/security_audit_scripts_hermetic.sh tests/backup_restore_hermetic.sh tests/build_interactive_backup_hermetic.sh
+sh -n build.sh build-interactive.sh sync.sh backup.sh restore.sh scripts/build_lib.sh scripts/build_steps.sh tests/smoke_dry_run.sh tests/idempotency_dry_run.sh tests/security_template_checks.sh tests/sync_hermetic.sh tests/security_audit_scripts_hermetic.sh tests/backup_restore_hermetic.sh tests/build_interactive_backup_hermetic.sh tests/ownership_config_dir_hermetic.sh
 ```
 
 ## Backup and restore mechanic
@@ -241,20 +248,18 @@ OVH_ENDPOINT_API_KEY=xxxxx \
 
 Behavior when enabled:
 
-- Validates `gh` availability (`OPENCLAW_GH_CLI_PATH`, default `gh`).
-- Auto-installs `gh` when missing (automatic; apt-get only).
-- Enforces authentication by running `gh auth status` (`OPENCLAW_GH_REQUIRE_AUTH=1`, default).
+- Auto-installs `gh` inside the running `openclaw` container when missing (apt-get based).
+- Validates that `gh` is available inside the running `openclaw` container runtime after restart.
 
-If you prefer to install/auth manually, use the following:
+If you prefer to install/auth manually in the container, use:
 
-1. Install `gh`:
-   - Ubuntu/Debian: `sudo apt update && sudo apt install -y gh`
-2. Authenticate once: `gh auth login`
-3. Verify runtime visibility and auth state:
-   - `which gh`
-   - `gh auth status`
+1. Install `gh` in the running container:
+   - `docker exec -u 0 openclaw sh -lc 'apt-get update && apt-get install -y gh'`
+2. Authenticate in the runtime context as needed for your workflow.
+3. Verify runtime visibility:
+   - `docker exec openclaw sh -lc 'command -v gh'`
 
-If auth validation fails, run `gh auth login` and rerun `build.sh`.
+Note: `OPENCLAW_GH_REQUIRE_AUTH` is retained for interface compatibility, but auth is no longer validated on the VPS host during build (runtime state depends on your in-container workflow).
 
 ## Himalaya skill prerequisites
 
@@ -268,21 +273,19 @@ OVH_ENDPOINT_API_KEY=xxxxx \
 
 Behavior when enabled:
 
-- Validates `himalaya` availability (`OPENCLAW_HIMALAYA_CLI_PATH`, default `himalaya`).
-- Auto-installs `himalaya` when missing (automatic; apt-get only).
+- Auto-installs `himalaya` inside the running `openclaw` container when missing (apt-get based).
 - If `OPENCLAW_HIMALAYA_CONFIG_TOML_BASE64` is set, the script writes that content to `OPENCLAW_HIMALAYA_CONFIG_PATH` with `chmod 600`.
-- Validates config presence by default (`OPENCLAW_HIMALAYA_REQUIRE_CONFIG=1`) at `OPENCLAW_HIMALAYA_CONFIG_PATH` (default `~/.config/himalaya/config.toml`).
+- Validates config presence by default (`OPENCLAW_HIMALAYA_REQUIRE_CONFIG=1`) at `OPENCLAW_HIMALAYA_CONFIG_PATH` (default `$OPENCLAW_CONFIG_DIR/himalaya/config.toml`).
+- Mounts `${OPENCLAW_CONFIG_DIR}/himalaya` into the container as `/home/node/.config/himalaya`.
+- Validates that `himalaya` is available inside the running `openclaw` container runtime after restart.
 
-If you prefer to install/configure manually, use the following:
+If you prefer to install/configure manually in the container, use:
 
-1. Install `himalaya`:
-   - Ubuntu/Debian: `sudo apt update && sudo apt install -y himalaya`
-2. Create account config:
-   - `himalaya account configure`
-3. Verify access:
-   - `which himalaya`
-   - `himalaya --version`
-   - `himalaya folder list`
+1. Install `himalaya` in the running container:
+   - `docker exec -u 0 openclaw sh -lc 'apt-get update && apt-get install -y himalaya'`
+2. Populate config at mounted path `${OPENCLAW_CONFIG_DIR}/himalaya/config.toml` (or use `OPENCLAW_HIMALAYA_CONFIG_TOML_BASE64`).
+3. Verify runtime visibility:
+   - `docker exec openclaw sh -lc 'command -v himalaya'`
 
 If config validation fails, run `himalaya account configure` (or set `OPENCLAW_HIMALAYA_CONFIG_PATH` to your existing config) and rerun `build.sh`.
 
@@ -292,7 +295,7 @@ You can provide a fully formed `config.toml` via base64:
 
 ```bash
 OPENCLAW_ENABLE_HIMALAYA_SKILL=1 \
-OPENCLAW_HIMALAYA_CONFIG_PATH="$HOME/.config/himalaya/config.toml" \
+OPENCLAW_HIMALAYA_CONFIG_PATH="$OPENCLAW_CONFIG_DIR/himalaya/config.toml" \
 OPENCLAW_HIMALAYA_CONFIG_TOML_BASE64="$(base64 -w 0 /path/to/config.toml)" \
 OVH_ENDPOINT_API_KEY=xxxxx \
 ./build.sh
@@ -313,16 +316,19 @@ OVH_ENDPOINT_API_KEY=xxxxx \
 
 Supported backends (`OPENCLAW_CODING_AGENT_BACKEND`):
 
-- `claude` → auto-install with `npm i -g @anthropic-ai/claude-code`
-- `codex` → auto-install with `npm i -g @openai/codex`
-- `pi` → auto-install with `npm i -g @mariozechner/pi-coding-agent`
-- `opencode` → manual install required (script validates binary only)
+- `claude` → auto-install in container with `npm i -g @anthropic-ai/claude-code`
+- `codex` → auto-install in container with `npm i -g @openai/codex`
+- `pi` → auto-install in container with `npm i -g @mariozechner/pi-coding-agent`
+- `opencode` → manual install required in container (script validates binary only)
 
 Behavior when enabled:
 
-- Validates backend binary presence and auto-installs when supported.
-- Optionally enforces `<backend> --version` (`OPENCLAW_CODING_AGENT_REQUIRE_VERSION_CHECK=1`, default).
-- Requires `npm` for auto-installable backends.
+- Auto-installs supported backends inside the running `openclaw` container:
+  - `claude`: `npm i -g @anthropic-ai/claude-code`
+  - `codex`: `npm i -g @openai/codex`
+  - `pi`: `npm i -g @mariozechner/pi-coding-agent`
+- `opencode` remains manual install.
+- Validates that the selected backend binary is available inside the running `openclaw` container runtime after restart.
 
 Safety guidance:
 

@@ -18,6 +18,7 @@ All notable changes to this repository are documented in this file.
   - `OPENCLAW_SIGNAL_AUTO_INSTALL`
 - Added automatic `signal-cli` dependency check/installation flow (opt-out via `OPENCLAW_SIGNAL_AUTO_INSTALL=0`) when Signal is enabled.
 - Added `backup.sh` and `restore.sh` mechanics for reproducible backup/restore of deployment data with explicit restore safety guard (`RESTORE_FORCE=1` for `/`).
+- Added `tests/ownership_config_dir_hermetic.sh` to cover ownership handling for root/non-root execution and custom `OPENCLAW_CONFIG_DIR` preparation flows.
 
 ### Changed
 - Changed default deployment posture to private mode (`ssh-tunnel`) with loopback-only binding on `127.0.0.1:18789`.
@@ -38,3 +39,9 @@ All notable changes to this repository are documented in this file.
 - Fixed backup staging path merge behavior so `INCLUDE_OPENCLAW_REPO=1` no longer nests restore paths as `<OPENCLAW_DIR>/openclaw/...`.
 - Removed legacy compatibility exports from `build-interactive.sh` so `build.sh` owns all default resolution directly.
 - Fixed backup staging for relative source paths so archives include relative `OPENCLAW_DIR`, `OPENCLAW_CONFIG_DIR`, and `EXTRA_BACKUP_PATHS` entries correctly.
+- Fixed ownership correction in `prepare_openclaw_repo` to support both root and non-root execution contexts by using `sudo` only when required.
+- Fixed custom `OPENCLAW_CONFIG_DIR` brittleness by preparing the config path before ownership safety checks.
+- Updated `README.md` and `docs/CONTRIBUTING.md` validation guidance to match current `make check` and `make check-strict` behavior.
+- Updated optional skill prerequisite flow to install/validate runtime binaries (`gh`, `himalaya`, coding-agent backend) inside the running `openclaw` container.
+- Updated default `OPENCLAW_HIMALAYA_CONFIG_PATH` to `$OPENCLAW_CONFIG_DIR/himalaya/config.toml` and mounted `${OPENCLAW_CONFIG_DIR}/himalaya` into the container for runtime config access.
+- Refactored optional skill handling into per-tool scripts under `scripts/optional_tools/` for cleaner extension as new tools are added.

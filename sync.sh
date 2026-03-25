@@ -163,7 +163,7 @@ if [ -n "$ENV_UPLOAD_SOURCE" ] && [ -n "$SYNC_REMOTE_ENV_FILE" ] && [ "$SKIP_ENV
 fi
 
 if [ -n "$SYNC_REMOTE_ENV_FILE" ]; then
-  REMOTE_ENV_SETUP=". './$SYNC_REMOTE_ENV_FILE' && "
+  REMOTE_ENV_SETUP="set -a && . './$SYNC_REMOTE_ENV_FILE' && set +a && "
 else
   REMOTE_ENV_SETUP=""
 fi

@@ -44,3 +44,4 @@ All notable changes to this repository are documented in this file.
 - Updated `README.md` and `docs/CONTRIBUTING.md` validation guidance to match current `make check` and `make check-strict` behavior.
 - Updated optional skill prerequisite flow to install/validate runtime binaries (`gh`, `himalaya`, coding-agent backend) inside the running `openclaw` container.
 - Updated default `OPENCLAW_HIMALAYA_CONFIG_PATH` to `$OPENCLAW_CONFIG_DIR/himalaya/config.toml` and mounted `${OPENCLAW_CONFIG_DIR}/himalaya` into the container for runtime config access.
+- Refactored optional skill handling into per-tool scripts under `scripts/optional_tools/` for cleaner extension as new tools are added.

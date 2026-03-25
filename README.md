@@ -13,6 +13,7 @@ Automation scripts for deploying OpenClaw on a VPS with two explicit access mode
 - `backup.sh`: creates a tarball backup of OpenClaw runtime data (`$OPENCLAW_CONFIG_DIR`, `$OPENCLAW_DIR/.env`, optional Traefik state).
 - `restore.sh`: restores a backup tarball into a chosen root path (requires explicit force flag for `/`).
 - `scripts/build_lib.sh` + `scripts/build_steps.sh`: shared helpers and modular deployment steps used by `build.sh`.
+- `scripts/optional_tools/*.sh`: per-tool optional runtime handlers (GitHub, Himalaya, coding-agent) plus shared container install/validation helpers.
 - `templates/openclaw-compose.ssh-tunnel.yml.tmpl`: private/local compose template.
 - `templates/openclaw-compose.public.yml.tmpl`: Traefik-integrated compose template.
 - `templates/traefik-compose.yml.tmpl`: Traefik compose template (public mode only).

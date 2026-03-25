@@ -2,6 +2,15 @@
 # shellcheck shell=sh
 # shellcheck disable=SC2154
 
+# shellcheck source=scripts/optional_tools/common.sh
+. "$SCRIPT_DIR/scripts/optional_tools/common.sh"
+# shellcheck source=scripts/optional_tools/github.sh
+. "$SCRIPT_DIR/scripts/optional_tools/github.sh"
+# shellcheck source=scripts/optional_tools/himalaya.sh
+. "$SCRIPT_DIR/scripts/optional_tools/himalaya.sh"
+# shellcheck source=scripts/optional_tools/coding_agent.sh
+. "$SCRIPT_DIR/scripts/optional_tools/coding_agent.sh"
+
 initialize_defaults() {
   CURRENT_USER=$(id -un)
   HOME_DIR=${HOME:-"$(getent passwd "$CURRENT_USER" | cut -d : -f 6 2> /dev/null || printf '/home/%s' "$CURRENT_USER")"}
@@ -197,77 +206,15 @@ setup_signal_channel_prerequisites() {
 }
 
 setup_github_skill_prerequisites() {
-  if [ "$OPENCLAW_ENABLE_GITHUB_SKILL" != "1" ]; then
-    return 0
-  fi
-
-  log "GitHub skill enabled; runtime dependency will be installed/validated inside Docker container after restart"
+  optional_tool_github_prepare
 }
 
 setup_himalaya_skill_prerequisites() {
-  if [ "$OPENCLAW_ENABLE_HIMALAYA_SKILL" != "1" ]; then
-    return 0
-  fi
-
-  log "Himalaya skill enabled; runtime dependency will be installed/validated inside Docker container after restart"
-
-  write_himalaya_config_from_env_if_provided
-
-  if [ "$OPENCLAW_HIMALAYA_REQUIRE_CONFIG" = "1" ]; then
-    if [ "$DRY_RUN" = "1" ]; then
-      log "[DRY_RUN] validate Himalaya config exists: $OPENCLAW_HIMALAYA_CONFIG_PATH"
-      return 0
-    fi
-
-    if [ ! -f "$OPENCLAW_HIMALAYA_CONFIG_PATH" ]; then
-      fail "Himalaya config not found at '$OPENCLAW_HIMALAYA_CONFIG_PATH'. Run '$OPENCLAW_HIMALAYA_CLI_PATH account configure' and rerun build."
-    fi
-  fi
-}
-
-write_himalaya_config_from_env_if_provided() {
-  if [ -z "${OPENCLAW_HIMALAYA_CONFIG_TOML_BASE64:-}" ]; then
-    return 0
-  fi
-
-  if [ "$DRY_RUN" = "1" ]; then
-    log "[DRY_RUN] write Himalaya config from OPENCLAW_HIMALAYA_CONFIG_TOML_BASE64 to $OPENCLAW_HIMALAYA_CONFIG_PATH"
-    return 0
-  fi
-
-  require_command base64
-  run_cmd mkdir -p "$(dirname "$OPENCLAW_HIMALAYA_CONFIG_PATH")"
-  printf '%s' "$OPENCLAW_HIMALAYA_CONFIG_TOML_BASE64" | base64 -d > "$OPENCLAW_HIMALAYA_CONFIG_PATH"
-  run_cmd chmod 600 "$OPENCLAW_HIMALAYA_CONFIG_PATH"
+  optional_tool_himalaya_prepare
 }
 
 setup_coding_agent_skill_prerequisites() {
-  if [ "$OPENCLAW_ENABLE_CODING_AGENT_SKILL" != "1" ]; then
-    return 0
-  fi
-
-  resolve_coding_agent_backend
-  log "Coding-agent skill enabled; backend '$OPENCLAW_CODING_AGENT_BACKEND' will be installed/validated inside Docker container after restart"
-}
-
-resolve_coding_agent_backend() {
-  case "$OPENCLAW_CODING_AGENT_BACKEND" in
-    claude)
-      OPENCLAW_CODING_AGENT_BIN=claude
-      ;;
-    codex)
-      OPENCLAW_CODING_AGENT_BIN=codex
-      ;;
-    pi)
-      OPENCLAW_CODING_AGENT_BIN=pi
-      ;;
-    opencode)
-      OPENCLAW_CODING_AGENT_BIN=opencode
-      ;;
-    *)
-      fail "Unsupported coding-agent backend: $OPENCLAW_CODING_AGENT_BACKEND"
-      ;;
-  esac
+  optional_tool_coding_agent_prepare
 }
 
 install_signal_cli() {
@@ -431,93 +378,16 @@ ensure_openclaw_env_overrides() {
   fi
 }
 
-validate_container_binary() {
-  feature_name=$1
-  binary_name=$2
-
-  if [ "$DRY_RUN" = "1" ]; then
-    log "[DRY_RUN] validate $feature_name runtime binary inside openclaw container: $binary_name"
-    return 0
-  fi
-
-  if ! docker exec openclaw sh -c 'command -v "$1" > /dev/null 2>&1' sh "$binary_name"; then
-    fail "$feature_name is enabled, but '$binary_name' is not available inside the openclaw container runtime. Install it in the OpenClaw image or disable this optional feature."
-  fi
-}
-
-install_container_apt_package_if_missing() {
-  package_name=$1
-  binary_name=$2
-
-  if [ "$DRY_RUN" = "1" ]; then
-    log "[DRY_RUN] ensure container package '$package_name' provides binary '$binary_name'"
-    return 0
-  fi
-
-  if docker exec openclaw sh -c 'command -v "$1" > /dev/null 2>&1' sh "$binary_name"; then
-    return 0
-  fi
-
-  log "Installing '$package_name' inside openclaw container for optional skill runtime"
-  docker exec -u 0 openclaw sh -c 'if command -v apt-get > /dev/null 2>&1; then apt-get update && apt-get install -y "$1"; else exit 127; fi' sh "$package_name" ||
-    fail "Unable to install '$package_name' inside openclaw container. Build a custom OPENCLAW_IMAGE with '$binary_name' available."
-}
-
-install_container_npm_package_if_missing() {
-  npm_package=$1
-  binary_name=$2
-
-  if [ "$DRY_RUN" = "1" ]; then
-    log "[DRY_RUN] ensure container npm package '$npm_package' provides binary '$binary_name'"
-    return 0
-  fi
-
-  if docker exec openclaw sh -c 'command -v "$1" > /dev/null 2>&1' sh "$binary_name"; then
-    return 0
-  fi
-
-  log "Installing npm package '$npm_package' inside openclaw container for optional skill runtime"
-  docker exec -u 0 openclaw sh -c 'if command -v npm > /dev/null 2>&1; then npm i -g "$1"; else exit 127; fi' sh "$npm_package" ||
-    fail "Unable to install npm package '$npm_package' inside openclaw container. Build a custom OPENCLAW_IMAGE with '$binary_name' available."
-}
-
 install_optional_skill_container_runtime_dependencies() {
-  if [ "$OPENCLAW_ENABLE_GITHUB_SKILL" = "1" ]; then
-    install_container_apt_package_if_missing gh "$OPENCLAW_GH_CLI_PATH"
-  fi
-
-  if [ "$OPENCLAW_ENABLE_HIMALAYA_SKILL" = "1" ]; then
-    install_container_apt_package_if_missing himalaya "$OPENCLAW_HIMALAYA_CLI_PATH"
-  fi
-
-  if [ "$OPENCLAW_ENABLE_CODING_AGENT_SKILL" = "1" ]; then
-    case "$OPENCLAW_CODING_AGENT_BACKEND" in
-      claude)
-        install_container_npm_package_if_missing @anthropic-ai/claude-code "$OPENCLAW_CODING_AGENT_BIN"
-        ;;
-      codex)
-        install_container_npm_package_if_missing @openai/codex "$OPENCLAW_CODING_AGENT_BIN"
-        ;;
-      pi)
-        install_container_npm_package_if_missing @mariozechner/pi-coding-agent "$OPENCLAW_CODING_AGENT_BIN"
-        ;;
-      opencode) ;;
-    esac
-  fi
+  optional_tool_github_install_runtime
+  optional_tool_himalaya_install_runtime
+  optional_tool_coding_agent_install_runtime
 }
 
 validate_optional_skill_container_runtime() {
-  if [ "$OPENCLAW_ENABLE_GITHUB_SKILL" = "1" ]; then
-    validate_container_binary "GitHub skill prerequisites" "$OPENCLAW_GH_CLI_PATH"
-  fi
-
-  if [ "$OPENCLAW_ENABLE_HIMALAYA_SKILL" = "1" ]; then
-    validate_container_binary "Himalaya skill prerequisites" "$OPENCLAW_HIMALAYA_CLI_PATH"
-  fi
-
-  if [ "$OPENCLAW_ENABLE_CODING_AGENT_SKILL" = "1" ]; then
-    validate_container_binary "coding-agent skill prerequisites" "$OPENCLAW_CODING_AGENT_BIN"
-  fi
+  optional_tool_github_validate_runtime
+  optional_tool_himalaya_validate_runtime
+  optional_tool_coding_agent_validate_runtime
 }
 
 write_openclaw_json_config() {

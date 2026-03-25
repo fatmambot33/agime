@@ -5,6 +5,10 @@ set -eu
 SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
 BUILD_SCRIPT="$SCRIPT_DIR/build.sh"
 BACKUP_SCRIPT="$SCRIPT_DIR/backup.sh"
+UPDATE_SCRIPT="$SCRIPT_DIR/update.sh"
+ADD_TOOL_SCRIPT="$SCRIPT_DIR/add_tool.sh"
+RESTORE_SCRIPT="$SCRIPT_DIR/restore.sh"
+SECURITY_SCRIPT="$SCRIPT_DIR/scripts/run_security_audit.sh"
 
 log() {
   printf '%s\n' "$*"
@@ -68,6 +72,45 @@ ask_access_mode() {
   esac
 }
 
+choose_welcome_action() {
+  if [ -n "${OPENCLAW_ACTION:-}" ]; then
+    value=$(to_lower "$OPENCLAW_ACTION")
+  else
+    cat << 'EOF2'
+Welcome to the OpenClaw toolkit.
+Choose an action:
+  1) Install
+  2) Update
+  3) Add Tool
+  4) Restore
+  5) Security
+EOF2
+    printf 'Selection [1]: '
+    read value
+    value=$(to_lower "${value:-1}")
+  fi
+  case "$value" in
+    1 | install)
+      OPENCLAW_ACTION=install
+      ;;
+    2 | update)
+      OPENCLAW_ACTION=update
+      ;;
+    3 | addtool | add-tool | "add tool")
+      OPENCLAW_ACTION=add_tool
+      ;;
+    4 | restore)
+      OPENCLAW_ACTION=restore
+      ;;
+    5 | security)
+      OPENCLAW_ACTION=security
+      ;;
+    *)
+      fail "Unsupported selection: $value"
+      ;;
+  esac
+}
+
 # read a variable with optional default
 ask_var() {
   var_name=$1
@@ -123,6 +166,35 @@ milestone() {
 if [ ! -f "$BUILD_SCRIPT" ]; then
   fail "build script not found at $BUILD_SCRIPT"
 fi
+
+choose_welcome_action
+case "$OPENCLAW_ACTION" in
+  install) ;;
+  update)
+    [ -f "$UPDATE_SCRIPT" ] || fail "update script not found at $UPDATE_SCRIPT"
+    milestone "Running update workflow"
+    sh "$UPDATE_SCRIPT"
+    exit 0
+    ;;
+  add_tool)
+    [ -f "$ADD_TOOL_SCRIPT" ] || fail "add_tool script not found at $ADD_TOOL_SCRIPT"
+    milestone "Running add-tool workflow"
+    sh "$ADD_TOOL_SCRIPT"
+    exit 0
+    ;;
+  restore)
+    [ -f "$RESTORE_SCRIPT" ] || fail "restore script not found at $RESTORE_SCRIPT"
+    milestone "Running restore workflow"
+    sh "$RESTORE_SCRIPT"
+    exit 0
+    ;;
+  security)
+    [ -f "$SECURITY_SCRIPT" ] || fail "security audit script not found at $SECURITY_SCRIPT"
+    milestone "Running security workflow"
+    sh "$SECURITY_SCRIPT"
+    exit 0
+    ;;
+esac
 
 milestone "Interactive OpenClaw setup started"
 

@@ -36,6 +36,7 @@ chmod +x "$WORK_DIR/build.sh" "$WORK_DIR/backup.sh"
 (
   cd "$WORK_DIR"
   HOME="$HOME_DIR" sh ./build-interactive.sh << 'EOF_INPUT'
+1
 ssh-tunnel
 api-key-123
 

@@ -10,8 +10,8 @@ WORK_DIR="$TMP_DIR/work"
 HOME_DIR="$TMP_DIR/home"
 mkdir -p "$WORK_DIR" "$HOME_DIR"
 
-cp "$REPO_DIR/build-interactive.sh" "$WORK_DIR/build-interactive.sh"
-chmod +x "$WORK_DIR/build-interactive.sh"
+cp "$REPO_DIR/configure.sh" "$WORK_DIR/configure.sh"
+chmod +x "$WORK_DIR/configure.sh"
 
 CALLS_FILE="$TMP_DIR/calls.log"
 : > "$CALLS_FILE"
@@ -35,7 +35,7 @@ chmod +x "$WORK_DIR/build.sh" "$WORK_DIR/backup.sh"
 
 (
   cd "$WORK_DIR"
-  HOME="$HOME_DIR" sh ./build-interactive.sh << 'EOF_INPUT'
+  HOME="$HOME_DIR" sh ./configure.sh << 'EOF_INPUT'
 1
 ssh-tunnel
 api-key-123
@@ -68,4 +68,4 @@ second_line=$(sed -n '2p' "$CALLS_FILE")
 printf '%s\n' "$first_line" | grep -Fq 'RUN_BACKUP'
 printf '%s\n' "$second_line" | grep -Fq 'RUN_BUILD'
 
-echo "build_interactive_backup_hermetic test passed"
+echo "configure_backup_hermetic test passed"

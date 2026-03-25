@@ -3,20 +3,21 @@
 ## Mode-first troubleshooting
 
 ### 0) `sync.sh` asks for SSH password multiple times
-- `sync.sh` runs from your local machine and performs three remote operations (`ssh mkdir`, `scp`, then remote `build-interactive.sh`).
+- `sync.sh` runs from your local machine and performs three remote operations (`ssh mkdir`, `scp`, then remote entrypoint execution; default is `build.sh`).
 - It enables SSH multiplexing by default (`ControlMaster=auto` + `ControlPersist`) so one authenticated control session is reused.
 - If repeated prompts continue, verify your SSH client supports multiplexing and optionally set:
   - `SSH_CONTROL_PERSIST_SECONDS=1200`
   - `SSH_CONTROL_PATH="$HOME/.ssh/agime-sync-%r@%h:%p"`
 - Prefer keeping sync + build options in `sync.conf` (copy from `sync.conf.example`) and enable `SYNC_PRINT_CONFIG=1` so current effective values are shown before each run.
-- If `sync.conf` is missing, `sync.sh` first tries to download remote `sync.conf`; if not found remotely, it runs local `build-interactive.sh` in config-generation mode and writes it locally.
+- If `sync.conf` is missing, `sync.sh` first tries to download remote `sync.conf`; if not found remotely, it runs local `configure.sh` in config-generation mode and writes it locally.
+- Treat `configure.sh` as a local config wizard (author/update), not the default deployment entrypoint.
 - `SYNC_REMOTE_CONFIG_PRIORITY=1` by default: if remote `SYNC_REMOTE_ENV_FILE` already exists, `sync.sh` treats it as authoritative for the run and refreshes local `sync.conf` from it.
 - For non-interactive deploys, use `SYNC_REMOTE_ENTRYPOINT=build.sh` and keep required build variables in `sync.conf` (single source of truth).
 - `sync.sh` prints a preflight warning when `SYNC_REMOTE_ENTRYPOINT=build.sh` and `OVH_ENDPOINT_API_KEY` is empty in loaded config/environment.
 - By default, `sync.sh` sources `SYNC_REMOTE_ENV_FILE=sync.conf` remotely under `set -a` (plain `KEY=value` lines auto-export). It uploads local `sync.conf` only when remote priority is disabled or when the remote env file does not already exist.
 - If those two paths are the same file (default), `sync.sh` now uploads it once (no duplicate `scp` line for `sync.conf`).
 - Set `SYNC_MIRROR_ENV_FILE=1` when you want generated env values copied back locally after the run.
-- `build-interactive.sh` auto-runs non-interactive mode when `.sync-build.env` exists on host; set `OPENCLAW_FORCE_INTERACTIVE=1` to override.
+- `configure.sh` auto-runs non-interactive mode when `.sync-build.env` exists on host; set `OPENCLAW_FORCE_INTERACTIVE=1` to override.
 
 ### 1) ssh-tunnel mode is unreachable locally
 - Symptom: browser cannot load `http://127.0.0.1:18789` after tunnel setup.
@@ -108,7 +109,7 @@ EXTRA_BACKUP_PATHS="$HOME/notes/IDENTITY.md" \
 sh ./backup.sh
 ```
 
-Interactive deploy note: `sh ./build-interactive.sh` now starts with a welcome menu (`Install`, `Update`, `Add Tool`, `Restore`, `Security`). The `Install` path still offers a pre-deploy backup step before running `build.sh`.
+Interactive deploy note: `sh ./configure.sh` now starts with a welcome menu (`Install`, `Update`, `Add Tool`, `Restore`, `Security`). The `Install` path still offers a pre-deploy backup step before running `build.sh`.
 
 Restore safely to a sandbox path first:
 

@@ -68,7 +68,7 @@ EOF
 grep -Fq "sync.sh preflight warning:" "$TMP_DIR/default.stdout"
 grep -Fq "requires OVH_ENDPOINT_API_KEY" "$TMP_DIR/default.stdout"
 grep -Eq "ssh .*test-host mkdir -p '/tmp/test-agime'" "$CALLS_FILE"
-grep -Eq "scp .* -r build-interactive.sh build.sh backup.sh update.sh add_tool.sh restore.sh sync.sh scripts templates docs README.md $TMP_DIR/auto-sync\\.conf test-host:/tmp/test-agime/" "$CALLS_FILE"
+grep -Eq "scp .* -r build.sh backup.sh update.sh add_tool.sh restore.sh scripts templates docs README.md $TMP_DIR/auto-sync\\.conf test-host:/tmp/test-agime/" "$CALLS_FILE"
 if grep -Eq "scp .* $TMP_DIR/auto-sync\\.conf test-host:/tmp/test-agime/auto-sync\\.conf" "$CALLS_FILE"; then
   echo "expected single upload path for auto-sync.conf, but found duplicate explicit env upload" >&2
   exit 1
@@ -137,7 +137,7 @@ INTERACTIVE_CONFIG_FILE="$TMP_DIR/interactive-sync.conf"
 cat > "$INTERACTIVE_CONFIG_FILE" << EOF
 REMOTE_HOST=interactive-host
 REMOTE_DIR=/tmp/interactive-agime
-SYNC_REMOTE_ENTRYPOINT=build-interactive.sh
+SYNC_REMOTE_ENTRYPOINT=configure.sh
 EOF
 
 (
@@ -148,7 +148,24 @@ EOF
     sh ./sync.sh
 )
 
-grep -Eq "ssh .* -t interactive-host cd '/tmp/interactive-agime' && chmod \+x \./\*\.sh && set -a && \. '\./interactive-sync\.conf' && set \+a && OPENCLAW_ACTION='security' OPENCLAW_EXPORT_ENV_FILE='interactive-sync\\.conf' \./build-interactive.sh" "$CALLS_FILE"
+grep -Eq "ssh .* -t interactive-host cd '/tmp/interactive-agime' && chmod \+x \./\*\.sh && set -a && \. '\./interactive-sync\.conf' && set \+a && OPENCLAW_ACTION='security' OPENCLAW_EXPORT_ENV_FILE='interactive-sync\\.conf' \./configure.sh" "$CALLS_FILE"
+
+LEGACY_INTERACTIVE_CONFIG_FILE="$TMP_DIR/legacy-interactive-sync.conf"
+cat > "$LEGACY_INTERACTIVE_CONFIG_FILE" << EOF
+REMOTE_HOST=legacy-interactive-host
+REMOTE_DIR=/tmp/legacy-interactive-agime
+SYNC_REMOTE_ENTRYPOINT=build-interactive.sh
+EOF
+
+(
+  cd "$REPO_DIR"
+  PATH="$BIN_DIR:$PATH" \
+    SYNC_CONFIG_FILE="$LEGACY_INTERACTIVE_CONFIG_FILE" \
+    OPENCLAW_ACTION=security \
+    sh ./sync.sh
+)
+
+grep -Eq "ssh .* -t legacy-interactive-host cd '/tmp/legacy-interactive-agime' && chmod \+x \./\*\.sh && set -a && \. '\./legacy-interactive-sync\.conf' && set \+a && OPENCLAW_ACTION='security' OPENCLAW_EXPORT_ENV_FILE='legacy-interactive-sync\\.conf' \./configure.sh" "$CALLS_FILE"
 
 REMOTE_PRIORITY_CONFIG="$TMP_DIR/remote-priority.conf"
 cat > "$REMOTE_PRIORITY_CONFIG" << EOF

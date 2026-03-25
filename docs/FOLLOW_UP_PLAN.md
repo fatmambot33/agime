@@ -21,6 +21,7 @@ Transform the repo into a maintainable, testable, and secure deployment toolkit 
 - Added hermetic ownership/config-dir validation coverage and aligned contributor validation docs with current `make check` / `make check-strict` targets.
 - Added post-install helper scripts (`update.sh`, `add_tool.sh`) with git-checkout-aware update behavior and hermetic test coverage.
 - Added compatibility matrix documentation for OVH Ubuntu + Docker/Compose/Traefik/OpenClaw deployment baselines.
+- Clarified deployment boundaries: remote `sync.conf` as authoritative config, `configure.sh` as local config-authoring wizard, and runtime-only default sync payload for VPS execution.
 
 ## Prioritized backlog (next 5 items)
 

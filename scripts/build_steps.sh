@@ -465,12 +465,13 @@ prepare_openclaw_repo() {
     run_cmd git clone "$OPENCLAW_REPO" "$OPENCLAW_DIR"
   fi
 
+  run_cmd mkdir -p "$OPENCLAW_CONFIG_DIR"
   run_cmd mkdir -p "$OPENCLAW_WORKSPACE_DIR"
   if [ "$DRY_RUN" != "1" ]; then
     ensure_safe_chown_path "$OPENCLAW_DIR"
     ensure_safe_chown_path "$OPENCLAW_CONFIG_DIR"
   fi
-  run_cmd sudo chown -R "$OPENCLAW_USER:$OPENCLAW_USER" "$OPENCLAW_DIR" "$OPENCLAW_CONFIG_DIR"
+  run_with_optional_sudo chown -R "$OPENCLAW_USER:$OPENCLAW_USER" "$OPENCLAW_DIR" "$OPENCLAW_CONFIG_DIR"
 }
 
 run_openclaw_wizard_if_needed() {

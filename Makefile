@@ -1,12 +1,12 @@
 SHELL := /bin/sh
 
-SCRIPTS := build.sh build-interactive.sh sync.sh backup.sh restore.sh scripts/build_lib.sh scripts/build_steps.sh scripts/run_security_audit.sh scripts/install_security_audit_cron.sh tests/smoke_dry_run.sh tests/idempotency_dry_run.sh tests/security_template_checks.sh tests/sync_hermetic.sh tests/security_audit_scripts_hermetic.sh tests/backup_restore_hermetic.sh tests/build_interactive_backup_hermetic.sh
+SCRIPTS := build.sh build-interactive.sh sync.sh backup.sh restore.sh scripts/build_lib.sh scripts/build_steps.sh scripts/run_security_audit.sh scripts/install_security_audit_cron.sh tests/smoke_dry_run.sh tests/idempotency_dry_run.sh tests/security_template_checks.sh tests/sync_hermetic.sh tests/security_audit_scripts_hermetic.sh tests/backup_restore_hermetic.sh tests/build_interactive_backup_hermetic.sh tests/ownership_config_dir_hermetic.sh
 
-.PHONY: check check-strict ensure-tools syntax lint fmt-check smoke idempotency security sync-test backup-restore-test interactive-backup-test security-audit-scripts security-audit install-security-cron
+.PHONY: check check-strict ensure-tools syntax lint fmt-check smoke idempotency security sync-test backup-restore-test interactive-backup-test ownership-config-test security-audit-scripts security-audit install-security-cron
 
-check: syntax smoke idempotency security sync-test backup-restore-test interactive-backup-test security-audit-scripts
+check: syntax smoke idempotency security sync-test backup-restore-test interactive-backup-test ownership-config-test security-audit-scripts
 
-check-strict: syntax lint fmt-check smoke idempotency security sync-test backup-restore-test interactive-backup-test security-audit-scripts
+check-strict: syntax lint fmt-check smoke idempotency security sync-test backup-restore-test interactive-backup-test ownership-config-test security-audit-scripts
 
 ensure-tools:
 	@if ! command -v shellcheck >/dev/null 2>&1 || ! command -v shfmt >/dev/null 2>&1; then \
@@ -45,6 +45,9 @@ backup-restore-test:
 
 interactive-backup-test:
 	sh tests/build_interactive_backup_hermetic.sh
+
+ownership-config-test:
+	sh tests/ownership_config_dir_hermetic.sh
 
 security-audit-scripts:
 	sh tests/security_audit_scripts_hermetic.sh

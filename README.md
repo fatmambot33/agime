@@ -165,14 +165,20 @@ Behavior:
 
 ## Developer checks
 
+Primary validation target is Linux (OVH VPS runtime profile).
+
 ```bash
 make check
 ```
 
-Or run the minimum syntax check directly:
+`make check` runs syntax + hermetic script checks that model the supported Linux deployment flow.
+
+`make check-strict` adds `shellcheck` + `shfmt` validation on top of `make check`.
+
+Or run the syntax checks directly:
 
 ```bash
-sh -n build.sh build-interactive.sh sync.sh backup.sh restore.sh scripts/build_lib.sh scripts/build_steps.sh tests/smoke_dry_run.sh tests/idempotency_dry_run.sh tests/security_template_checks.sh tests/sync_hermetic.sh tests/security_audit_scripts_hermetic.sh tests/backup_restore_hermetic.sh tests/build_interactive_backup_hermetic.sh
+sh -n build.sh build-interactive.sh sync.sh backup.sh restore.sh scripts/build_lib.sh scripts/build_steps.sh tests/smoke_dry_run.sh tests/idempotency_dry_run.sh tests/security_template_checks.sh tests/sync_hermetic.sh tests/security_audit_scripts_hermetic.sh tests/backup_restore_hermetic.sh tests/build_interactive_backup_hermetic.sh tests/ownership_config_dir_hermetic.sh
 ```
 
 ## Backup and restore mechanic

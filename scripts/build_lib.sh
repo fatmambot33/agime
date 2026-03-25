@@ -29,6 +29,21 @@ run_cmd() {
   "$@"
 }
 
+run_with_optional_sudo() {
+  if [ "$DRY_RUN" = "1" ]; then
+    run_cmd "$@"
+    return 0
+  fi
+
+  if [ "$(id -u)" = "0" ]; then
+    run_cmd "$@"
+    return 0
+  fi
+
+  require_command sudo
+  run_cmd sudo "$@"
+}
+
 escape_sed_replacement() {
   printf '%s' "$1" | sed 's/[\\\/&]/\\&/g'
 }

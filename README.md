@@ -77,6 +77,7 @@ sh ./sync.sh
 Set this in `sync.conf`:
 
 - add required `build.sh` variables directly to `sync.conf` (for example `OVH_ENDPOINT_API_KEY=...`, optional access-mode settings).
+- `sync.sh` now prints a preflight warning when `SYNC_REMOTE_ENTRYPOINT=build.sh` and `OVH_ENDPOINT_API_KEY` is empty in loaded config/environment.
 
 If you prefer the welcome flow and want those selections reflected in reusable config:
 

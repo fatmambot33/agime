@@ -9,6 +9,7 @@ REMOTE_HOST=${REMOTE_HOST:-my-vps}
 REMOTE_DIR=${REMOTE_DIR:-/tmp/agime}
 SYNC_REMOTE_ENV_FILE=${SYNC_REMOTE_ENV_FILE:-"$(basename "$SYNC_CONFIG_FILE")"}
 SYNC_LOCAL_ENV_FILE=${SYNC_LOCAL_ENV_FILE:-"$SYNC_CONFIG_FILE"}
+SYNC_REMOTE_CONFIG_PRIORITY=${SYNC_REMOTE_CONFIG_PRIORITY:-1}
 SSH_CONTROL_PERSIST_SECONDS=${SSH_CONTROL_PERSIST_SECONDS:-600}
 SSH_CONTROL_PATH=${SSH_CONTROL_PATH:-"$HOME/.ssh/agime-sync-%r@%h:%p"}
 SSH_BASE_ARGS="-o ControlMaster=auto -o ControlPersist=${SSH_CONTROL_PERSIST_SECONDS} -o ControlPath=$SSH_CONTROL_PATH"
@@ -63,6 +64,11 @@ scp_exec() {
   scp $SSH_BASE_ARGS "$@"
 }
 
+remote_env_exists() {
+  [ -n "$SYNC_REMOTE_ENV_FILE" ] || return 1
+  ssh_exec "$REMOTE_HOST" "test -f '$REMOTE_DIR/$SYNC_REMOTE_ENV_FILE'"
+}
+
 cleanup_ssh_master() {
   ssh_exec -O exit "$REMOTE_HOST" > /dev/null 2>&1 || true
 }
@@ -88,8 +94,20 @@ fi
 
 trap 'cleanup_ssh_master' EXIT INT TERM
 
+REMOTE_ENV_PRESENT=0
+if [ "$SYNC_REMOTE_CONFIG_PRIORITY" = "1" ] && remote_env_exists; then
+  REMOTE_ENV_PRESENT=1
+  try_download_remote_config || true
+  if [ -f "$SYNC_LOCAL_ENV_FILE" ]; then
+    set -a
+    # shellcheck disable=SC1090
+    . "$SYNC_LOCAL_ENV_FILE"
+    set +a
+  fi
+fi
+
 UPLOAD_ITEMS=$SYNC_ITEMS
-if [ -f "$SYNC_CONFIG_FILE" ]; then
+if [ "$REMOTE_ENV_PRESENT" != "1" ] && [ -f "$SYNC_CONFIG_FILE" ]; then
   case " $UPLOAD_ITEMS " in
     *" $SYNC_CONFIG_FILE "*) ;;
     *) UPLOAD_ITEMS="$UPLOAD_ITEMS $SYNC_CONFIG_FILE" ;;
@@ -98,7 +116,9 @@ fi
 
 ENV_UPLOAD_SOURCE=""
 if [ -n "$SYNC_REMOTE_ENV_FILE" ]; then
-  if [ -f "$SYNC_LOCAL_ENV_FILE" ]; then
+  if [ "$REMOTE_ENV_PRESENT" = "1" ]; then
+    ENV_UPLOAD_SOURCE=""
+  elif [ -f "$SYNC_LOCAL_ENV_FILE" ]; then
     ENV_UPLOAD_SOURCE=$SYNC_LOCAL_ENV_FILE
   elif [ -f "$SYNC_REMOTE_ENV_FILE" ]; then
     ENV_UPLOAD_SOURCE=$SYNC_REMOTE_ENV_FILE
@@ -163,7 +183,7 @@ if [ -n "$ENV_UPLOAD_SOURCE" ] && [ -n "$SYNC_REMOTE_ENV_FILE" ] && [ "$SKIP_ENV
 fi
 
 if [ -n "$SYNC_REMOTE_ENV_FILE" ]; then
-  REMOTE_ENV_SETUP=". './$SYNC_REMOTE_ENV_FILE' && "
+  REMOTE_ENV_SETUP="set -a && . './$SYNC_REMOTE_ENV_FILE' && set +a && "
 else
   REMOTE_ENV_SETUP=""
 fi

@@ -59,7 +59,10 @@ EOF
 
 grep -Eq "ssh .*test-host mkdir -p '/tmp/test-agime'" "$CALLS_FILE"
 grep -Eq "scp .* -r build-interactive.sh build.sh backup.sh update.sh add_tool.sh restore.sh sync.sh scripts templates docs README.md $TMP_DIR/auto-sync\\.conf test-host:/tmp/test-agime/" "$CALLS_FILE"
-grep -Eq "scp .* $TMP_DIR/auto-sync\\.conf test-host:/tmp/test-agime/auto-sync\\.conf" "$CALLS_FILE"
+if grep -Eq "scp .* $TMP_DIR/auto-sync\\.conf test-host:/tmp/test-agime/auto-sync\\.conf" "$CALLS_FILE"; then
+  echo "expected single upload path for auto-sync.conf, but found duplicate explicit env upload" >&2
+  exit 1
+fi
 grep -Eq "ssh .* test-host cd '/tmp/test-agime' && chmod \+x \./\*\.sh && \. '\./auto-sync\.conf' && \./build.sh" "$CALLS_FILE"
 grep -Eq "ssh .* -O exit test-host" "$CALLS_FILE"
 

@@ -59,9 +59,10 @@ ask_optional_assign() {
 }
 
 ask_access_mode() {
-  printf 'Access mode [ssh-tunnel/public] [ssh-tunnel]: '
+  current_mode=${OPENCLAW_ACCESS_MODE:-ssh-tunnel}
+  printf 'Access mode [ssh-tunnel/public] [%s]: ' "$current_mode"
   read value
-  value=${value:-ssh-tunnel}
+  value=${value:-$current_mode}
   case "$value" in
     ssh-tunnel | public)
       OPENCLAW_ACCESS_MODE=$value
@@ -70,6 +71,17 @@ ask_access_mode() {
       fail "Unsupported access mode: $value"
       ;;
   esac
+}
+
+env_or_default() {
+  var_name=$1
+  fallback=$2
+  eval "current_value=\${$var_name:-}"
+  if [ -n "$current_value" ]; then
+    printf '%s' "$current_value"
+  else
+    printf '%s' "$fallback"
+  fi
 }
 
 choose_welcome_action() {
@@ -272,39 +284,39 @@ BACKUP_OUTPUT_PATH="$PWD/openclaw-backup-$(date +%Y%m%d-%H%M%S).tar.gz"
 ask_access_mode
 ask_var OVH_ENDPOINT_API_KEY "OVH endpoint API key" ""
 if [ "$OPENCLAW_ACCESS_MODE" = "public" ]; then
-  ask_var TRAEFIK_ACME_EMAIL "Traefik email for ACME certs" "admin@example.com"
-  ask_var OPENCLAW_DOMAIN "OpenClaw public domain (DNS must point to host)" "openclaw.example.com"
+  ask_var TRAEFIK_ACME_EMAIL "Traefik email for ACME certs" "$(env_or_default TRAEFIK_ACME_EMAIL admin@example.com)"
+  ask_var OPENCLAW_DOMAIN "OpenClaw public domain (DNS must point to host)" "$(env_or_default OPENCLAW_DOMAIN openclaw.example.com)"
 fi
 ask_var OPENCLAW_TOKEN "OpenClaw gateway token (optional)" ""
-ask_var OPENCLAW_DIR "Optional output directory for OpenClaw" "$HOME/openclaw"
-ask_var OPENCLAW_CONFIG_DIR "Optional OpenClaw config directory" "$HOME/.openclaw"
-ask_var OPENCLAW_WORKSPACE_DIR "Optional workspace directory" "$HOME/.openclaw/workspace"
+ask_var OPENCLAW_DIR "Optional output directory for OpenClaw" "$(env_or_default OPENCLAW_DIR "$HOME/openclaw")"
+ask_var OPENCLAW_CONFIG_DIR "Optional OpenClaw config directory" "$(env_or_default OPENCLAW_CONFIG_DIR "$HOME/.openclaw")"
+ask_var OPENCLAW_WORKSPACE_DIR "Optional workspace directory" "$(env_or_default OPENCLAW_WORKSPACE_DIR "$HOME/.openclaw/workspace")"
 if [ "$OPENCLAW_ACCESS_MODE" = "public" ]; then
-  ask_var TRAEFIK_DIR "Optional Traefik directory" "$HOME/docker/traefik"
+  ask_var TRAEFIK_DIR "Optional Traefik directory" "$(env_or_default TRAEFIK_DIR "$HOME/docker/traefik")"
 fi
-ask_var OPENCLAW_USER "System user that should own OpenClaw files (usually your SSH user)" "$(id -un)"
-ask_var OPENCLAW_ENABLE_SIGNAL "Enable Signal channel setup (1=yes, 0=no)" "0"
+ask_var OPENCLAW_USER "System user that should own OpenClaw files (usually your SSH user)" "$(env_or_default OPENCLAW_USER "$(id -un)")"
+ask_var OPENCLAW_ENABLE_SIGNAL "Enable Signal channel setup (1=yes, 0=no)" "$(env_or_default OPENCLAW_ENABLE_SIGNAL 0)"
 if [ "${OPENCLAW_ENABLE_SIGNAL:-0}" = "1" ]; then
   ask_var OPENCLAW_SIGNAL_ACCOUNT "Signal bot account number (E.164, e.g. +15551234567)" ""
   ask_var OPENCLAW_SIGNAL_ALLOW_FROM "Signal DM allowlist sender (optional E.164 or uuid:<id>)" ""
-  ask_var OPENCLAW_SIGNAL_CLI_PATH "Signal CLI command/path" "signal-cli"
-  ask_var OPENCLAW_SIGNAL_AUTO_INSTALL "Auto-install signal-cli if missing (1=yes, 0=no)" "1"
+  ask_var OPENCLAW_SIGNAL_CLI_PATH "Signal CLI command/path" "$(env_or_default OPENCLAW_SIGNAL_CLI_PATH signal-cli)"
+  ask_var OPENCLAW_SIGNAL_AUTO_INSTALL "Auto-install signal-cli if missing (1=yes, 0=no)" "$(env_or_default OPENCLAW_SIGNAL_AUTO_INSTALL 1)"
 fi
-ask_var OPENCLAW_ENABLE_GITHUB_SKILL "Enable GitHub skill prerequisites (1=yes, 0=no)" "0"
+ask_var OPENCLAW_ENABLE_GITHUB_SKILL "Enable GitHub skill prerequisites (1=yes, 0=no)" "$(env_or_default OPENCLAW_ENABLE_GITHUB_SKILL 0)"
 if [ "${OPENCLAW_ENABLE_GITHUB_SKILL:-0}" = "1" ]; then
-  ask_var OPENCLAW_GH_CLI_PATH "GitHub CLI command/path" "gh"
+  ask_var OPENCLAW_GH_CLI_PATH "GitHub CLI command/path" "$(env_or_default OPENCLAW_GH_CLI_PATH gh)"
 fi
-ask_var OPENCLAW_ENABLE_HIMALAYA_SKILL "Enable Himalaya skill prerequisites (1=yes, 0=no)" "0"
+ask_var OPENCLAW_ENABLE_HIMALAYA_SKILL "Enable Himalaya skill prerequisites (1=yes, 0=no)" "$(env_or_default OPENCLAW_ENABLE_HIMALAYA_SKILL 0)"
 if [ "${OPENCLAW_ENABLE_HIMALAYA_SKILL:-0}" = "1" ]; then
-  ask_var OPENCLAW_HIMALAYA_CLI_PATH "Himalaya CLI command/path" "himalaya"
-  ask_var OPENCLAW_HIMALAYA_REQUIRE_CONFIG "Require Himalaya config file exists (1=yes, 0=no)" "1"
-  ask_var OPENCLAW_HIMALAYA_CONFIG_PATH "Himalaya config file path" "$HOME/.config/himalaya/config.toml"
+  ask_var OPENCLAW_HIMALAYA_CLI_PATH "Himalaya CLI command/path" "$(env_or_default OPENCLAW_HIMALAYA_CLI_PATH himalaya)"
+  ask_var OPENCLAW_HIMALAYA_REQUIRE_CONFIG "Require Himalaya config file exists (1=yes, 0=no)" "$(env_or_default OPENCLAW_HIMALAYA_REQUIRE_CONFIG 1)"
+  ask_var OPENCLAW_HIMALAYA_CONFIG_PATH "Himalaya config file path" "$(env_or_default OPENCLAW_HIMALAYA_CONFIG_PATH "$HOME/.config/himalaya/config.toml")"
 fi
-ask_var OPENCLAW_ENABLE_CODING_AGENT_SKILL "Enable coding-agent skill prerequisites (1=yes, 0=no)" "0"
+ask_var OPENCLAW_ENABLE_CODING_AGENT_SKILL "Enable coding-agent skill prerequisites (1=yes, 0=no)" "$(env_or_default OPENCLAW_ENABLE_CODING_AGENT_SKILL 0)"
 if [ "${OPENCLAW_ENABLE_CODING_AGENT_SKILL:-0}" = "1" ]; then
-  ask_var OPENCLAW_CODING_AGENT_BACKEND "Coding-agent backend (claude/codex/opencode/pi)" "codex"
+  ask_var OPENCLAW_CODING_AGENT_BACKEND "Coding-agent backend (claude/codex/opencode/pi)" "$(env_or_default OPENCLAW_CODING_AGENT_BACKEND codex)"
 fi
-ask_var DRY_RUN "Dry-run mode (1=yes, 0=no)" "0"
+ask_var DRY_RUN "Dry-run mode (1=yes, 0=no)" "$(env_or_default DRY_RUN 0)"
 
 if [ "$DRY_RUN" != "1" ]; then
   milestone "Optional pre-deploy backup"

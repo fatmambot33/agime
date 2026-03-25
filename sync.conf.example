@@ -7,8 +7,8 @@
 REMOTE_HOST=user@example-vps
 REMOTE_DIR=/tmp/agime
 
-# Run one of: build-interactive.sh (default) or build.sh (non-interactive)
-SYNC_REMOTE_ENTRYPOINT=build-interactive.sh
+# Run one of: build.sh (default, non-interactive) or build-interactive.sh (welcome menu)
+SYNC_REMOTE_ENTRYPOINT=build.sh
 
 # Optional: pre-select welcome action when using build-interactive.sh
 # OPENCLAW_ACTION=install

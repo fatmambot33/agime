@@ -60,7 +60,7 @@ EOF
 grep -Eq "ssh .*test-host mkdir -p '/tmp/test-agime'" "$CALLS_FILE"
 grep -Eq "scp .* -r build-interactive.sh build.sh backup.sh update.sh add_tool.sh restore.sh sync.sh scripts templates docs README.md $TMP_DIR/auto-sync\\.conf test-host:/tmp/test-agime/" "$CALLS_FILE"
 grep -Eq "scp .* $TMP_DIR/auto-sync\\.conf test-host:/tmp/test-agime/auto-sync\\.conf" "$CALLS_FILE"
-grep -Eq "ssh .* -t test-host cd '/tmp/test-agime' && chmod \+x \./\*\.sh && \. '\./auto-sync\.conf' && OPENCLAW_EXPORT_ENV_FILE='auto-sync\\.conf' \./build-interactive.sh" "$CALLS_FILE"
+grep -Eq "ssh .* test-host cd '/tmp/test-agime' && chmod \+x \./\*\.sh && \. '\./auto-sync\.conf' && \./build.sh" "$CALLS_FILE"
 grep -Eq "ssh .* -O exit test-host" "$CALLS_FILE"
 
 (
@@ -72,7 +72,7 @@ grep -Eq "ssh .* -O exit test-host" "$CALLS_FILE"
     sh ./sync.sh
 )
 
-grep -Eq "ssh .* -t test-host cd '/tmp/test-agime' && chmod \+x \./\*\.sh && \. '\./auto-sync\.conf' && OPENCLAW_ACTION='security' OPENCLAW_EXPORT_ENV_FILE='auto-sync\\.conf' \./build-interactive.sh" "$CALLS_FILE"
+grep -Eq "ssh .* test-host cd '/tmp/test-agime' && chmod \+x \./\*\.sh && \. '\./auto-sync\.conf' && \./build.sh" "$CALLS_FILE"
 
 CONFIG_FILE="$TMP_DIR/sync.conf"
 cat > "$CONFIG_FILE" << EOF
@@ -100,5 +100,22 @@ grep -Eq "scp .* $CONFIG_FILE config-host:/tmp/config-agime/" "$CALLS_FILE"
 grep -Eq "scp .* $TMP_DIR/mirrored\\.env config-host:/tmp/config-agime/\\.sync-build\\.env" "$CALLS_FILE"
 grep -Eq "ssh .* config-host cd '/tmp/config-agime' && chmod \+x \./\*\.sh && \. '\./\.sync-build\.env' && \./build.sh" "$CALLS_FILE"
 grep -Eq "scp .* config-host:/tmp/config-agime/\.sync-build\.env $TMP_DIR/mirrored\.env" "$CALLS_FILE"
+
+INTERACTIVE_CONFIG_FILE="$TMP_DIR/interactive-sync.conf"
+cat > "$INTERACTIVE_CONFIG_FILE" << EOF
+REMOTE_HOST=interactive-host
+REMOTE_DIR=/tmp/interactive-agime
+SYNC_REMOTE_ENTRYPOINT=build-interactive.sh
+EOF
+
+(
+  cd "$REPO_DIR"
+  PATH="$BIN_DIR:$PATH" \
+    SYNC_CONFIG_FILE="$INTERACTIVE_CONFIG_FILE" \
+    OPENCLAW_ACTION=security \
+    sh ./sync.sh
+)
+
+grep -Eq "ssh .* -t interactive-host cd '/tmp/interactive-agime' && chmod \+x \./\*\.sh && \. '\./interactive-sync\.conf' && OPENCLAW_ACTION='security' OPENCLAW_EXPORT_ENV_FILE='interactive-sync\\.conf' \./build-interactive.sh" "$CALLS_FILE"
 
 echo "sync.sh hermetic test passed"

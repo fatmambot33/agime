@@ -4,9 +4,6 @@ set -eu
 
 SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 SYNC_CONFIG_FILE=${SYNC_CONFIG_FILE:-"$SCRIPT_DIR/sync.conf"}
-SYNC_CONFIG_TEMPLATE=${SYNC_CONFIG_TEMPLATE:-"$SCRIPT_DIR/sync.conf.example"}
-SYNC_BOOTSTRAP_LOCAL_CONFIG=${SYNC_BOOTSTRAP_LOCAL_CONFIG:-1}
-SYNC_FETCH_REMOTE_CONFIG_ON_MISSING=${SYNC_FETCH_REMOTE_CONFIG_ON_MISSING:-1}
 
 REMOTE_HOST=${REMOTE_HOST:-my-vps}
 REMOTE_DIR=${REMOTE_DIR:-/tmp/agime}
@@ -17,7 +14,6 @@ SSH_CONTROL_PATH=${SSH_CONTROL_PATH:-"$HOME/.ssh/agime-sync-%r@%h:%p"}
 SSH_BASE_ARGS="-o ControlMaster=auto -o ControlPersist=${SSH_CONTROL_PERSIST_SECONDS} -o ControlPath=$SSH_CONTROL_PATH"
 
 try_download_remote_config() {
-  [ "$SYNC_FETCH_REMOTE_CONFIG_ON_MISSING" = "1" ] || return 1
   ssh $SSH_BASE_ARGS "$REMOTE_HOST" "test -f '$REMOTE_DIR/$SYNC_REMOTE_ENV_FILE'" || return 1
   mkdir -p "$(dirname "$SYNC_LOCAL_ENV_FILE")"
   scp $SSH_BASE_ARGS "$REMOTE_HOST:$REMOTE_DIR/$SYNC_REMOTE_ENV_FILE" "$SYNC_LOCAL_ENV_FILE"
@@ -26,12 +22,6 @@ try_download_remote_config() {
 }
 
 bootstrap_local_config() {
-  [ "$SYNC_BOOTSTRAP_LOCAL_CONFIG" = "1" ] || return 1
-
-  if [ -f "$SYNC_CONFIG_TEMPLATE" ]; then
-    cp "$SYNC_CONFIG_TEMPLATE" "$SYNC_LOCAL_ENV_FILE"
-  fi
-
   OPENCLAW_FORCE_INTERACTIVE=1 \
     OPENCLAW_GENERATE_ENV_ONLY=1 \
     OPENCLAW_EXPORT_ENV_FILE="$SYNC_LOCAL_ENV_FILE" \
@@ -48,10 +38,7 @@ bootstrap_local_config() {
 }
 
 if [ ! -f "$SYNC_LOCAL_ENV_FILE" ]; then
-  try_download_remote_config || bootstrap_local_config || {
-    printf 'Error: missing %s and unable to fetch/bootstrap config.\n' "$SYNC_LOCAL_ENV_FILE" >&2
-    exit 1
-  }
+  try_download_remote_config || bootstrap_local_config
 fi
 
 if [ -f "$SYNC_CONFIG_FILE" ]; then

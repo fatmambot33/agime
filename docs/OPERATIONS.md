@@ -9,7 +9,7 @@
   - `SSH_CONTROL_PERSIST_SECONDS=1200`
   - `SSH_CONTROL_PATH="$HOME/.ssh/agime-sync-%r@%h:%p"`
 - Prefer keeping sync + build options in `sync.conf` (copy from `sync.conf.example`) and enable `SYNC_PRINT_CONFIG=1` so current effective values are shown before each run.
-- If `sync.conf` is missing, `sync.sh` first tries to download `$REMOTE_DIR/$SYNC_REMOTE_ENV_FILE`; if not found remotely, it runs local `build-interactive.sh` in config-generation mode and writes `sync.conf`.
+- If `sync.conf` is missing, `sync.sh` first tries to download remote `sync.conf`; if not found remotely, it runs local `build-interactive.sh` in config-generation mode and writes it locally.
 - For non-interactive deploys, use `SYNC_REMOTE_ENTRYPOINT=build.sh` and keep required build variables in `sync.conf` (single source of truth).
 - By default, `sync.sh` uploads `sync.conf` (from `SYNC_CONFIG_FILE`) and sources it remotely (`SYNC_REMOTE_ENV_FILE=sync.conf`).
 - Set `SYNC_MIRROR_ENV_FILE=1` when you want generated env values copied back locally after the run.

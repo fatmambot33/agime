@@ -60,7 +60,7 @@ sh ./sync.sh
 ```
 
 `sync.sh` auto-loads `./sync.conf` when present.
-If missing, `sync.sh` first tries downloading the remote config (`$REMOTE_DIR/$SYNC_REMOTE_ENV_FILE`) to local. If remote is also missing, it runs local `build-interactive.sh` in config-generation mode to create the file, then appends `REMOTE_HOST`/`REMOTE_DIR` if absent.
+If missing, `sync.sh` first tries downloading remote `sync.conf`. If remote is also missing, it runs local `build-interactive.sh` in config-generation mode to create one, then appends `REMOTE_HOST`/`REMOTE_DIR` if absent.
 By default, the same `sync.conf` is sourced remotely before execution (`SYNC_REMOTE_ENV_FILE=sync.conf`) as a single source of truth.
 Set `SYNC_PRINT_CONFIG=1` to print the effective config before execution.
 `sync.conf` is intentionally gitignored (it may contain secrets), while `sync.conf.example` remains the safe template.

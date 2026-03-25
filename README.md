@@ -9,7 +9,7 @@ Automation scripts for deploying OpenClaw on a VPS with two explicit access mode
 
 - `build.sh`: non-interactive end-to-end setup script (environment-variable driven).
 - `build-interactive.sh`: guided entrypoint with a welcome menu (`Install`, `Update`, `Add Tool`, `Restore`, `Security`); `Install` collects inputs then runs `build.sh`.
-- `sync.sh`: local helper that uploads toolkit files to a VPS first (scripts/templates/docs/README), then runs `build-interactive.sh` remotely over SSH (optionally preselecting `OPENCLAW_ACTION`).
+- `sync.sh`: local helper that uploads toolkit files to a VPS first (scripts/templates/docs/README), then runs `build.sh` remotely over SSH by default (set `SYNC_REMOTE_ENTRYPOINT=build-interactive.sh` to use the welcome menu).
 - `sync.conf.example`: sample local config file for `sync.sh` (copy to `sync.conf` to track current sync/build defaults).
 - `.sync-build.env.example`: sample build environment file for non-interactive deploy runs.
 - `backup.sh`: creates a tarball backup of OpenClaw runtime data (`$OPENCLAW_CONFIG_DIR`, `$OPENCLAW_DIR/.env`, optional Traefik state).
@@ -27,7 +27,7 @@ Automation scripts for deploying OpenClaw on a VPS with two explicit access mode
 
 ## Quick start
 
-### Sync + remote welcome flow
+### Sync + remote deploy
 
 Run from your local machine:
 
@@ -38,7 +38,7 @@ REMOTE_HOST=<user>@<host> sh ./sync.sh
 Behavior:
 
 - sync/upload is executed locally;
-- the welcome menu (`build-interactive.sh`) is executed on the SSH host.
+- non-interactive deploy (`build.sh`) is executed on the SSH host by default.
 
 `sync.sh` now enables SSH connection multiplexing by default (`ControlMaster=auto` + `ControlPersist`), which usually avoids repeated password prompts across the multiple SSH/SCP calls.
 
@@ -62,6 +62,7 @@ sh ./sync.sh
 `sync.sh` auto-loads `./sync.conf` when present.
 If missing, `sync.sh` first tries downloading remote `sync.conf`. If remote is also missing, it runs local `build-interactive.sh` in config-generation mode to create one, then appends `REMOTE_HOST`/`REMOTE_DIR` if absent.
 By default, the same `sync.conf` is sourced remotely before execution (`SYNC_REMOTE_ENV_FILE=sync.conf`) as a single source of truth.
+When `build-interactive.sh` is launched from `sync.sh`, values already present in `sync.conf` are reused as prompt defaults (for example `OPENCLAW_ACCESS_MODE`, directories, and optional tool flags), so pressing Enter keeps existing config values.
 Set `SYNC_PRINT_CONFIG=1` to print the effective config before execution.
 `sync.conf` is intentionally gitignored (it may contain secrets), while `sync.conf.example` remains the safe template.
 
@@ -74,11 +75,11 @@ sh ./sync.sh
 
 Set this in `sync.conf`:
 
-- `SYNC_REMOTE_ENTRYPOINT=build.sh`
 - add required `build.sh` variables directly to `sync.conf` (for example `OVH_ENDPOINT_API_KEY=...`, optional access-mode settings).
 
-If you run the welcome flow and want those selections reflected in reusable config:
+If you prefer the welcome flow and want those selections reflected in reusable config:
 
+- set `SYNC_REMOTE_ENTRYPOINT=build-interactive.sh`;
 - keep `SYNC_REMOTE_ENV_FILE=sync.conf` (default);
 - set `SYNC_MIRROR_ENV_FILE=1` when you want remote updates copied back locally.
 

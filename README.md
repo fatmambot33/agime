@@ -8,7 +8,7 @@ Automation scripts for deploying OpenClaw on a VPS with two explicit access mode
 ## Current repository contents
 
 - `build.sh`: non-interactive end-to-end setup script (environment-variable driven).
-- `build-interactive.sh`: guided wrapper that collects inputs and runs `build.sh`.
+- `build-interactive.sh`: guided entrypoint with a welcome menu (`Install`, `Update`, `Add Tool`, `Restore`, `Security`); `Install` collects inputs then runs `build.sh`.
 - `sync.sh`: helper to copy setup scripts (`build-interactive.sh`, `build.sh`, `backup.sh`, `restore.sh`, `update.sh`, `add_tool.sh`) plus required `scripts/` and `templates/` dependencies over SSH, then run setup remotely.
 - `backup.sh`: creates a tarball backup of OpenClaw runtime data (`$OPENCLAW_CONFIG_DIR`, `$OPENCLAW_DIR/.env`, optional Traefik state).
 - `update.sh`: post-install helper that can fast-forward pull this toolkit checkout (auto-detected) and rerun `build.sh`.

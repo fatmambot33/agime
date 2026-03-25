@@ -53,7 +53,7 @@ Optional environment variables:
  OPENCLAW_SIGNAL_AUTO_INSTALL Default: 1. Set to 0 to disable automatic signal-cli installation.
  OPENCLAW_ENABLE_GITHUB_SKILL Default: 0. Set to 1 to validate/install GitHub CLI (gh) for GitHub skill usage.
  OPENCLAW_GH_CLI_PATH Default: gh. Path/command used to invoke GitHub CLI.
- OPENCLAW_GH_REQUIRE_AUTH Legacy compatibility toggle (host auth checks are not enforced during build).
+ OPENCLAW_GH_REQUIRE_AUTH Default: 1. Set to 0 to skip in-container gh auth status validation.
  OPENCLAW_ENABLE_HIMALAYA_SKILL Default: 0. Set to 1 to validate/install Himalaya CLI for Himalaya skill usage.
  OPENCLAW_HIMALAYA_CLI_PATH Default: himalaya. Path/command used to invoke Himalaya CLI.
  OPENCLAW_HIMALAYA_REQUIRE_CONFIG Default: 1. Set to 0 to skip config file validation.
@@ -77,8 +77,8 @@ Notes:
  https://help.ovhcloud.com/csm/fr-vps-install-openclaw?id=kb_article_view&sysparm_article=KB0074788
  - Docker and Docker Compose must already be installed.
  - If OPENCLAW_ENABLE_GITHUB_SKILL=1, this script can auto-install GitHub CLI (gh) when missing
-   (apt-get only) and, by default, enforces successful gh auth status.
- - If auth is missing, run: gh auth login and rerun the script.
+   (apt-get only) and, by default, validates gh auth status inside the running container runtime.
+ - If auth is missing, run: docker exec openclaw sh -lc 'gh auth login' and rerun the script.
  - If OPENCLAW_ENABLE_HIMALAYA_SKILL=1, this script can auto-install Himalaya CLI (himalaya) when missing
    (apt-get only), can write config from OPENCLAW_HIMALAYA_CONFIG_TOML_BASE64, and by default requires config
    at \$HOME/.config/himalaya/config.toml.
@@ -88,6 +88,7 @@ Notes:
    - codex => npm i -g @openai/codex
    - pi => npm i -g @mariozechner/pi-coding-agent
    - opencode must be installed manually
+   and, by default, validates <backend> --version inside the running container runtime.
  - If the OpenClaw setup wizard runs, it remains interactive.
 EOF2
 }

@@ -51,3 +51,18 @@ validate_container_binary() {
     fail "$feature_name is enabled, but '$binary_name' is not available inside the openclaw container runtime. Install it in the OpenClaw image or disable this optional feature."
   fi
 }
+
+run_container_validation_command() {
+  feature_name=$1
+  validation_description=$2
+  shift 2
+
+  if [ "$DRY_RUN" = "1" ]; then
+    log "[DRY_RUN] validate $feature_name runtime command inside openclaw container: $validation_description"
+    return 0
+  fi
+
+  if ! docker exec openclaw "$@"; then
+    fail "$feature_name is enabled, but runtime validation failed: $validation_description"
+  fi
+}

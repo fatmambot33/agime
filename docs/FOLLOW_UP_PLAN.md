@@ -1,7 +1,7 @@
 # Follow-up Evolution Plan
 
 Date: 2026-03-22
-Last Updated: 2026-03-24
+Last Updated: 2026-03-25
 
 ## Goal
 Transform the repo into a maintainable, testable, and secure deployment toolkit that defaults to private access.
@@ -19,6 +19,7 @@ Transform the repo into a maintainable, testable, and secure deployment toolkit 
 - Fixed ownership correction flow so setup works for both root and non-root execution contexts (optional sudo usage).
 - Ensured `OPENCLAW_CONFIG_DIR` is prepared before ownership safety checks, including custom config-dir paths.
 - Added hermetic ownership/config-dir validation coverage and aligned contributor validation docs with current `make check` / `make check-strict` targets.
+- Added post-install helper scripts (`update.sh`, `add_tool.sh`) and documented their maintenance workflow usage.
 
 ## Prioritized backlog (next 5 items)
 

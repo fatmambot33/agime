@@ -59,6 +59,19 @@
 
 Use repo-provided helpers:
 
+Post-install maintenance helpers:
+
+```sh
+# backup
+sh ./backup.sh
+
+# update toolkit + rerun deploy
+sh ./update.sh
+
+# enable one optional tool post-install
+TOOL=github sh ./add_tool.sh
+```
+
 ```sh
 # backup (default targets)
 sh ./backup.sh

@@ -1,6 +1,6 @@
 SHELL := /bin/sh
 
-SCRIPTS := build.sh build-interactive.sh sync.sh backup.sh restore.sh scripts/build_lib.sh scripts/build_steps.sh scripts/optional_tools/common.sh scripts/optional_tools/github.sh scripts/optional_tools/himalaya.sh scripts/optional_tools/coding_agent.sh scripts/run_security_audit.sh scripts/install_security_audit_cron.sh tests/smoke_dry_run.sh tests/idempotency_dry_run.sh tests/security_template_checks.sh tests/sync_hermetic.sh tests/security_audit_scripts_hermetic.sh tests/backup_restore_hermetic.sh tests/build_interactive_backup_hermetic.sh tests/ownership_config_dir_hermetic.sh
+SCRIPTS := build.sh build-interactive.sh sync.sh backup.sh update.sh add_tool.sh restore.sh scripts/build_lib.sh scripts/build_steps.sh scripts/optional_tools/common.sh scripts/optional_tools/github.sh scripts/optional_tools/himalaya.sh scripts/optional_tools/coding_agent.sh scripts/run_security_audit.sh scripts/install_security_audit_cron.sh tests/smoke_dry_run.sh tests/idempotency_dry_run.sh tests/security_template_checks.sh tests/sync_hermetic.sh tests/security_audit_scripts_hermetic.sh tests/backup_restore_hermetic.sh tests/build_interactive_backup_hermetic.sh tests/ownership_config_dir_hermetic.sh
 
 .PHONY: check check-strict ensure-tools syntax lint fmt-check smoke idempotency security sync-test backup-restore-test interactive-backup-test ownership-config-test security-audit-scripts security-audit install-security-cron
 

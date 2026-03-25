@@ -37,10 +37,8 @@ optional_tool_coding_agent_validate_runtime() {
   [ "$OPENCLAW_ENABLE_CODING_AGENT_SKILL" = "1" ] || return 0
   validate_container_binary "coding-agent skill prerequisites" "$OPENCLAW_CODING_AGENT_BIN"
 
-  if [ "$OPENCLAW_CODING_AGENT_REQUIRE_VERSION_CHECK" = "1" ]; then
-    run_container_validation_command \
-      "coding-agent skill prerequisites" \
-      "$OPENCLAW_CODING_AGENT_BIN --version" \
-      sh -c '"$1" --version > /dev/null 2>&1' sh "$OPENCLAW_CODING_AGENT_BIN"
-  fi
+  run_container_validation_command \
+    "coding-agent skill prerequisites" \
+    "$OPENCLAW_CODING_AGENT_BIN --version" \
+    sh -c '"$1" --version > /dev/null 2>&1' sh "$OPENCLAW_CODING_AGENT_BIN"
 }

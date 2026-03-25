@@ -79,6 +79,7 @@ SYNC_MIRROR_ENV_FILE=1
 SYNC_LOCAL_ENV_FILE=$TMP_DIR/mirrored.env
 SYNC_PRINT_CONFIG=1
 EOF
+printf 'OVH_ENDPOINT_API_KEY=test-key\n' > "$TMP_DIR/mirrored.env"
 
 (
   cd "$REPO_DIR"
@@ -91,6 +92,7 @@ grep -Fq "sync.sh effective config:" "$TMP_DIR/config.stdout"
 grep -Fq "REMOTE_HOST=config-host" "$TMP_DIR/config.stdout"
 grep -Eq "ssh .*config-host mkdir -p '/tmp/config-agime'" "$CALLS_FILE"
 grep -Eq "scp .* $CONFIG_FILE config-host:/tmp/config-agime/" "$CALLS_FILE"
+grep -Eq "scp .* $TMP_DIR/mirrored\\.env config-host:/tmp/config-agime/\\.sync-build\\.env" "$CALLS_FILE"
 grep -Eq "ssh .* config-host cd '/tmp/config-agime' && chmod \+x \./\*\.sh && \. '\./\.sync-build\.env' && \./build.sh" "$CALLS_FILE"
 grep -Eq "scp .* config-host:/tmp/config-agime/\.sync-build\.env $TMP_DIR/mirrored\.env" "$CALLS_FILE"
 

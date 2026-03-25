@@ -12,7 +12,7 @@
 - For non-interactive deploys, use `SYNC_REMOTE_ENTRYPOINT=build.sh` and provide a remote env file via `SYNC_REMOTE_ENV_FILE`.
 - `sync.conf` and `.sync-build.env` are gitignored because they can contain secrets.
 - To reflect welcome answers into reusable config, set `SYNC_REMOTE_ENV_FILE=.sync-build.env` and `SYNC_MIRROR_ENV_FILE=1` so the generated env file is copied back to local.
-- `sync.sh` now uploads `sync.conf` (from `SYNC_CONFIG_FILE`) and `.sync-build.env` automatically when those files exist locally.
+- `sync.sh` now uploads `sync.conf` (from `SYNC_CONFIG_FILE`) and the environment file (`SYNC_LOCAL_ENV_FILE`, fallback `SYNC_REMOTE_ENV_FILE` path) when present locally.
 - `build-interactive.sh` auto-runs non-interactive mode when `.sync-build.env` exists on host; set `OPENCLAW_FORCE_INTERACTIVE=1` to override.
 
 ### 1) ssh-tunnel mode is unreachable locally
@@ -66,9 +66,13 @@
 
 - `ssh-tunnel` mode backup targets:
   - `$HOME/.openclaw`
+  - `$HOME/.openclaw/workspace` (or your custom `OPENCLAW_WORKSPACE_DIR`)
+  - `$HOME/.openclaw/skills` and `$HOME/.openclaw/hooks` when present
+  - `$HOME/.openclaw/paired-devices.json` when present
   - `$HOME/openclaw/.env`
 - `public` mode backup targets include the above plus:
   - `$HOME/docker/traefik`
+- `build.sh` stores timestamped `openclaw.json` backups under `$HOME/openclaw-backups` by default (override with `OPENCLAW_JSON_BACKUP_DIR`).
 
 Use repo-provided helpers:
 
@@ -147,4 +151,3 @@ Use this short checklist for final readiness reviews:
    - Take a pre-change backup (`backup.sh`) and confirm archive existence before upgrades.
 5. **Post-change verification**
    - Run mode-specific health checks and inspect `docker logs openclaw` (plus `docker logs traefik` in public mode).
-

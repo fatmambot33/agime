@@ -20,6 +20,7 @@ initialize_defaults() {
   OPENCLAW_DIR=${OPENCLAW_DIR:-"$HOME_DIR/openclaw"}
   OPENCLAW_CONFIG_DIR=${OPENCLAW_CONFIG_DIR:-"$HOME_DIR/.openclaw"}
   OPENCLAW_WORKSPACE_DIR=${OPENCLAW_WORKSPACE_DIR:-"$OPENCLAW_CONFIG_DIR/workspace"}
+  OPENCLAW_JSON_BACKUP_DIR=${OPENCLAW_JSON_BACKUP_DIR:-"$HOME_DIR/openclaw-backups"}
   TRAEFIK_DIR=${TRAEFIK_DIR:-"$HOME_DIR/docker/traefik"}
   OPENCLAW_REPO=${OPENCLAW_REPO:-"https://github.com/openclaw/openclaw.git"}
   OPENCLAW_IMAGE=${OPENCLAW_IMAGE:-"openclaw:local"}
@@ -48,7 +49,6 @@ initialize_defaults() {
   OPENCLAW_SIGNAL_AUTO_INSTALL=${OPENCLAW_SIGNAL_AUTO_INSTALL:-"1"}
   OPENCLAW_ENABLE_GITHUB_SKILL=${OPENCLAW_ENABLE_GITHUB_SKILL:-"0"}
   OPENCLAW_GH_CLI_PATH=${OPENCLAW_GH_CLI_PATH:-"gh"}
-  OPENCLAW_GH_REQUIRE_AUTH=${OPENCLAW_GH_REQUIRE_AUTH:-"1"}
   OPENCLAW_ENABLE_HIMALAYA_SKILL=${OPENCLAW_ENABLE_HIMALAYA_SKILL:-"0"}
   OPENCLAW_HIMALAYA_CLI_PATH=${OPENCLAW_HIMALAYA_CLI_PATH:-"himalaya"}
   OPENCLAW_HIMALAYA_REQUIRE_CONFIG=${OPENCLAW_HIMALAYA_REQUIRE_CONFIG:-"1"}
@@ -56,7 +56,6 @@ initialize_defaults() {
   OPENCLAW_HIMALAYA_CONFIG_TOML_BASE64=${OPENCLAW_HIMALAYA_CONFIG_TOML_BASE64:-""}
   OPENCLAW_ENABLE_CODING_AGENT_SKILL=${OPENCLAW_ENABLE_CODING_AGENT_SKILL:-"0"}
   OPENCLAW_CODING_AGENT_BACKEND=${OPENCLAW_CODING_AGENT_BACKEND:-"codex"}
-  OPENCLAW_CODING_AGENT_REQUIRE_VERSION_CHECK=${OPENCLAW_CODING_AGENT_REQUIRE_VERSION_CHECK:-"1"}
 }
 
 validate_access_mode() {
@@ -100,13 +99,6 @@ validate_access_mode() {
       ;;
   esac
 
-  case "$OPENCLAW_GH_REQUIRE_AUTH" in
-    0 | 1) ;;
-    *)
-      fail "OPENCLAW_GH_REQUIRE_AUTH must be either '0' or '1'"
-      ;;
-  esac
-
   case "$OPENCLAW_ENABLE_HIMALAYA_SKILL" in
     0 | 1) ;;
     *)
@@ -132,13 +124,6 @@ validate_access_mode() {
     claude | codex | opencode | pi) ;;
     *)
       fail "OPENCLAW_CODING_AGENT_BACKEND must be one of: claude, codex, opencode, pi"
-      ;;
-  esac
-
-  case "$OPENCLAW_CODING_AGENT_REQUIRE_VERSION_CHECK" in
-    0 | 1) ;;
-    *)
-      fail "OPENCLAW_CODING_AGENT_REQUIRE_VERSION_CHECK must be either '0' or '1'"
       ;;
   esac
 
@@ -393,8 +378,12 @@ validate_optional_skill_container_runtime() {
 write_openclaw_json_config() {
   OPENCLAW_JSON="$OPENCLAW_CONFIG_DIR/openclaw.json"
   if [ -f "$OPENCLAW_JSON" ]; then
-    run_cmd cp "$OPENCLAW_JSON" "${OPENCLAW_JSON}.bak"
-    run_cmd chmod 600 "${OPENCLAW_JSON}.bak"
+    OPENCLAW_JSON_BACKUP_TIMESTAMP=$(date +%Y%m%d-%H%M%S)
+    OPENCLAW_JSON_BACKUP_FILE="$OPENCLAW_JSON_BACKUP_DIR/openclaw.json.$OPENCLAW_JSON_BACKUP_TIMESTAMP.bak"
+    run_cmd mkdir -p "$OPENCLAW_JSON_BACKUP_DIR"
+    run_cmd chmod 700 "$OPENCLAW_JSON_BACKUP_DIR"
+    run_cmd cp "$OPENCLAW_JSON" "$OPENCLAW_JSON_BACKUP_FILE"
+    run_cmd chmod 600 "$OPENCLAW_JSON_BACKUP_FILE"
   fi
 
   log "Writing $OPENCLAW_JSON"

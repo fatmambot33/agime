@@ -4,12 +4,36 @@ set -eu
 
 SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 SYNC_CONFIG_FILE=${SYNC_CONFIG_FILE:-"$SCRIPT_DIR/sync.conf"}
-SYNC_CONFIG_TEMPLATE=${SYNC_CONFIG_TEMPLATE:-"$SCRIPT_DIR/sync.conf.example"}
 
-if [ ! -f "$SYNC_CONFIG_FILE" ] && [ -f "$SYNC_CONFIG_TEMPLATE" ]; then
-  cp "$SYNC_CONFIG_TEMPLATE" "$SYNC_CONFIG_FILE"
+bootstrap_sync_config() {
+  build_interactive_script=$SCRIPT_DIR/build-interactive.sh
+  [ -f "$build_interactive_script" ] || {
+    printf 'Error: missing %s and cannot bootstrap without %s\n' "$SYNC_CONFIG_FILE" "$build_interactive_script" >&2
+    exit 1
+  }
+
+  printf 'sync.sh: %s not found. Launching local build-interactive wizard to create it.\n' "$SYNC_CONFIG_FILE"
+  OPENCLAW_FORCE_INTERACTIVE=1 \
+    OPENCLAW_GENERATE_ENV_ONLY=1 \
+    OPENCLAW_EXPORT_ENV_FILE="$SYNC_CONFIG_FILE" \
+    sh "$build_interactive_script"
+
+  printf 'Remote SSH host (REMOTE_HOST) [my-vps]: '
+  read remote_host
+  remote_host=${remote_host:-my-vps}
+  printf 'Remote directory (REMOTE_DIR) [/tmp/agime]: '
+  read remote_dir
+  remote_dir=${remote_dir:-/tmp/agime}
+
+  {
+    printf '\nREMOTE_HOST=%s\n' "$remote_host"
+    printf 'REMOTE_DIR=%s\n' "$remote_dir"
+  } >> "$SYNC_CONFIG_FILE"
   chmod 600 "$SYNC_CONFIG_FILE"
-  printf 'sync.sh: created %s from template %s\n' "$SYNC_CONFIG_FILE" "$SYNC_CONFIG_TEMPLATE"
+}
+
+if [ ! -f "$SYNC_CONFIG_FILE" ]; then
+  bootstrap_sync_config
 fi
 
 if [ -f "$SYNC_CONFIG_FILE" ]; then

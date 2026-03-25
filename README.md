@@ -54,12 +54,13 @@ sh ./sync.sh
 Use a local config file (so current sync + build settings are visible and reusable):
 
 ```bash
-# optional: sync.sh auto-creates this from sync.conf.example when missing
+# optional: pre-create/edit; otherwise sync.sh bootstraps it via build-interactive
 $EDITOR ./sync.conf
 sh ./sync.sh
 ```
 
-`sync.sh` auto-loads `./sync.conf` when present and auto-creates it from `sync.conf.example` when absent.
+`sync.sh` auto-loads `./sync.conf` when present.
+If missing, `sync.sh` launches local `build-interactive.sh` in "generate config only" mode to create `sync.conf`, then asks for `REMOTE_HOST`/`REMOTE_DIR` and appends them.
 By default, the same `sync.conf` is also sourced remotely before execution (`SYNC_REMOTE_ENV_FILE=sync.conf`), giving you a single source of truth for sync and build variables.
 Set `SYNC_PRINT_CONFIG=1` to print the effective config before execution.
 `sync.conf` is intentionally gitignored (it may contain secrets), while `sync.conf.example` remains the safe template.

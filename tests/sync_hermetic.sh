@@ -10,8 +10,6 @@ BIN_DIR="$TMP_DIR/bin"
 mkdir -p "$BIN_DIR"
 CALLS_FILE="$TMP_DIR/calls.log"
 : > "$CALLS_FILE"
-BLANK_TEMPLATE="$TMP_DIR/blank-sync.conf.example"
-: > "$BLANK_TEMPLATE"
 
 cat > "$BIN_DIR/ssh" << EOF
 #!/usr/bin/env sh
@@ -50,11 +48,12 @@ chmod +x "$BIN_DIR/ssh" "$BIN_DIR/scp"
 (
   cd "$REPO_DIR"
   AUTO_CONFIG_FILE="$TMP_DIR/auto-sync.conf"
+  cat > "$AUTO_CONFIG_FILE" << EOF
+REMOTE_HOST=test-host
+REMOTE_DIR=/tmp/test-agime
+EOF
   PATH="$BIN_DIR:$PATH" \
-    SYNC_CONFIG_TEMPLATE="$BLANK_TEMPLATE" \
     SYNC_CONFIG_FILE="$AUTO_CONFIG_FILE" \
-    REMOTE_HOST=test-host \
-    REMOTE_DIR=/tmp/test-agime \
     sh ./sync.sh
 )
 
@@ -68,10 +67,7 @@ grep -Eq "ssh .* -O exit test-host" "$CALLS_FILE"
   cd "$REPO_DIR"
   AUTO_CONFIG_FILE="$TMP_DIR/auto-sync.conf"
   PATH="$BIN_DIR:$PATH" \
-    SYNC_CONFIG_TEMPLATE="$BLANK_TEMPLATE" \
     SYNC_CONFIG_FILE="$AUTO_CONFIG_FILE" \
-    REMOTE_HOST=test-host \
-    REMOTE_DIR=/tmp/test-agime \
     OPENCLAW_ACTION=security \
     sh ./sync.sh
 )

@@ -42,7 +42,7 @@ normalize_shared_home_paths() {
   tmp_file=$(mktemp)
   while IFS= read -r line || [ -n "$line" ]; do
     case "$line" in
-      OPENCLAW_DIR=*|OPENCLAW_CONFIG_DIR=*|OPENCLAW_WORKSPACE_DIR=*|TRAEFIK_DIR=*|OPENCLAW_JSON_BACKUP_DIR=*)
+      OPENCLAW_DIR=* | OPENCLAW_CONFIG_DIR=* | OPENCLAW_WORKSPACE_DIR=* | TRAEFIK_DIR=* | OPENCLAW_JSON_BACKUP_DIR=*)
         key=${line%%=*}
         value=${line#*=}
         value=$(canonicalize_home_path "$value")

@@ -434,6 +434,11 @@ fi
 
 persist_env_file "${OPENCLAW_EXPORT_ENV_FILE:-}"
 
+if [ "${OPENCLAW_GENERATE_ENV_ONLY:-0}" = "1" ]; then
+  milestone "OPENCLAW_GENERATE_ENV_ONLY=1 - configuration captured; skipping backup and build."
+  exit 0
+fi
+
 if [ "${OPENCLAW_ENABLE_SIGNAL:-0}" = "1" ]; then
   cat << 'EOF2'
 - Signal setup enabled. Next steps after deploy:

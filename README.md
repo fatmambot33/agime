@@ -60,7 +60,8 @@ sh ./sync.sh
 ```
 
 `sync.sh` auto-loads `./sync.conf` when present.
-If missing, `sync.sh` first tries downloading remote `sync.conf`. If remote is also missing, it runs local `build-interactive.sh` in config-generation mode to create one, then appends `REMOTE_HOST`/`REMOTE_DIR` if absent.
+It then prioritizes an existing remote env file (`SYNC_REMOTE_ENV_FILE`, default `sync.conf`): when found, that remote file is downloaded locally and used as the source of truth for the run.
+If the remote file is missing, `sync.sh` uses local config; and when local is also missing, it runs local `build-interactive.sh` in config-generation mode to create one, then appends `REMOTE_HOST`/`REMOTE_DIR` if absent.
 By default, the same `sync.conf` is sourced remotely before execution (`SYNC_REMOTE_ENV_FILE=sync.conf`) under `set -a`, so plain `KEY=value` assignments are auto-exported for the selected remote entrypoint.
 When `SYNC_REMOTE_ENV_FILE` points to the same file already included in `SYNC_ITEMS` (default: `sync.conf`), `sync.sh` uploads it once to avoid duplicate transfer lines.
 When `build-interactive.sh` is launched from `sync.sh`, values already present in `sync.conf` are reused as prompt defaults (for example `OPENCLAW_ACCESS_MODE`, directories, and optional tool flags), so pressing Enter keeps existing config values.
@@ -78,6 +79,7 @@ Set this in `sync.conf`:
 
 - add required `build.sh` variables directly to `sync.conf` (for example `OVH_ENDPOINT_API_KEY=...`, optional access-mode settings). They can remain plain shell assignments; `sync.sh` auto-exports them on the remote host before launching `build.sh`.
 - `sync.sh` now prints a preflight warning when `SYNC_REMOTE_ENTRYPOINT=build.sh` and `OVH_ENDPOINT_API_KEY` is empty in loaded config/environment.
+- `SYNC_REMOTE_CONFIG_PRIORITY=1` (default) keeps remote env authoritative when it already exists; set `SYNC_REMOTE_CONFIG_PRIORITY=0` if you explicitly want to push local config as the source of truth.
 
 If you prefer the welcome flow and want those selections reflected in reusable config:
 

@@ -14,6 +14,14 @@ CALLS_FILE="$TMP_DIR/calls.log"
 cat > "$BIN_DIR/ssh" << EOF
 #!/usr/bin/env sh
 printf 'ssh %s\n' "\$*" >> "$CALLS_FILE"
+case "\$*" in
+  *" test -f "*)
+    if [ "\${MOCK_REMOTE_ENV_EXISTS:-0}" = "1" ]; then
+      exit 0
+    fi
+    exit 1
+    ;;
+esac
 exit 0
 EOF
 
@@ -141,5 +149,26 @@ EOF
 )
 
 grep -Eq "ssh .* -t interactive-host cd '/tmp/interactive-agime' && chmod \+x \./\*\.sh && set -a && \. '\./interactive-sync\.conf' && set \+a && OPENCLAW_ACTION='security' OPENCLAW_EXPORT_ENV_FILE='interactive-sync\\.conf' \./build-interactive.sh" "$CALLS_FILE"
+
+REMOTE_PRIORITY_CONFIG="$TMP_DIR/remote-priority.conf"
+cat > "$REMOTE_PRIORITY_CONFIG" << EOF
+REMOTE_HOST=remote-priority-host
+REMOTE_DIR=/tmp/remote-priority-agime
+OVH_ENDPOINT_API_KEY=local-should-not-win
+EOF
+
+(
+  cd "$REPO_DIR"
+  PATH="$BIN_DIR:$PATH" \
+    MOCK_REMOTE_ENV_EXISTS=1 \
+    SYNC_CONFIG_FILE="$REMOTE_PRIORITY_CONFIG" \
+    sh ./sync.sh
+)
+
+grep -Eq "scp .* remote-priority-host:/tmp/remote-priority-agime/remote-priority\\.conf $REMOTE_PRIORITY_CONFIG" "$CALLS_FILE"
+if grep -Eq "scp .* $REMOTE_PRIORITY_CONFIG remote-priority-host:/tmp/remote-priority-agime/" "$CALLS_FILE"; then
+  echo "did not expect local config upload when remote env file already exists" >&2
+  exit 1
+fi
 
 echo "sync.sh hermetic test passed"

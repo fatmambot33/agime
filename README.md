@@ -250,14 +250,13 @@ Behavior when enabled:
 - Auto-installs `gh` inside the running `openclaw` container when missing (apt-get based).
 - Validates that `gh` is available inside the running `openclaw` container runtime after restart.
 
-If you prefer to install/auth manually, use the following:
+If you prefer to install/auth manually in the container, use:
 
-1. Install `gh`:
-   - Ubuntu/Debian: `sudo apt update && sudo apt install -y gh`
-2. Authenticate once: `gh auth login`
-3. Verify runtime visibility and auth state:
-   - `which gh`
-   - `gh auth status`
+1. Install `gh` in the running container:
+   - `docker exec -u 0 openclaw sh -lc 'apt-get update && apt-get install -y gh'`
+2. Authenticate in the runtime context as needed for your workflow.
+3. Verify runtime visibility:
+   - `docker exec openclaw sh -lc 'command -v gh'`
 
 Note: `OPENCLAW_GH_REQUIRE_AUTH` is retained for interface compatibility, but auth is no longer validated on the VPS host during build (runtime state depends on your in-container workflow).
 
@@ -279,16 +278,13 @@ Behavior when enabled:
 - Mounts `${OPENCLAW_CONFIG_DIR}/himalaya` into the container as `/home/node/.config/himalaya`.
 - Validates that `himalaya` is available inside the running `openclaw` container runtime after restart.
 
-If you prefer to install/configure manually, use the following:
+If you prefer to install/configure manually in the container, use:
 
-1. Install `himalaya`:
-   - Ubuntu/Debian: `sudo apt update && sudo apt install -y himalaya`
-2. Create account config:
-   - `himalaya account configure`
-3. Verify access:
-   - `which himalaya`
-   - `himalaya --version`
-   - `himalaya folder list`
+1. Install `himalaya` in the running container:
+   - `docker exec -u 0 openclaw sh -lc 'apt-get update && apt-get install -y himalaya'`
+2. Populate config at mounted path `${OPENCLAW_CONFIG_DIR}/himalaya/config.toml` (or use `OPENCLAW_HIMALAYA_CONFIG_TOML_BASE64`).
+3. Verify runtime visibility:
+   - `docker exec openclaw sh -lc 'command -v himalaya'`
 
 If config validation fails, run `himalaya account configure` (or set `OPENCLAW_HIMALAYA_CONFIG_PATH` to your existing config) and rerun `build.sh`.
 
@@ -298,7 +294,7 @@ You can provide a fully formed `config.toml` via base64:
 
 ```bash
 OPENCLAW_ENABLE_HIMALAYA_SKILL=1 \
-OPENCLAW_HIMALAYA_CONFIG_PATH="$HOME/.config/himalaya/config.toml" \
+OPENCLAW_HIMALAYA_CONFIG_PATH="$OPENCLAW_CONFIG_DIR/himalaya/config.toml" \
 OPENCLAW_HIMALAYA_CONFIG_TOML_BASE64="$(base64 -w 0 /path/to/config.toml)" \
 OVH_ENDPOINT_API_KEY=xxxxx \
 ./build.sh
@@ -319,10 +315,10 @@ OVH_ENDPOINT_API_KEY=xxxxx \
 
 Supported backends (`OPENCLAW_CODING_AGENT_BACKEND`):
 
-- `claude` → auto-install with `npm i -g @anthropic-ai/claude-code`
-- `codex` → auto-install with `npm i -g @openai/codex`
-- `pi` → auto-install with `npm i -g @mariozechner/pi-coding-agent`
-- `opencode` → manual install required (script validates binary only)
+- `claude` → auto-install in container with `npm i -g @anthropic-ai/claude-code`
+- `codex` → auto-install in container with `npm i -g @openai/codex`
+- `pi` → auto-install in container with `npm i -g @mariozechner/pi-coding-agent`
+- `opencode` → manual install required in container (script validates binary only)
 
 Behavior when enabled:
 

@@ -204,27 +204,6 @@ setup_github_skill_prerequisites() {
   log "GitHub skill enabled; runtime dependency will be installed/validated inside Docker container after restart"
 }
 
-install_github_cli() {
-  if [ "$DRY_RUN" = "1" ]; then
-    log "[DRY_RUN] install GitHub CLI using apt-get"
-    return 0
-  fi
-
-  if command -v apt-get > /dev/null 2>&1; then
-    if [ "$(id -u)" = "0" ]; then
-      run_cmd apt-get update
-      run_cmd apt-get install -y gh
-    else
-      require_command sudo
-      run_cmd sudo apt-get update
-      run_cmd sudo apt-get install -y gh
-    fi
-    return 0
-  fi
-
-  fail "Unable to auto-install GitHub CLI (gh): apt-get is required."
-}
-
 setup_himalaya_skill_prerequisites() {
   if [ "$OPENCLAW_ENABLE_HIMALAYA_SKILL" != "1" ]; then
     return 0
@@ -244,27 +223,6 @@ setup_himalaya_skill_prerequisites() {
       fail "Himalaya config not found at '$OPENCLAW_HIMALAYA_CONFIG_PATH'. Run '$OPENCLAW_HIMALAYA_CLI_PATH account configure' and rerun build."
     fi
   fi
-}
-
-install_himalaya_cli() {
-  if [ "$DRY_RUN" = "1" ]; then
-    log "[DRY_RUN] install Himalaya CLI using apt-get"
-    return 0
-  fi
-
-  if command -v apt-get > /dev/null 2>&1; then
-    if [ "$(id -u)" = "0" ]; then
-      run_cmd apt-get update
-      run_cmd apt-get install -y himalaya
-    else
-      require_command sudo
-      run_cmd sudo apt-get update
-      run_cmd sudo apt-get install -y himalaya
-    fi
-    return 0
-  fi
-
-  fail "Unable to auto-install Himalaya CLI (himalaya): apt-get is required."
 }
 
 write_himalaya_config_from_env_if_provided() {
@@ -296,38 +254,20 @@ resolve_coding_agent_backend() {
   case "$OPENCLAW_CODING_AGENT_BACKEND" in
     claude)
       OPENCLAW_CODING_AGENT_BIN=claude
-      OPENCLAW_CODING_AGENT_INSTALL_COMMAND="npm i -g @anthropic-ai/claude-code"
       ;;
     codex)
       OPENCLAW_CODING_AGENT_BIN=codex
-      OPENCLAW_CODING_AGENT_INSTALL_COMMAND="npm i -g @openai/codex"
       ;;
     pi)
       OPENCLAW_CODING_AGENT_BIN=pi
-      OPENCLAW_CODING_AGENT_INSTALL_COMMAND="npm i -g @mariozechner/pi-coding-agent"
       ;;
     opencode)
       OPENCLAW_CODING_AGENT_BIN=opencode
-      OPENCLAW_CODING_AGENT_INSTALL_COMMAND=""
       ;;
     *)
       fail "Unsupported coding-agent backend: $OPENCLAW_CODING_AGENT_BACKEND"
       ;;
   esac
-}
-
-install_coding_agent_backend() {
-  if [ -z "$OPENCLAW_CODING_AGENT_INSTALL_COMMAND" ]; then
-    fail "Backend '$OPENCLAW_CODING_AGENT_BACKEND' does not support automatic install in this script. Install '$OPENCLAW_CODING_AGENT_BIN' manually and rerun."
-  fi
-
-  if [ "$DRY_RUN" = "1" ]; then
-    log "[DRY_RUN] install coding-agent backend: $OPENCLAW_CODING_AGENT_INSTALL_COMMAND"
-    return 0
-  fi
-
-  require_command npm
-  sh -c "$OPENCLAW_CODING_AGENT_INSTALL_COMMAND"
 }
 
 install_signal_cli() {
@@ -342,8 +282,6 @@ install_signal_cli() {
 
   require_command curl
   require_command tar
-  require_command sudo
-
   tmp_dir=$(mktemp -d)
   trap 'rm -rf "$tmp_dir"' EXIT INT HUP TERM
 
@@ -354,18 +292,18 @@ install_signal_cli() {
 
   log "Installing signal-cli ${version}"
   run_cmd curl -fsSL "$download_url" -o "$tmp_dir/$archive"
-  run_cmd sudo tar xf "$tmp_dir/$archive" -C /opt
+  run_with_optional_sudo tar xf "$tmp_dir/$archive" -C /opt
   installed_signal_cli="/opt/signal-cli-${version}/bin/signal-cli"
-  run_cmd sudo ln -sfn "$installed_signal_cli" /usr/local/bin/signal-cli
+  run_with_optional_sudo ln -sfn "$installed_signal_cli" /usr/local/bin/signal-cli
 
   if [ "$OPENCLAW_SIGNAL_CLI_PATH" != "signal-cli" ]; then
     case "$OPENCLAW_SIGNAL_CLI_PATH" in
       */*)
-        run_cmd sudo mkdir -p "$(dirname "$OPENCLAW_SIGNAL_CLI_PATH")"
-        run_cmd sudo ln -sfn "$installed_signal_cli" "$OPENCLAW_SIGNAL_CLI_PATH"
+        run_with_optional_sudo mkdir -p "$(dirname "$OPENCLAW_SIGNAL_CLI_PATH")"
+        run_with_optional_sudo ln -sfn "$installed_signal_cli" "$OPENCLAW_SIGNAL_CLI_PATH"
         ;;
       *)
-        run_cmd sudo ln -sfn "$installed_signal_cli" "/usr/local/bin/$OPENCLAW_SIGNAL_CLI_PATH"
+        run_with_optional_sudo ln -sfn "$installed_signal_cli" "/usr/local/bin/$OPENCLAW_SIGNAL_CLI_PATH"
         ;;
     esac
   fi

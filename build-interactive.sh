@@ -169,8 +169,7 @@ fi
 
 choose_welcome_action
 case "$OPENCLAW_ACTION" in
-  install)
-    ;;
+  install) ;;
   update)
     [ -f "$UPDATE_SCRIPT" ] || fail "update script not found at $UPDATE_SCRIPT"
     milestone "Running update workflow"

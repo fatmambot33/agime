@@ -11,7 +11,9 @@
 - Prefer keeping sync + build options in `sync.conf` (copy from `sync.conf.example`) and enable `SYNC_PRINT_CONFIG=1` so current effective values are shown before each run.
 - If `sync.conf` is missing, `sync.sh` first tries to download remote `sync.conf`; if not found remotely, it runs local `build-interactive.sh` in config-generation mode and writes it locally.
 - For non-interactive deploys, use `SYNC_REMOTE_ENTRYPOINT=build.sh` and keep required build variables in `sync.conf` (single source of truth).
+- `sync.sh` prints a preflight warning when `SYNC_REMOTE_ENTRYPOINT=build.sh` and `OVH_ENDPOINT_API_KEY` is empty in loaded config/environment.
 - By default, `sync.sh` uploads `sync.conf` (from `SYNC_CONFIG_FILE`) and sources it remotely (`SYNC_REMOTE_ENV_FILE=sync.conf`).
+- If those two paths are the same file (default), `sync.sh` now uploads it once (no duplicate `scp` line for `sync.conf`).
 - Set `SYNC_MIRROR_ENV_FILE=1` when you want generated env values copied back locally after the run.
 - `build-interactive.sh` auto-runs non-interactive mode when `.sync-build.env` exists on host; set `OPENCLAW_FORCE_INTERACTIVE=1` to override.
 

@@ -105,10 +105,60 @@ if [ -n "$SYNC_REMOTE_ENV_FILE" ]; then
   fi
 fi
 
+env_file_has_nonempty_ovh_key() {
+  env_file=${1-}
+  [ -n "$env_file" ] && [ -f "$env_file" ] && awk '
+    /^[[:space:]]*(export[[:space:]]+)?OVH_ENDPOINT_API_KEY=/ {
+      value = substr($0, index($0, "=") + 1)
+      gsub(/^[[:space:]]+/, "", value)
+      gsub(/[[:space:]]+$/, "", value)
+      if (value != "" && value != "\"\"" && value != "'"'"''"'"'") {
+        found = 1
+      }
+    }
+    END { exit(found ? 0 : 1) }
+  ' "$env_file"
+}
+
+print_preflight_warnings() {
+  if [ "$SYNC_REMOTE_ENTRYPOINT" != "build.sh" ] || [ -n "${OVH_ENDPOINT_API_KEY:-}" ]; then
+    return
+  fi
+
+  if env_file_has_nonempty_ovh_key "$ENV_UPLOAD_SOURCE"; then
+    return
+  fi
+
+  warning_target=$SYNC_CONFIG_FILE
+  if [ -n "$ENV_UPLOAD_SOURCE" ]; then
+    warning_target=$ENV_UPLOAD_SOURCE
+  fi
+
+  cat >&2 << EOF
+sync.sh preflight warning:
+  SYNC_REMOTE_ENTRYPOINT=build.sh requires OVH_ENDPOINT_API_KEY.
+  It is currently empty in the loaded environment/config, so remote build.sh is expected to fail.
+  Set OVH_ENDPOINT_API_KEY in $warning_target (or export it before running sync.sh) and retry.
+EOF
+}
+
+print_preflight_warnings
+
+SKIP_ENV_EXTRA_UPLOAD=0
+if [ -n "$ENV_UPLOAD_SOURCE" ] && [ -f "$SYNC_CONFIG_FILE" ]; then
+  case " $UPLOAD_ITEMS " in
+    *" $SYNC_CONFIG_FILE "*)
+      if [ "$ENV_UPLOAD_SOURCE" = "$SYNC_CONFIG_FILE" ] && [ "$SYNC_REMOTE_ENV_FILE" = "$(basename "$SYNC_CONFIG_FILE")" ]; then
+        SKIP_ENV_EXTRA_UPLOAD=1
+      fi
+      ;;
+  esac
+fi
+
 ssh_exec "$REMOTE_HOST" "mkdir -p '$REMOTE_DIR'"
 set -- $UPLOAD_ITEMS
 scp_exec -r "$@" "$REMOTE_HOST:$REMOTE_DIR/"
-if [ -n "$ENV_UPLOAD_SOURCE" ] && [ -n "$SYNC_REMOTE_ENV_FILE" ]; then
+if [ -n "$ENV_UPLOAD_SOURCE" ] && [ -n "$SYNC_REMOTE_ENV_FILE" ] && [ "$SKIP_ENV_EXTRA_UPLOAD" != "1" ]; then
   scp_exec "$ENV_UPLOAD_SOURCE" "$REMOTE_HOST:$REMOTE_DIR/$SYNC_REMOTE_ENV_FILE"
 fi
 

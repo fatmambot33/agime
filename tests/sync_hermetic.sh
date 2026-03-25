@@ -54,14 +54,38 @@ REMOTE_DIR=/tmp/test-agime
 EOF
   PATH="$BIN_DIR:$PATH" \
     SYNC_CONFIG_FILE="$AUTO_CONFIG_FILE" \
-    sh ./sync.sh
+    sh ./sync.sh > "$TMP_DIR/default.stdout" 2>&1
 )
 
+grep -Fq "sync.sh preflight warning:" "$TMP_DIR/default.stdout"
+grep -Fq "requires OVH_ENDPOINT_API_KEY" "$TMP_DIR/default.stdout"
 grep -Eq "ssh .*test-host mkdir -p '/tmp/test-agime'" "$CALLS_FILE"
 grep -Eq "scp .* -r build-interactive.sh build.sh backup.sh update.sh add_tool.sh restore.sh sync.sh scripts templates docs README.md $TMP_DIR/auto-sync\\.conf test-host:/tmp/test-agime/" "$CALLS_FILE"
-grep -Eq "scp .* $TMP_DIR/auto-sync\\.conf test-host:/tmp/test-agime/auto-sync\\.conf" "$CALLS_FILE"
+if grep -Eq "scp .* $TMP_DIR/auto-sync\\.conf test-host:/tmp/test-agime/auto-sync\\.conf" "$CALLS_FILE"; then
+  echo "expected single upload path for auto-sync.conf, but found duplicate explicit env upload" >&2
+  exit 1
+fi
 grep -Eq "ssh .* test-host cd '/tmp/test-agime' && chmod \+x \./\*\.sh && \. '\./auto-sync\.conf' && \./build.sh" "$CALLS_FILE"
 grep -Eq "ssh .* -O exit test-host" "$CALLS_FILE"
+
+CONFIG_WITH_KEY="$TMP_DIR/config-with-key.conf"
+cat > "$CONFIG_WITH_KEY" << EOF
+REMOTE_HOST=key-host
+REMOTE_DIR=/tmp/key-agime
+OVH_ENDPOINT_API_KEY=from-config
+EOF
+
+(
+  cd "$REPO_DIR"
+  PATH="$BIN_DIR:$PATH" \
+    SYNC_CONFIG_FILE="$CONFIG_WITH_KEY" \
+    sh ./sync.sh > "$TMP_DIR/with-key.stdout" 2>&1
+)
+
+if grep -Fq "sync.sh preflight warning:" "$TMP_DIR/with-key.stdout"; then
+  echo "did not expect preflight warning when OVH_ENDPOINT_API_KEY is set in sync config" >&2
+  exit 1
+fi
 
 (
   cd "$REPO_DIR"

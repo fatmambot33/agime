@@ -23,9 +23,9 @@ SYNC_REMOTE_ENTRYPOINT=build-interactive.sh
 # SYNC_LOCAL_ENV_FILE=./.sync-build.env
 #
 # Single source-of-truth mode:
-# - `sync.sh` can bootstrap `sync.conf` via local `build-interactive.sh` if missing.
+# - `sync.sh` can create `sync.conf` from this template if missing.
 # - by default, `sync.conf` is also sourced remotely (SYNC_REMOTE_ENV_FILE=sync.conf)
-#   and mirrored locally (via SYNC_LOCAL_ENV_FILE=./sync.conf).
+#   and mirrored locally (SYNC_MIRROR_ENV_FILE=1, SYNC_LOCAL_ENV_FILE=./sync.conf).
 # - add your build variables below to keep sync + build settings in one file.
 
 # Optional build variables for non-interactive build.sh

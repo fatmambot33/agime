@@ -34,7 +34,7 @@ if [ "\$has_remote" = "1" ]; then
     *)
       case "\$last_arg" in
         /* | ./* | ../* | "$TMP_DIR"/*)
-          : > "\$last_arg"
+          [ -f "\$last_arg" ] || : > "\$last_arg"
           ;;
       esac
       ;;

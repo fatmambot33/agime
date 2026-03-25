@@ -54,14 +54,14 @@ sh ./sync.sh
 Use a local config file (so current sync + build settings are visible and reusable):
 
 ```bash
-# optional: pre-create/edit; otherwise sync.sh bootstraps it via build-interactive
+# optional: pre-create/edit; otherwise sync.sh creates it from sync.conf.example
 $EDITOR ./sync.conf
 sh ./sync.sh
 ```
 
 `sync.sh` auto-loads `./sync.conf` when present.
-If missing, `sync.sh` launches local `build-interactive.sh` in "generate config only" mode to create `sync.conf`, then asks for `REMOTE_HOST`/`REMOTE_DIR` and appends them.
-By default, the same `sync.conf` is also sourced remotely before execution (`SYNC_REMOTE_ENV_FILE=sync.conf`), giving you a single source of truth for sync and build variables.
+If missing, `sync.sh` creates `sync.conf` from `sync.conf.example`, then exits so you can review/edit before deployment.
+By default, the same `sync.conf` is sourced remotely before execution (`SYNC_REMOTE_ENV_FILE=sync.conf`) and mirrored back locally after the run (`SYNC_MIRROR_ENV_FILE=1`) so local/remote stay aligned.
 Set `SYNC_PRINT_CONFIG=1` to print the effective config before execution.
 `sync.conf` is intentionally gitignored (it may contain secrets), while `sync.conf.example` remains the safe template.
 
@@ -80,7 +80,7 @@ Set this in `sync.conf`:
 If you run the welcome flow and want those selections reflected in reusable config:
 
 - keep `SYNC_REMOTE_ENV_FILE=sync.conf` (default);
-- set `SYNC_MIRROR_ENV_FILE=1`.
+- keep `SYNC_MIRROR_ENV_FILE=1` (default).
 
 With this, `build-interactive.sh` can write updated values on the remote host and `sync.sh` copies the remote env file back locally (chmod `600`) so your local `sync.conf` stays current.
 

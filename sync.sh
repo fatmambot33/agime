@@ -4,36 +4,19 @@ set -eu
 
 SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 SYNC_CONFIG_FILE=${SYNC_CONFIG_FILE:-"$SCRIPT_DIR/sync.conf"}
-
-bootstrap_sync_config() {
-  build_interactive_script=$SCRIPT_DIR/build-interactive.sh
-  [ -f "$build_interactive_script" ] || {
-    printf 'Error: missing %s and cannot bootstrap without %s\n' "$SYNC_CONFIG_FILE" "$build_interactive_script" >&2
-    exit 1
-  }
-
-  printf 'sync.sh: %s not found. Launching local build-interactive wizard to create it.\n' "$SYNC_CONFIG_FILE"
-  OPENCLAW_FORCE_INTERACTIVE=1 \
-    OPENCLAW_GENERATE_ENV_ONLY=1 \
-    OPENCLAW_EXPORT_ENV_FILE="$SYNC_CONFIG_FILE" \
-    sh "$build_interactive_script"
-
-  printf 'Remote SSH host (REMOTE_HOST) [my-vps]: '
-  read remote_host
-  remote_host=${remote_host:-my-vps}
-  printf 'Remote directory (REMOTE_DIR) [/tmp/agime]: '
-  read remote_dir
-  remote_dir=${remote_dir:-/tmp/agime}
-
-  {
-    printf '\nREMOTE_HOST=%s\n' "$remote_host"
-    printf 'REMOTE_DIR=%s\n' "$remote_dir"
-  } >> "$SYNC_CONFIG_FILE"
-  chmod 600 "$SYNC_CONFIG_FILE"
-}
+SYNC_CONFIG_TEMPLATE=${SYNC_CONFIG_TEMPLATE:-"$SCRIPT_DIR/sync.conf.example"}
 
 if [ ! -f "$SYNC_CONFIG_FILE" ]; then
-  bootstrap_sync_config
+  if [ -f "$SYNC_CONFIG_TEMPLATE" ]; then
+    cp "$SYNC_CONFIG_TEMPLATE" "$SYNC_CONFIG_FILE"
+    chmod 600 "$SYNC_CONFIG_FILE"
+    printf 'sync.sh: created %s from %s\n' "$SYNC_CONFIG_FILE" "$SYNC_CONFIG_TEMPLATE"
+    printf 'sync.sh: edit %s (REMOTE_HOST/REMOTE_DIR/secrets), then rerun.\n' "$SYNC_CONFIG_FILE"
+    exit 1
+  fi
+
+  printf 'Error: missing %s\n' "$SYNC_CONFIG_FILE" >&2
+  exit 1
 fi
 
 if [ -f "$SYNC_CONFIG_FILE" ]; then
@@ -49,7 +32,7 @@ OPENCLAW_ACTION=${OPENCLAW_ACTION:-}
 SYNC_REMOTE_ENTRYPOINT=${SYNC_REMOTE_ENTRYPOINT:-build-interactive.sh}
 SYNC_REMOTE_ENV_FILE=${SYNC_REMOTE_ENV_FILE:-"$(basename "$SYNC_CONFIG_FILE")"}
 SYNC_LOCAL_ENV_FILE=${SYNC_LOCAL_ENV_FILE:-"$SYNC_CONFIG_FILE"}
-SYNC_MIRROR_ENV_FILE=${SYNC_MIRROR_ENV_FILE:-0}
+SYNC_MIRROR_ENV_FILE=${SYNC_MIRROR_ENV_FILE:-1}
 SYNC_PRINT_CONFIG=${SYNC_PRINT_CONFIG:-0}
 SYNC_ITEMS=${SYNC_ITEMS:-"build-interactive.sh build.sh backup.sh update.sh add_tool.sh restore.sh sync.sh scripts templates docs README.md"}
 SSH_CONTROL_PERSIST_SECONDS=${SSH_CONTROL_PERSIST_SECONDS:-600}

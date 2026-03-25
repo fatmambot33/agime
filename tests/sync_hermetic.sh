@@ -34,7 +34,7 @@ chmod +x "$BIN_DIR/ssh" "$BIN_DIR/scp"
 )
 
 grep -Fq "ssh test-host mkdir -p '/tmp/test-agime'" "$CALLS_FILE"
-grep -Fq "scp -r build-interactive.sh build.sh backup.sh restore.sh scripts templates test-host:/tmp/test-agime/" "$CALLS_FILE"
+grep -Fq "scp -r build-interactive.sh build.sh backup.sh update.sh add_tool.sh restore.sh scripts templates test-host:/tmp/test-agime/" "$CALLS_FILE"
 grep -Fq "ssh -t test-host cd '/tmp/test-agime' && chmod +x ./*.sh && ./build-interactive.sh" "$CALLS_FILE"
 
 echo "sync.sh hermetic test passed"

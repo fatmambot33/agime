@@ -19,6 +19,10 @@ All notable changes to this repository are documented in this file.
 - Added automatic `signal-cli` dependency check/installation flow (opt-out via `OPENCLAW_SIGNAL_AUTO_INSTALL=0`) when Signal is enabled.
 - Added `backup.sh` and `restore.sh` mechanics for reproducible backup/restore of deployment data with explicit restore safety guard (`RESTORE_FORCE=1` for `/`).
 - Added `tests/ownership_config_dir_hermetic.sh` to cover ownership handling for root/non-root execution and custom `OPENCLAW_CONFIG_DIR` preparation flows.
+- Added post-install helpers:
+  - `update.sh` to rerun maintenance deploys with optional git update behavior.
+  - `add_tool.sh` to enable optional tools (`signal`, `github`, `himalaya`, `coding-agent`) and rerun deploy.
+- Added `tests/post_install_helpers_hermetic.sh` to validate helper behavior without Docker/network dependencies.
 
 ### Changed
 - Changed default deployment posture to private mode (`ssh-tunnel`) with loopback-only binding on `127.0.0.1:18789`.
@@ -45,3 +49,5 @@ All notable changes to this repository are documented in this file.
 - Updated optional skill prerequisite flow to install/validate runtime binaries (`gh`, `himalaya`, coding-agent backend) inside the running `openclaw` container.
 - Updated default `OPENCLAW_HIMALAYA_CONFIG_PATH` to `$OPENCLAW_CONFIG_DIR/himalaya/config.toml` and mounted `${OPENCLAW_CONFIG_DIR}/himalaya` into the container for runtime config access.
 - Refactored optional skill handling into per-tool scripts under `scripts/optional_tools/` for cleaner extension as new tools are added.
+- Updated `update.sh` to be git-checkout aware (`GIT_PULL=auto` by default) so it works in both cloned and synced toolkit directories.
+- Updated post-install helpers to auto-load `OVH_ENDPOINT_API_KEY` from `$OPENCLAW_DIR/.env` when not already exported.

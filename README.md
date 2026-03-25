@@ -250,6 +250,7 @@ Behavior when enabled:
 - Validates `gh` availability (`OPENCLAW_GH_CLI_PATH`, default `gh`).
 - Auto-installs `gh` when missing (automatic; apt-get only).
 - Enforces authentication by running `gh auth status` (`OPENCLAW_GH_REQUIRE_AUTH=1`, default).
+- Validates that `gh` is available inside the running `openclaw` container runtime after restart.
 
 If you prefer to install/auth manually, use the following:
 
@@ -277,7 +278,9 @@ Behavior when enabled:
 - Validates `himalaya` availability (`OPENCLAW_HIMALAYA_CLI_PATH`, default `himalaya`).
 - Auto-installs `himalaya` when missing (automatic; apt-get only).
 - If `OPENCLAW_HIMALAYA_CONFIG_TOML_BASE64` is set, the script writes that content to `OPENCLAW_HIMALAYA_CONFIG_PATH` with `chmod 600`.
-- Validates config presence by default (`OPENCLAW_HIMALAYA_REQUIRE_CONFIG=1`) at `OPENCLAW_HIMALAYA_CONFIG_PATH` (default `~/.config/himalaya/config.toml`).
+- Validates config presence by default (`OPENCLAW_HIMALAYA_REQUIRE_CONFIG=1`) at `OPENCLAW_HIMALAYA_CONFIG_PATH` (default `$OPENCLAW_CONFIG_DIR/himalaya/config.toml`).
+- Mounts `${OPENCLAW_CONFIG_DIR}/himalaya` into the container as `/home/node/.config/himalaya`.
+- Validates that `himalaya` is available inside the running `openclaw` container runtime after restart.
 
 If you prefer to install/configure manually, use the following:
 
@@ -329,6 +332,7 @@ Behavior when enabled:
 - Validates backend binary presence and auto-installs when supported.
 - Optionally enforces `<backend> --version` (`OPENCLAW_CODING_AGENT_REQUIRE_VERSION_CHECK=1`, default).
 - Requires `npm` for auto-installable backends.
+- Validates that the selected backend binary is available inside the running `openclaw` container runtime after restart.
 
 Safety guidance:
 

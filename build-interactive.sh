@@ -73,7 +73,10 @@ ask_access_mode() {
 }
 
 choose_welcome_action() {
-  cat << 'EOF2'
+  if [ -n "${OPENCLAW_ACTION:-}" ]; then
+    value=$(to_lower "$OPENCLAW_ACTION")
+  else
+    cat << 'EOF2'
 Welcome to the OpenClaw toolkit.
 Choose an action:
   1) Install
@@ -82,9 +85,10 @@ Choose an action:
   4) Restore
   5) Security
 EOF2
-  printf 'Selection [1]: '
-  read value
-  value=$(to_lower "${value:-1}")
+    printf 'Selection [1]: '
+    read value
+    value=$(to_lower "${value:-1}")
+  fi
   case "$value" in
     1 | install)
       OPENCLAW_ACTION=install

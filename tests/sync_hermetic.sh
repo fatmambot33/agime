@@ -34,7 +34,18 @@ chmod +x "$BIN_DIR/ssh" "$BIN_DIR/scp"
 )
 
 grep -Fq "ssh test-host mkdir -p '/tmp/test-agime'" "$CALLS_FILE"
-grep -Fq "scp -r build-interactive.sh build.sh backup.sh update.sh add_tool.sh restore.sh scripts templates test-host:/tmp/test-agime/" "$CALLS_FILE"
+grep -Fq "scp -r build-interactive.sh build.sh backup.sh update.sh add_tool.sh restore.sh sync.sh scripts templates docs README.md test-host:/tmp/test-agime/" "$CALLS_FILE"
 grep -Fq "ssh -t test-host cd '/tmp/test-agime' && chmod +x ./*.sh && ./build-interactive.sh" "$CALLS_FILE"
+
+(
+  cd "$REPO_DIR"
+  PATH="$BIN_DIR:$PATH" \
+    REMOTE_HOST=test-host \
+    REMOTE_DIR=/tmp/test-agime \
+    OPENCLAW_ACTION=security \
+    sh ./sync.sh
+)
+
+grep -Fq "ssh -t test-host cd '/tmp/test-agime' && chmod +x ./*.sh && OPENCLAW_ACTION='security' ./build-interactive.sh" "$CALLS_FILE"
 
 echo "sync.sh hermetic test passed"

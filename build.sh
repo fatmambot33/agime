@@ -78,7 +78,6 @@ Notes:
  - If OPENCLAW_ENABLE_GITHUB_SKILL=1, this script can auto-install GitHub CLI (gh) when missing
    (apt-get only) and validates runtime binary visibility in the container.
  - Authenticate manually in-container as needed for your workflow.
- - GitHub skill validation always checks gh auth status in the running container runtime.
  - If OPENCLAW_ENABLE_HIMALAYA_SKILL=1, this script can auto-install Himalaya CLI (himalaya) when missing
    (apt-get only), can write config from OPENCLAW_HIMALAYA_CONFIG_TOML_BASE64, and by default requires config
    at \$HOME/.config/himalaya/config.toml.

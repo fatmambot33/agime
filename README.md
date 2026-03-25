@@ -368,7 +368,7 @@ Behavior when enabled:
 
 - Auto-installs `gh` inside the running `openclaw` container when missing (apt-get based).
 - Validates that `gh` is available inside the running `openclaw` container runtime after restart.
-- Validates `gh auth status` inside the running container runtime after restart.
+- Prints a post-build reminder to run `gh auth login` / `gh auth status` in the running container before using the GitHub skill.
 
 If you prefer to install/auth manually in the container, use:
 

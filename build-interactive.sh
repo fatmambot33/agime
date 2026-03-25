@@ -163,6 +163,62 @@ milestone() {
   printf '%s\n' "--- [$ts] $*"
 }
 
+persist_env_file() {
+  export_path=$1
+  [ -n "$export_path" ] || return 0
+
+  umask 077
+  : > "$export_path"
+  chmod 600 "$export_path"
+
+  {
+    printf 'OPENCLAW_ACCESS_MODE=%s\n' "$OPENCLAW_ACCESS_MODE"
+    printf 'OVH_ENDPOINT_API_KEY=%s\n' "$OVH_ENDPOINT_API_KEY"
+    printf 'OPENCLAW_TOKEN=%s\n' "$OPENCLAW_TOKEN"
+    printf 'OPENCLAW_DIR=%s\n' "$OPENCLAW_DIR"
+    printf 'OPENCLAW_CONFIG_DIR=%s\n' "$OPENCLAW_CONFIG_DIR"
+    printf 'OPENCLAW_WORKSPACE_DIR=%s\n' "$OPENCLAW_WORKSPACE_DIR"
+    printf 'OPENCLAW_USER=%s\n' "$OPENCLAW_USER"
+    printf 'OPENCLAW_ENABLE_SIGNAL=%s\n' "$OPENCLAW_ENABLE_SIGNAL"
+    printf 'OPENCLAW_ENABLE_GITHUB_SKILL=%s\n' "$OPENCLAW_ENABLE_GITHUB_SKILL"
+    printf 'OPENCLAW_ENABLE_HIMALAYA_SKILL=%s\n' "$OPENCLAW_ENABLE_HIMALAYA_SKILL"
+    printf 'OPENCLAW_ENABLE_CODING_AGENT_SKILL=%s\n' "$OPENCLAW_ENABLE_CODING_AGENT_SKILL"
+    printf 'DRY_RUN=%s\n' "$DRY_RUN"
+    printf 'OPENCLAW_ALLOWED_ORIGIN=%s\n' "${OPENCLAW_ALLOWED_ORIGIN:-}"
+
+    if [ "$OPENCLAW_ACCESS_MODE" = "public" ]; then
+      printf 'TRAEFIK_ACME_EMAIL=%s\n' "$TRAEFIK_ACME_EMAIL"
+      printf 'OPENCLAW_DOMAIN=%s\n' "$OPENCLAW_DOMAIN"
+      printf 'TRAEFIK_DIR=%s\n' "$TRAEFIK_DIR"
+    fi
+
+    if [ "${OPENCLAW_ENABLE_SIGNAL:-0}" = "1" ]; then
+      printf 'OPENCLAW_SIGNAL_ACCOUNT=%s\n' "$OPENCLAW_SIGNAL_ACCOUNT"
+      printf 'OPENCLAW_SIGNAL_ALLOW_FROM=%s\n' "$OPENCLAW_SIGNAL_ALLOW_FROM"
+      printf 'OPENCLAW_SIGNAL_CLI_PATH=%s\n' "$OPENCLAW_SIGNAL_CLI_PATH"
+      printf 'OPENCLAW_SIGNAL_AUTO_INSTALL=%s\n' "$OPENCLAW_SIGNAL_AUTO_INSTALL"
+    fi
+
+    if [ "${OPENCLAW_ENABLE_GITHUB_SKILL:-0}" = "1" ]; then
+      printf 'OPENCLAW_GH_CLI_PATH=%s\n' "$OPENCLAW_GH_CLI_PATH"
+      printf 'OPENCLAW_GH_REQUIRE_AUTH=%s\n' "$OPENCLAW_GH_REQUIRE_AUTH"
+    fi
+
+    if [ "${OPENCLAW_ENABLE_HIMALAYA_SKILL:-0}" = "1" ]; then
+      printf 'OPENCLAW_HIMALAYA_CLI_PATH=%s\n' "$OPENCLAW_HIMALAYA_CLI_PATH"
+      printf 'OPENCLAW_HIMALAYA_REQUIRE_CONFIG=%s\n' "$OPENCLAW_HIMALAYA_REQUIRE_CONFIG"
+      printf 'OPENCLAW_HIMALAYA_CONFIG_PATH=%s\n' "$OPENCLAW_HIMALAYA_CONFIG_PATH"
+    fi
+
+    if [ "${OPENCLAW_ENABLE_CODING_AGENT_SKILL:-0}" = "1" ]; then
+      printf 'OPENCLAW_CODING_AGENT_BACKEND=%s\n' "$OPENCLAW_CODING_AGENT_BACKEND"
+      printf 'OPENCLAW_CODING_AGENT_REQUIRE_VERSION_CHECK=%s\n' "$OPENCLAW_CODING_AGENT_REQUIRE_VERSION_CHECK"
+    fi
+  } > "$export_path"
+
+  milestone "Wrote deployment environment file: $export_path"
+}
+
 if [ ! -f "$BUILD_SCRIPT" ]; then
   fail "build script not found at $BUILD_SCRIPT"
 fi
@@ -370,6 +426,8 @@ if [ "$OPENCLAW_ACCESS_MODE" = "public" ]; then
 else
   export OPENCLAW_ALLOWED_ORIGIN=${OPENCLAW_ALLOWED_ORIGIN:-http://127.0.0.1:18789}
 fi
+
+persist_env_file "${OPENCLAW_EXPORT_ENV_FILE:-}"
 
 if [ "${OPENCLAW_ENABLE_SIGNAL:-0}" = "1" ]; then
   cat << 'EOF2'

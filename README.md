@@ -58,6 +58,7 @@ sh ./sync.sh
 ```
 
 `sync.sh` auto-loads `./sync.conf` when present. Set `SYNC_PRINT_CONFIG=1` to print the effective config before execution.
+`sync.conf` is intentionally gitignored (it may contain secrets), while `sync.conf.example` remains the safe template.
 
 For non-interactive remote deploys, set this in `sync.conf`:
 
@@ -68,6 +69,13 @@ SYNC_ITEMS="build-interactive.sh build.sh backup.sh update.sh add_tool.sh restor
 ```
 
 Then create `.sync-build.env` with required `build.sh` variables (for example `OVH_ENDPOINT_API_KEY=...`, optional access-mode settings). The file is uploaded and sourced remotely before `build.sh` runs.
+
+If you run the welcome flow and want those selections reflected in reusable config:
+
+- set `SYNC_REMOTE_ENV_FILE=.sync-build.env`;
+- set `SYNC_MIRROR_ENV_FILE=1` (optional `SYNC_LOCAL_ENV_FILE=./.sync-build.env`).
+
+With this, `build-interactive.sh` writes the chosen deploy env on the remote host, and `sync.sh` copies it back locally (chmod `600`) for future non-interactive runs.
 
 ### Safer default (`ssh-tunnel`)
 

@@ -10,6 +10,8 @@
   - `SSH_CONTROL_PATH="$HOME/.ssh/agime-sync-%r@%h:%p"`
 - Prefer keeping sync options in `sync.conf` (copy from `sync.conf.example`) and enable `SYNC_PRINT_CONFIG=1` so current effective values are shown before each run.
 - For non-interactive deploys, use `SYNC_REMOTE_ENTRYPOINT=build.sh` and provide a remote env file via `SYNC_REMOTE_ENV_FILE`.
+- `sync.conf` and `.sync-build.env` are gitignored because they can contain secrets.
+- To reflect welcome answers into reusable config, set `SYNC_REMOTE_ENV_FILE=.sync-build.env` and `SYNC_MIRROR_ENV_FILE=1` so the generated env file is copied back to local.
 
 ### 1) ssh-tunnel mode is unreachable locally
 - Symptom: browser cannot load `http://127.0.0.1:18789` after tunnel setup.

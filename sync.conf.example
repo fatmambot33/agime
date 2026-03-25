@@ -16,6 +16,11 @@ SYNC_REMOTE_ENTRYPOINT=build-interactive.sh
 # Optional: source this file remotely before entrypoint execution.
 # Add this file to SYNC_ITEMS if you use it.
 # SYNC_REMOTE_ENV_FILE=.sync-build.env
+#
+# Optional: copy the remote env file back locally after the run.
+# Useful to keep local non-interactive config in sync with latest welcome choices.
+# SYNC_MIRROR_ENV_FILE=1
+# SYNC_LOCAL_ENV_FILE=./.sync-build.env
 
 # Default upload set (space-separated)
 SYNC_ITEMS="build-interactive.sh build.sh backup.sh update.sh add_tool.sh restore.sh sync.sh scripts templates docs README.md"

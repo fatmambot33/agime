@@ -17,6 +17,8 @@ REMOTE_DIR=${REMOTE_DIR:-/tmp/agime}
 OPENCLAW_ACTION=${OPENCLAW_ACTION:-}
 SYNC_REMOTE_ENTRYPOINT=${SYNC_REMOTE_ENTRYPOINT:-build-interactive.sh}
 SYNC_REMOTE_ENV_FILE=${SYNC_REMOTE_ENV_FILE:-}
+SYNC_LOCAL_ENV_FILE=${SYNC_LOCAL_ENV_FILE:-"$SCRIPT_DIR/.sync-build.env"}
+SYNC_MIRROR_ENV_FILE=${SYNC_MIRROR_ENV_FILE:-0}
 SYNC_PRINT_CONFIG=${SYNC_PRINT_CONFIG:-0}
 SYNC_ITEMS=${SYNC_ITEMS:-"build-interactive.sh build.sh backup.sh update.sh add_tool.sh restore.sh sync.sh scripts templates docs README.md"}
 SSH_CONTROL_PERSIST_SECONDS=${SSH_CONTROL_PERSIST_SECONDS:-600}
@@ -44,6 +46,8 @@ print_effective_config() {
   printf '  REMOTE_DIR=%s\n' "$REMOTE_DIR"
   printf '  SYNC_REMOTE_ENTRYPOINT=%s\n' "$SYNC_REMOTE_ENTRYPOINT"
   printf '  SYNC_REMOTE_ENV_FILE=%s\n' "${SYNC_REMOTE_ENV_FILE:-<none>}"
+  printf '  SYNC_LOCAL_ENV_FILE=%s\n' "$SYNC_LOCAL_ENV_FILE"
+  printf '  SYNC_MIRROR_ENV_FILE=%s\n' "$SYNC_MIRROR_ENV_FILE"
   printf '  OPENCLAW_ACTION=%s\n' "${OPENCLAW_ACTION:-<none>}"
   printf '  SSH_CONTROL_PERSIST_SECONDS=%s\n' "$SSH_CONTROL_PERSIST_SECONDS"
   printf '  SSH_CONTROL_PATH=%s\n' "$SSH_CONTROL_PATH"
@@ -69,9 +73,9 @@ fi
 case "$SYNC_REMOTE_ENTRYPOINT" in
   build-interactive.sh)
     if [ -n "$OPENCLAW_ACTION" ]; then
-      ssh_exec -t "$REMOTE_HOST" "cd '$REMOTE_DIR' && chmod +x ./*.sh && ${REMOTE_ENV_SETUP}OPENCLAW_ACTION='$OPENCLAW_ACTION' ./build-interactive.sh"
+      ssh_exec -t "$REMOTE_HOST" "cd '$REMOTE_DIR' && chmod +x ./*.sh && ${REMOTE_ENV_SETUP}OPENCLAW_ACTION='$OPENCLAW_ACTION' OPENCLAW_EXPORT_ENV_FILE='${SYNC_REMOTE_ENV_FILE:-}' ./build-interactive.sh"
     else
-      ssh_exec -t "$REMOTE_HOST" "cd '$REMOTE_DIR' && chmod +x ./*.sh && ${REMOTE_ENV_SETUP}./build-interactive.sh"
+      ssh_exec -t "$REMOTE_HOST" "cd '$REMOTE_DIR' && chmod +x ./*.sh && ${REMOTE_ENV_SETUP}OPENCLAW_EXPORT_ENV_FILE='${SYNC_REMOTE_ENV_FILE:-}' ./build-interactive.sh"
     fi
     ;;
   build.sh)
@@ -82,3 +86,9 @@ case "$SYNC_REMOTE_ENTRYPOINT" in
     exit 1
     ;;
 esac
+
+if [ "$SYNC_MIRROR_ENV_FILE" = "1" ] && [ -n "$SYNC_REMOTE_ENV_FILE" ]; then
+  mkdir -p "$(dirname "$SYNC_LOCAL_ENV_FILE")"
+  scp_exec "$REMOTE_HOST:$REMOTE_DIR/$SYNC_REMOTE_ENV_FILE" "$SYNC_LOCAL_ENV_FILE"
+  chmod 600 "$SYNC_LOCAL_ENV_FILE"
+fi

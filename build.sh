@@ -53,7 +53,7 @@ Optional environment variables:
  OPENCLAW_SIGNAL_AUTO_INSTALL Default: 1. Set to 0 to disable automatic signal-cli installation.
  OPENCLAW_ENABLE_GITHUB_SKILL Default: 0. Set to 1 to validate/install GitHub CLI (gh) for GitHub skill usage.
  OPENCLAW_GH_CLI_PATH Default: gh. Path/command used to invoke GitHub CLI.
- OPENCLAW_GH_REQUIRE_AUTH Default: 1. Set to 0 to skip in-container gh auth status validation.
+ OPENCLAW_GH_REQUIRE_AUTH Legacy compatibility toggle (currently no-op; host/runtime auth checks are not enforced during build).
  OPENCLAW_ENABLE_HIMALAYA_SKILL Default: 0. Set to 1 to validate/install Himalaya CLI for Himalaya skill usage.
  OPENCLAW_HIMALAYA_CLI_PATH Default: himalaya. Path/command used to invoke Himalaya CLI.
  OPENCLAW_HIMALAYA_REQUIRE_CONFIG Default: 1. Set to 0 to skip config file validation.
@@ -61,7 +61,7 @@ Optional environment variables:
  OPENCLAW_HIMALAYA_CONFIG_TOML_BASE64 Optional base64-encoded Himalaya config.toml content to render at OPENCLAW_HIMALAYA_CONFIG_PATH.
  OPENCLAW_ENABLE_CODING_AGENT_SKILL Default: 0. Set to 1 to validate/install coding-agent backend CLI.
  OPENCLAW_CODING_AGENT_BACKEND Default: codex. One of: claude, codex, opencode, pi.
- OPENCLAW_CODING_AGENT_REQUIRE_VERSION_CHECK Default: 1. Set to 0 to skip <backend> --version validation.
+ OPENCLAW_CODING_AGENT_REQUIRE_VERSION_CHECK Legacy compatibility toggle (currently no-op; backend --version checks are not enforced during build).
  SKIP_DOCKER_GROUP_SETUP Default: 0. Set to 1 to skip docker group changes.
  SKIP_OPENCLAW_WIZARD Default: 0. Set to 1 if .env already exists.
  SKIP_OPENCLAW_IMAGE_BUILD Default: 0. Set to 1 to skip rebuilding local OpenClaw image.
@@ -77,8 +77,8 @@ Notes:
  https://help.ovhcloud.com/csm/fr-vps-install-openclaw?id=kb_article_view&sysparm_article=KB0074788
  - Docker and Docker Compose must already be installed.
  - If OPENCLAW_ENABLE_GITHUB_SKILL=1, this script can auto-install GitHub CLI (gh) when missing
-   (apt-get only) and, by default, validates gh auth status inside the running container runtime.
- - If auth is missing, run: docker exec openclaw sh -lc 'gh auth login' and rerun the script.
+   (apt-get only) and validates runtime binary visibility in the container.
+ - Authenticate manually in-container as needed for your workflow.
  - If OPENCLAW_ENABLE_HIMALAYA_SKILL=1, this script can auto-install Himalaya CLI (himalaya) when missing
    (apt-get only), can write config from OPENCLAW_HIMALAYA_CONFIG_TOML_BASE64, and by default requires config
    at \$HOME/.config/himalaya/config.toml.
@@ -88,6 +88,7 @@ Notes:
    - codex => npm i -g @openai/codex
    - pi => npm i -g @mariozechner/pi-coding-agent
    - opencode must be installed manually
+   and validates runtime binary visibility in the container.
    and, by default, validates <backend> --version inside the running container runtime.
  - If the OpenClaw setup wizard runs, it remains interactive.
 EOF2

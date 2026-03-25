@@ -305,6 +305,7 @@ OVH_ENDPOINT_API_KEY=xxxxx \
 
 This lets you inject credentials/config from your secret manager at runtime instead of running `himalaya account configure` interactively.
 
+- `OPENCLAW_CODING_AGENT_REQUIRE_VERSION_CHECK` is retained for interface compatibility, but `<backend> --version` checks are not enforced during build.
 ## Coding-agent skill prerequisites
 
 If you plan to use the coding-agent skill, enable prerequisite handling in the build:

@@ -156,7 +156,7 @@ fi
 ask_var OPENCLAW_ENABLE_GITHUB_SKILL "Enable GitHub skill prerequisites (1=yes, 0=no)" "0"
 if [ "${OPENCLAW_ENABLE_GITHUB_SKILL:-0}" = "1" ]; then
   ask_var OPENCLAW_GH_CLI_PATH "GitHub CLI command/path" "gh"
-  ask_var OPENCLAW_GH_REQUIRE_AUTH "Require gh auth status success (1=yes, 0=no)" "1"
+  ask_var OPENCLAW_GH_REQUIRE_AUTH "Legacy compatibility toggle (currently no-op; keep 1)" "1"
 fi
 ask_var OPENCLAW_ENABLE_HIMALAYA_SKILL "Enable Himalaya skill prerequisites (1=yes, 0=no)" "0"
 if [ "${OPENCLAW_ENABLE_HIMALAYA_SKILL:-0}" = "1" ]; then
@@ -167,7 +167,7 @@ fi
 ask_var OPENCLAW_ENABLE_CODING_AGENT_SKILL "Enable coding-agent skill prerequisites (1=yes, 0=no)" "0"
 if [ "${OPENCLAW_ENABLE_CODING_AGENT_SKILL:-0}" = "1" ]; then
   ask_var OPENCLAW_CODING_AGENT_BACKEND "Coding-agent backend (claude/codex/opencode/pi)" "codex"
-  ask_var OPENCLAW_CODING_AGENT_REQUIRE_VERSION_CHECK "Require backend --version success (1=yes, 0=no)" "1"
+  ask_var OPENCLAW_CODING_AGENT_REQUIRE_VERSION_CHECK "Legacy compatibility toggle (currently no-op; keep 1)" "1"
 fi
 ask_var DRY_RUN "Dry-run mode (1=yes, 0=no)" "0"
 

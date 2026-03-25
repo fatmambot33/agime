@@ -201,27 +201,7 @@ setup_github_skill_prerequisites() {
     return 0
   fi
 
-  log "GitHub skill enabled; validating GitHub CLI dependency"
-  if ! command -v "$OPENCLAW_GH_CLI_PATH" > /dev/null 2>&1; then
-    install_github_cli
-  fi
-
-  if [ "$DRY_RUN" = "1" ]; then
-    log "[DRY_RUN] validate configured GitHub CLI path is resolvable: $OPENCLAW_GH_CLI_PATH"
-  elif ! command -v "$OPENCLAW_GH_CLI_PATH" > /dev/null 2>&1; then
-    fail "GitHub CLI installation/check completed, but OPENCLAW_GH_CLI_PATH '$OPENCLAW_GH_CLI_PATH' is still unavailable."
-  fi
-
-  if [ "$OPENCLAW_GH_REQUIRE_AUTH" = "1" ]; then
-    if [ "$DRY_RUN" = "1" ]; then
-      log "[DRY_RUN] validate GitHub CLI auth state: $OPENCLAW_GH_CLI_PATH auth status"
-      return 0
-    fi
-
-    if ! "$OPENCLAW_GH_CLI_PATH" auth status > /dev/null 2>&1; then
-      fail "GitHub CLI is installed but not authenticated. Run '$OPENCLAW_GH_CLI_PATH auth login' and rerun build."
-    fi
-  fi
+  log "GitHub skill enabled; runtime dependency will be installed/validated inside Docker container after restart"
 }
 
 install_github_cli() {
@@ -250,10 +230,7 @@ setup_himalaya_skill_prerequisites() {
     return 0
   fi
 
-  log "Himalaya skill enabled; validating Himalaya CLI dependency"
-  if ! command -v "$OPENCLAW_HIMALAYA_CLI_PATH" > /dev/null 2>&1; then
-    install_himalaya_cli
-  fi
+  log "Himalaya skill enabled; runtime dependency will be installed/validated inside Docker container after restart"
 
   write_himalaya_config_from_env_if_provided
 
@@ -312,19 +289,7 @@ setup_coding_agent_skill_prerequisites() {
   fi
 
   resolve_coding_agent_backend
-  log "Coding-agent skill enabled; validating backend '$OPENCLAW_CODING_AGENT_BACKEND' (binary: $OPENCLAW_CODING_AGENT_BIN)"
-
-  if ! command -v "$OPENCLAW_CODING_AGENT_BIN" > /dev/null 2>&1; then
-    install_coding_agent_backend
-  fi
-
-  if [ "$OPENCLAW_CODING_AGENT_REQUIRE_VERSION_CHECK" = "1" ]; then
-    if [ "$DRY_RUN" = "1" ]; then
-      log "[DRY_RUN] validate coding-agent backend version: $OPENCLAW_CODING_AGENT_BIN --version"
-    else
-      "$OPENCLAW_CODING_AGENT_BIN" --version > /dev/null 2>&1 || fail "Failed to run '$OPENCLAW_CODING_AGENT_BIN --version' after installation/check."
-    fi
-  fi
+  log "Coding-agent skill enabled; backend '$OPENCLAW_CODING_AGENT_BACKEND' will be installed/validated inside Docker container after restart"
 }
 
 resolve_coding_agent_backend() {
@@ -539,6 +504,67 @@ validate_container_binary() {
 
   if ! docker exec openclaw sh -c 'command -v "$1" > /dev/null 2>&1' sh "$binary_name"; then
     fail "$feature_name is enabled, but '$binary_name' is not available inside the openclaw container runtime. Install it in the OpenClaw image or disable this optional feature."
+  fi
+}
+
+install_container_apt_package_if_missing() {
+  package_name=$1
+  binary_name=$2
+
+  if [ "$DRY_RUN" = "1" ]; then
+    log "[DRY_RUN] ensure container package '$package_name' provides binary '$binary_name'"
+    return 0
+  fi
+
+  if docker exec openclaw sh -c 'command -v "$1" > /dev/null 2>&1' sh "$binary_name"; then
+    return 0
+  fi
+
+  log "Installing '$package_name' inside openclaw container for optional skill runtime"
+  docker exec -u 0 openclaw sh -c 'if command -v apt-get > /dev/null 2>&1; then apt-get update && apt-get install -y "$1"; else exit 127; fi' sh "$package_name" ||
+    fail "Unable to install '$package_name' inside openclaw container. Build a custom OPENCLAW_IMAGE with '$binary_name' available."
+}
+
+install_container_npm_package_if_missing() {
+  npm_package=$1
+  binary_name=$2
+
+  if [ "$DRY_RUN" = "1" ]; then
+    log "[DRY_RUN] ensure container npm package '$npm_package' provides binary '$binary_name'"
+    return 0
+  fi
+
+  if docker exec openclaw sh -c 'command -v "$1" > /dev/null 2>&1' sh "$binary_name"; then
+    return 0
+  fi
+
+  log "Installing npm package '$npm_package' inside openclaw container for optional skill runtime"
+  docker exec -u 0 openclaw sh -c 'if command -v npm > /dev/null 2>&1; then npm i -g "$1"; else exit 127; fi' sh "$npm_package" ||
+    fail "Unable to install npm package '$npm_package' inside openclaw container. Build a custom OPENCLAW_IMAGE with '$binary_name' available."
+}
+
+install_optional_skill_container_runtime_dependencies() {
+  if [ "$OPENCLAW_ENABLE_GITHUB_SKILL" = "1" ]; then
+    install_container_apt_package_if_missing gh "$OPENCLAW_GH_CLI_PATH"
+  fi
+
+  if [ "$OPENCLAW_ENABLE_HIMALAYA_SKILL" = "1" ]; then
+    install_container_apt_package_if_missing himalaya "$OPENCLAW_HIMALAYA_CLI_PATH"
+  fi
+
+  if [ "$OPENCLAW_ENABLE_CODING_AGENT_SKILL" = "1" ]; then
+    case "$OPENCLAW_CODING_AGENT_BACKEND" in
+      claude)
+        install_container_npm_package_if_missing @anthropic-ai/claude-code "$OPENCLAW_CODING_AGENT_BIN"
+        ;;
+      codex)
+        install_container_npm_package_if_missing @openai/codex "$OPENCLAW_CODING_AGENT_BIN"
+        ;;
+      pi)
+        install_container_npm_package_if_missing @mariozechner/pi-coding-agent "$OPENCLAW_CODING_AGENT_BIN"
+        ;;
+      opencode) ;;
+    esac
   fi
 }
 

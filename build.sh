@@ -53,7 +53,7 @@ Optional environment variables:
  OPENCLAW_SIGNAL_AUTO_INSTALL Default: 1. Set to 0 to disable automatic signal-cli installation.
  OPENCLAW_ENABLE_GITHUB_SKILL Default: 0. Set to 1 to validate/install GitHub CLI (gh) for GitHub skill usage.
  OPENCLAW_GH_CLI_PATH Default: gh. Path/command used to invoke GitHub CLI.
- OPENCLAW_GH_REQUIRE_AUTH Default: 1. Set to 0 to skip gh auth status validation.
+ OPENCLAW_GH_REQUIRE_AUTH Legacy compatibility toggle (host auth checks are not enforced during build).
  OPENCLAW_ENABLE_HIMALAYA_SKILL Default: 0. Set to 1 to validate/install Himalaya CLI for Himalaya skill usage.
  OPENCLAW_HIMALAYA_CLI_PATH Default: himalaya. Path/command used to invoke Himalaya CLI.
  OPENCLAW_HIMALAYA_REQUIRE_CONFIG Default: 1. Set to 0 to skip config file validation.
@@ -115,6 +115,7 @@ ensure_openclaw_env_overrides
 write_openclaw_json_config
 ensure_openclaw_image
 restart_openclaw
+install_optional_skill_container_runtime_dependencies
 validate_optional_skill_container_runtime
 post_build_connectivity_test
 print_summary

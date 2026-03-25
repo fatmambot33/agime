@@ -247,9 +247,7 @@ OVH_ENDPOINT_API_KEY=xxxxx \
 
 Behavior when enabled:
 
-- Validates `gh` availability (`OPENCLAW_GH_CLI_PATH`, default `gh`).
-- Auto-installs `gh` when missing (automatic; apt-get only).
-- Enforces authentication by running `gh auth status` (`OPENCLAW_GH_REQUIRE_AUTH=1`, default).
+- Auto-installs `gh` inside the running `openclaw` container when missing (apt-get based).
 - Validates that `gh` is available inside the running `openclaw` container runtime after restart.
 
 If you prefer to install/auth manually, use the following:
@@ -261,7 +259,7 @@ If you prefer to install/auth manually, use the following:
    - `which gh`
    - `gh auth status`
 
-If auth validation fails, run `gh auth login` and rerun `build.sh`.
+Note: `OPENCLAW_GH_REQUIRE_AUTH` is retained for interface compatibility, but auth is no longer validated on the VPS host during build (runtime state depends on your in-container workflow).
 
 ## Himalaya skill prerequisites
 
@@ -275,8 +273,7 @@ OVH_ENDPOINT_API_KEY=xxxxx \
 
 Behavior when enabled:
 
-- Validates `himalaya` availability (`OPENCLAW_HIMALAYA_CLI_PATH`, default `himalaya`).
-- Auto-installs `himalaya` when missing (automatic; apt-get only).
+- Auto-installs `himalaya` inside the running `openclaw` container when missing (apt-get based).
 - If `OPENCLAW_HIMALAYA_CONFIG_TOML_BASE64` is set, the script writes that content to `OPENCLAW_HIMALAYA_CONFIG_PATH` with `chmod 600`.
 - Validates config presence by default (`OPENCLAW_HIMALAYA_REQUIRE_CONFIG=1`) at `OPENCLAW_HIMALAYA_CONFIG_PATH` (default `$OPENCLAW_CONFIG_DIR/himalaya/config.toml`).
 - Mounts `${OPENCLAW_CONFIG_DIR}/himalaya` into the container as `/home/node/.config/himalaya`.
@@ -329,9 +326,11 @@ Supported backends (`OPENCLAW_CODING_AGENT_BACKEND`):
 
 Behavior when enabled:
 
-- Validates backend binary presence and auto-installs when supported.
-- Optionally enforces `<backend> --version` (`OPENCLAW_CODING_AGENT_REQUIRE_VERSION_CHECK=1`, default).
-- Requires `npm` for auto-installable backends.
+- Auto-installs supported backends inside the running `openclaw` container:
+  - `claude`: `npm i -g @anthropic-ai/claude-code`
+  - `codex`: `npm i -g @openai/codex`
+  - `pi`: `npm i -g @mariozechner/pi-coding-agent`
+- `opencode` remains manual install.
 - Validates that the selected backend binary is available inside the running `openclaw` container runtime after restart.
 
 Safety guidance:

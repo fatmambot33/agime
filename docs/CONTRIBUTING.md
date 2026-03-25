@@ -24,13 +24,14 @@ make check-strict
 - `backup-restore-test`
 - `interactive-backup-test`
 - `ownership-config-test`
+- `post-install-helpers-test`
 - `security-audit-scripts`
 
 `make check-strict` runs:
 
-- `sh -n build.sh build-interactive.sh sync.sh backup.sh restore.sh scripts/build_lib.sh scripts/build_steps.sh scripts/optional_tools/common.sh scripts/optional_tools/github.sh scripts/optional_tools/himalaya.sh scripts/optional_tools/coding_agent.sh tests/smoke_dry_run.sh tests/idempotency_dry_run.sh tests/security_template_checks.sh tests/sync_hermetic.sh tests/security_audit_scripts_hermetic.sh tests/backup_restore_hermetic.sh tests/build_interactive_backup_hermetic.sh tests/ownership_config_dir_hermetic.sh`
-- `shellcheck -S error -e SC1091,SC2034,SC2154 build.sh build-interactive.sh sync.sh backup.sh restore.sh scripts/build_lib.sh scripts/build_steps.sh scripts/optional_tools/common.sh scripts/optional_tools/github.sh scripts/optional_tools/himalaya.sh scripts/optional_tools/coding_agent.sh tests/smoke_dry_run.sh tests/idempotency_dry_run.sh tests/security_template_checks.sh tests/sync_hermetic.sh tests/security_audit_scripts_hermetic.sh tests/backup_restore_hermetic.sh tests/build_interactive_backup_hermetic.sh tests/ownership_config_dir_hermetic.sh`
-- `shfmt -i 2 -ci -sr -d build.sh build-interactive.sh sync.sh backup.sh restore.sh scripts/build_lib.sh scripts/build_steps.sh scripts/optional_tools/common.sh scripts/optional_tools/github.sh scripts/optional_tools/himalaya.sh scripts/optional_tools/coding_agent.sh tests/smoke_dry_run.sh tests/idempotency_dry_run.sh tests/security_template_checks.sh tests/sync_hermetic.sh tests/security_audit_scripts_hermetic.sh tests/backup_restore_hermetic.sh tests/build_interactive_backup_hermetic.sh tests/ownership_config_dir_hermetic.sh`
+- `sh -n build.sh build-interactive.sh sync.sh backup.sh update.sh add_tool.sh restore.sh scripts/build_lib.sh scripts/build_steps.sh scripts/optional_tools/common.sh scripts/optional_tools/github.sh scripts/optional_tools/himalaya.sh scripts/optional_tools/coding_agent.sh tests/smoke_dry_run.sh tests/idempotency_dry_run.sh tests/security_template_checks.sh tests/sync_hermetic.sh tests/security_audit_scripts_hermetic.sh tests/backup_restore_hermetic.sh tests/build_interactive_backup_hermetic.sh tests/ownership_config_dir_hermetic.sh tests/post_install_helpers_hermetic.sh`
+- `shellcheck -S error -e SC1091,SC2034,SC2154 build.sh build-interactive.sh sync.sh backup.sh update.sh add_tool.sh restore.sh scripts/build_lib.sh scripts/build_steps.sh scripts/optional_tools/common.sh scripts/optional_tools/github.sh scripts/optional_tools/himalaya.sh scripts/optional_tools/coding_agent.sh tests/smoke_dry_run.sh tests/idempotency_dry_run.sh tests/security_template_checks.sh tests/sync_hermetic.sh tests/security_audit_scripts_hermetic.sh tests/backup_restore_hermetic.sh tests/build_interactive_backup_hermetic.sh tests/ownership_config_dir_hermetic.sh tests/post_install_helpers_hermetic.sh`
+- `shfmt -i 2 -ci -sr -d build.sh build-interactive.sh sync.sh backup.sh update.sh add_tool.sh restore.sh scripts/build_lib.sh scripts/build_steps.sh scripts/optional_tools/common.sh scripts/optional_tools/github.sh scripts/optional_tools/himalaya.sh scripts/optional_tools/coding_agent.sh tests/smoke_dry_run.sh tests/idempotency_dry_run.sh tests/security_template_checks.sh tests/sync_hermetic.sh tests/security_audit_scripts_hermetic.sh tests/backup_restore_hermetic.sh tests/build_interactive_backup_hermetic.sh tests/ownership_config_dir_hermetic.sh tests/post_install_helpers_hermetic.sh`
 - `sh tests/smoke_dry_run.sh`
 - `sh tests/idempotency_dry_run.sh`
 - `sh tests/security_template_checks.sh`
@@ -38,6 +39,7 @@ make check-strict
 - `sh tests/backup_restore_hermetic.sh`
 - `sh tests/build_interactive_backup_hermetic.sh`
 - `sh tests/ownership_config_dir_hermetic.sh`
+- `sh tests/post_install_helpers_hermetic.sh`
 - `sh tests/security_audit_scripts_hermetic.sh`
 
 If `shellcheck` or `shfmt` are unavailable, `make check-strict` will try to install them via `apt-get`.

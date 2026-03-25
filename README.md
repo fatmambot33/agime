@@ -9,8 +9,10 @@ Automation scripts for deploying OpenClaw on a VPS with two explicit access mode
 
 - `build.sh`: non-interactive end-to-end setup script (environment-variable driven).
 - `build-interactive.sh`: guided wrapper that collects inputs and runs `build.sh`.
-- `sync.sh`: helper to copy setup scripts (`build-interactive.sh`, `build.sh`, `backup.sh`, `restore.sh`) plus required `scripts/` and `templates/` dependencies over SSH, then run setup remotely.
+- `sync.sh`: helper to copy setup scripts (`build-interactive.sh`, `build.sh`, `backup.sh`, `restore.sh`, `update.sh`, `add_tool.sh`) plus required `scripts/` and `templates/` dependencies over SSH, then run setup remotely.
 - `backup.sh`: creates a tarball backup of OpenClaw runtime data (`$OPENCLAW_CONFIG_DIR`, `$OPENCLAW_DIR/.env`, optional Traefik state).
+- `update.sh`: post-install helper that can fast-forward pull this toolkit checkout (auto-detected) and rerun `build.sh`.
+- `add_tool.sh`: post-install helper to enable one optional tool (`signal`, `github`, `himalaya`, `coding-agent`) and rerun `build.sh`.
 - `restore.sh`: restores a backup tarball into a chosen root path (requires explicit force flag for `/`).
 - `scripts/build_lib.sh` + `scripts/build_steps.sh`: shared helpers and modular deployment steps used by `build.sh`.
 - `scripts/optional_tools/*.sh`: per-tool optional runtime handlers (GitHub, Himalaya, coding-agent) plus shared container install/validation helpers.
@@ -179,7 +181,7 @@ make check
 Or run the syntax checks directly:
 
 ```bash
-sh -n build.sh build-interactive.sh sync.sh backup.sh restore.sh scripts/build_lib.sh scripts/build_steps.sh tests/smoke_dry_run.sh tests/idempotency_dry_run.sh tests/security_template_checks.sh tests/sync_hermetic.sh tests/security_audit_scripts_hermetic.sh tests/backup_restore_hermetic.sh tests/build_interactive_backup_hermetic.sh tests/ownership_config_dir_hermetic.sh
+sh -n build.sh build-interactive.sh sync.sh backup.sh update.sh add_tool.sh restore.sh scripts/build_lib.sh scripts/build_steps.sh tests/smoke_dry_run.sh tests/idempotency_dry_run.sh tests/security_template_checks.sh tests/sync_hermetic.sh tests/security_audit_scripts_hermetic.sh tests/backup_restore_hermetic.sh tests/build_interactive_backup_hermetic.sh tests/ownership_config_dir_hermetic.sh tests/post_install_helpers_hermetic.sh
 ```
 
 ## Backup and restore mechanic
@@ -230,6 +232,42 @@ Restore into the real filesystem root (requires explicit opt-in):
 RESTORE_ARCHIVE="$HOME/openclaw-backup.tgz" \
 RESTORE_FORCE=1 \
 sh ./restore.sh
+```
+
+## Post-install helpers
+
+Create a backup before maintenance changes:
+
+```bash
+sh ./backup.sh
+```
+
+Update this toolkit checkout and rerun deployment (works in both a git clone and synced `/tmp/agime` copy):
+
+```bash
+sh ./update.sh
+```
+
+Control pull behavior explicitly when needed:
+
+```bash
+GIT_PULL=1 sh ./update.sh      # require git checkout and pull
+GIT_PULL=0 sh ./update.sh      # skip pull and only rerun build
+```
+
+Enable one optional tool after initial install (example: GitHub CLI runtime support):
+
+```bash
+TOOL=github sh ./add_tool.sh
+```
+
+Both helpers auto-load `OVH_ENDPOINT_API_KEY` from `$OPENCLAW_DIR/.env` when not already exported.
+
+Use dry-run previews when needed:
+
+```bash
+DRY_RUN=1 sh ./update.sh
+DRY_RUN=1 TOOL=signal sh ./add_tool.sh
 ```
 
 ## Signal docs

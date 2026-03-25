@@ -59,6 +59,22 @@
 
 Use repo-provided helpers:
 
+Post-install maintenance helpers:
+
+```sh
+# backup
+sh ./backup.sh
+
+# update toolkit + rerun deploy (git pull is auto-detected)
+sh ./update.sh
+
+# enable one optional tool post-install
+TOOL=github sh ./add_tool.sh
+
+# force update pull only when this directory is a git checkout
+GIT_PULL=1 sh ./update.sh
+```
+
 ```sh
 # backup (default targets)
 sh ./backup.sh

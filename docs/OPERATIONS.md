@@ -8,6 +8,8 @@
 - If repeated prompts continue, verify your SSH client supports multiplexing and optionally set:
   - `SSH_CONTROL_PERSIST_SECONDS=1200`
   - `SSH_CONTROL_PATH="$HOME/.ssh/agime-sync-%r@%h:%p"`
+- Prefer keeping sync options in `sync.conf` (copy from `sync.conf.example`) and enable `SYNC_PRINT_CONFIG=1` so current effective values are shown before each run.
+- For non-interactive deploys, use `SYNC_REMOTE_ENTRYPOINT=build.sh` and provide a remote env file via `SYNC_REMOTE_ENV_FILE`.
 
 ### 1) ssh-tunnel mode is unreachable locally
 - Symptom: browser cannot load `http://127.0.0.1:18789` after tunnel setup.

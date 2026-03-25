@@ -1,0 +1,28 @@
+#
+# Copy to sync.conf (or set SYNC_CONFIG_FILE) and edit for your host.
+# Values can still be overridden per-command, e.g. REMOTE_HOST=... sh ./sync.sh
+#
+
+# Required target
+REMOTE_HOST=user@example-vps
+REMOTE_DIR=/tmp/agime
+
+# Run one of: build-interactive.sh (default) or build.sh (non-interactive)
+SYNC_REMOTE_ENTRYPOINT=build-interactive.sh
+
+# Optional: pre-select welcome action when using build-interactive.sh
+# OPENCLAW_ACTION=install
+
+# Optional: source this file remotely before entrypoint execution.
+# Add this file to SYNC_ITEMS if you use it.
+# SYNC_REMOTE_ENV_FILE=.sync-build.env
+
+# Default upload set (space-separated)
+SYNC_ITEMS="build-interactive.sh build.sh backup.sh update.sh add_tool.sh restore.sh sync.sh scripts templates docs README.md"
+
+# SSH multiplexing tunables
+SSH_CONTROL_PERSIST_SECONDS=600
+SSH_CONTROL_PATH="$HOME/.ssh/agime-sync-%r@%h:%p"
+
+# Print effective config before syncing (1=yes, 0=no)
+SYNC_PRINT_CONFIG=1

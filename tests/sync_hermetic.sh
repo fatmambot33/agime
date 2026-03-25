@@ -49,4 +49,24 @@ grep -Eq "ssh .* -O exit test-host" "$CALLS_FILE"
 
 grep -Eq "ssh .* -t test-host cd '/tmp/test-agime' && chmod \+x \./\*\.sh && OPENCLAW_ACTION='security' \./build-interactive.sh" "$CALLS_FILE"
 
+CONFIG_FILE="$TMP_DIR/sync.conf"
+cat > "$CONFIG_FILE" << EOF
+REMOTE_HOST=config-host
+REMOTE_DIR=/tmp/config-agime
+SYNC_REMOTE_ENTRYPOINT=build.sh
+SYNC_PRINT_CONFIG=1
+EOF
+
+(
+  cd "$REPO_DIR"
+  PATH="$BIN_DIR:$PATH" \
+    SYNC_CONFIG_FILE="$CONFIG_FILE" \
+    sh ./sync.sh > "$TMP_DIR/config.stdout"
+)
+
+grep -Fq "sync.sh effective config:" "$TMP_DIR/config.stdout"
+grep -Fq "REMOTE_HOST=config-host" "$TMP_DIR/config.stdout"
+grep -Eq "ssh .*config-host mkdir -p '/tmp/config-agime'" "$CALLS_FILE"
+grep -Eq "ssh .* config-host cd '/tmp/config-agime' && chmod \+x \./\*\.sh && \./build.sh" "$CALLS_FILE"
+
 echo "sync.sh hermetic test passed"

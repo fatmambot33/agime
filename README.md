@@ -10,6 +10,7 @@ Automation scripts for deploying OpenClaw on a VPS with two explicit access mode
 - `build.sh`: non-interactive end-to-end setup script (environment-variable driven).
 - `build-interactive.sh`: guided entrypoint with a welcome menu (`Install`, `Update`, `Add Tool`, `Restore`, `Security`); `Install` collects inputs then runs `build.sh`.
 - `sync.sh`: local helper that uploads toolkit files to a VPS first (scripts/templates/docs/README), then runs `build-interactive.sh` remotely over SSH (optionally preselecting `OPENCLAW_ACTION`).
+- `sync.conf.example`: sample local config file for `sync.sh` (copy to `sync.conf` to track current sync/build defaults).
 - `backup.sh`: creates a tarball backup of OpenClaw runtime data (`$OPENCLAW_CONFIG_DIR`, `$OPENCLAW_DIR/.env`, optional Traefik state).
 - `update.sh`: post-install helper that can fast-forward pull this toolkit checkout (auto-detected) and rerun `build.sh`.
 - `add_tool.sh`: post-install helper to enable one optional tool (`signal`, `github`, `himalaya`, `coding-agent`) and rerun `build.sh`.
@@ -47,6 +48,26 @@ SSH_CONTROL_PATH="$HOME/.ssh/agime-sync-%r@%h:%p" \
 REMOTE_HOST=<user>@<host> \
 sh ./sync.sh
 ```
+
+Use a local config file (so current sync settings are visible and reusable):
+
+```bash
+cp ./sync.conf.example ./sync.conf
+$EDITOR ./sync.conf
+sh ./sync.sh
+```
+
+`sync.sh` auto-loads `./sync.conf` when present. Set `SYNC_PRINT_CONFIG=1` to print the effective config before execution.
+
+For non-interactive remote deploys, set this in `sync.conf`:
+
+```bash
+SYNC_REMOTE_ENTRYPOINT=build.sh
+SYNC_REMOTE_ENV_FILE=.sync-build.env
+SYNC_ITEMS="build-interactive.sh build.sh backup.sh update.sh add_tool.sh restore.sh sync.sh scripts templates docs README.md .sync-build.env"
+```
+
+Then create `.sync-build.env` with required `build.sh` variables (for example `OVH_ENDPOINT_API_KEY=...`, optional access-mode settings). The file is uploaded and sourced remotely before `build.sh` runs.
 
 ### Safer default (`ssh-tunnel`)
 

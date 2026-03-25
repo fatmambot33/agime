@@ -51,3 +51,4 @@ All notable changes to this repository are documented in this file.
 - Refactored optional skill handling into per-tool scripts under `scripts/optional_tools/` for cleaner extension as new tools are added.
 - Updated `update.sh` to be git-checkout aware (`GIT_PULL=auto` by default) so it works in both cloned and synced toolkit directories.
 - Updated post-install helpers to auto-load `OVH_ENDPOINT_API_KEY` from `$OPENCLAW_DIR/.env` when not already exported.
+- Removed backward-compatibility toggles `OPENCLAW_GH_REQUIRE_AUTH` and `OPENCLAW_CODING_AGENT_REQUIRE_VERSION_CHECK`; runtime prerequisite checks are now always enforced when corresponding optional skills are enabled.

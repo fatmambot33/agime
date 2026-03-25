@@ -23,6 +23,7 @@ Automation scripts for deploying OpenClaw on a VPS with two explicit access mode
 - `templates/traefik-compose.yml.tmpl`: Traefik compose template (public mode only).
 - `templates/openclaw.json.tmpl`: OpenClaw JSON config template.
 - `Makefile`: local quality checks.
+- `docs/COMPATIBILITY_MATRIX.md`: OVH Ubuntu compatibility baseline and version expectations.
 
 ## Quick start
 

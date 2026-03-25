@@ -129,3 +129,22 @@ rm -rf "$HOME/openclaw" "$HOME/.openclaw" "$HOME/docker/traefik"
 ```
 
 For `ssh-tunnel`-only deployments, Traefik directory/network cleanup is usually a no-op.
+
+
+## OVH Ubuntu production posture checklist
+
+Use this short checklist for final readiness reviews:
+
+1. **Host baseline**
+   - Confirm Ubuntu LTS and Docker/Compose versions match the compatibility guidance in `docs/COMPATIBILITY_MATRIX.md`.
+2. **Network boundary**
+   - Prefer `OPENCLAW_ACCESS_MODE=ssh-tunnel` unless public HTTPS access is explicitly required.
+   - In `public` mode, restrict inbound rules to only `22`, `80`, and `443`.
+3. **Secrets hygiene**
+   - Keep `sync.conf` and `.sync-build.env` local-only (gitignored).
+   - Ensure mirrored env files remain `chmod 600`.
+4. **Recoverability**
+   - Take a pre-change backup (`backup.sh`) and confirm archive existence before upgrades.
+5. **Post-change verification**
+   - Run mode-specific health checks and inspect `docker logs openclaw` (plus `docker logs traefik` in public mode).
+

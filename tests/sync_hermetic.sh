@@ -33,9 +33,10 @@ chmod +x "$BIN_DIR/ssh" "$BIN_DIR/scp"
     sh ./sync.sh
 )
 
-grep -Fq "ssh test-host mkdir -p '/tmp/test-agime'" "$CALLS_FILE"
-grep -Fq "scp -r build-interactive.sh build.sh backup.sh update.sh add_tool.sh restore.sh sync.sh scripts templates docs README.md test-host:/tmp/test-agime/" "$CALLS_FILE"
-grep -Fq "ssh -t test-host cd '/tmp/test-agime' && chmod +x ./*.sh && ./build-interactive.sh" "$CALLS_FILE"
+grep -Eq "ssh .*test-host mkdir -p '/tmp/test-agime'" "$CALLS_FILE"
+grep -Eq "scp .* -r build-interactive.sh build.sh backup.sh update.sh add_tool.sh restore.sh sync.sh scripts templates docs README.md test-host:/tmp/test-agime/" "$CALLS_FILE"
+grep -Eq "ssh .* -t test-host cd '/tmp/test-agime' && chmod \+x \./\*\.sh && \./build-interactive.sh" "$CALLS_FILE"
+grep -Eq "ssh .* -O exit test-host" "$CALLS_FILE"
 
 (
   cd "$REPO_DIR"
@@ -46,6 +47,6 @@ grep -Fq "ssh -t test-host cd '/tmp/test-agime' && chmod +x ./*.sh && ./build-in
     sh ./sync.sh
 )
 
-grep -Fq "ssh -t test-host cd '/tmp/test-agime' && chmod +x ./*.sh && OPENCLAW_ACTION='security' ./build-interactive.sh" "$CALLS_FILE"
+grep -Eq "ssh .* -t test-host cd '/tmp/test-agime' && chmod \+x \./\*\.sh && OPENCLAW_ACTION='security' \./build-interactive.sh" "$CALLS_FILE"
 
 echo "sync.sh hermetic test passed"

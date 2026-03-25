@@ -9,7 +9,7 @@ Automation scripts for deploying OpenClaw on a VPS with two explicit access mode
 
 - `build.sh`: non-interactive end-to-end setup script (environment-variable driven).
 - `build-interactive.sh`: guided entrypoint with a welcome menu (`Install`, `Update`, `Add Tool`, `Restore`, `Security`); `Install` collects inputs then runs `build.sh`.
-- `sync.sh`: helper to upload toolkit files to a VPS first (scripts/templates/docs/README), then run `build-interactive.sh` remotely (optionally preselecting `OPENCLAW_ACTION`).
+- `sync.sh`: local helper that uploads toolkit files to a VPS first (scripts/templates/docs/README), then runs `build-interactive.sh` remotely over SSH (optionally preselecting `OPENCLAW_ACTION`).
 - `backup.sh`: creates a tarball backup of OpenClaw runtime data (`$OPENCLAW_CONFIG_DIR`, `$OPENCLAW_DIR/.env`, optional Traefik state).
 - `update.sh`: post-install helper that can fast-forward pull this toolkit checkout (auto-detected) and rerun `build.sh`.
 - `add_tool.sh`: post-install helper to enable one optional tool (`signal`, `github`, `himalaya`, `coding-agent`) and rerun `build.sh`.
@@ -23,6 +23,30 @@ Automation scripts for deploying OpenClaw on a VPS with two explicit access mode
 - `Makefile`: local quality checks.
 
 ## Quick start
+
+### Sync + remote welcome flow
+
+Run from your local machine:
+
+```bash
+REMOTE_HOST=<user>@<host> sh ./sync.sh
+```
+
+Behavior:
+
+- sync/upload is executed locally;
+- the welcome menu (`build-interactive.sh`) is executed on the SSH host.
+
+`sync.sh` now enables SSH connection multiplexing by default (`ControlMaster=auto` + `ControlPersist`), which usually avoids repeated password prompts across the multiple SSH/SCP calls.
+
+Tune if needed:
+
+```bash
+SSH_CONTROL_PERSIST_SECONDS=1200 \
+SSH_CONTROL_PATH="$HOME/.ssh/agime-sync-%r@%h:%p" \
+REMOTE_HOST=<user>@<host> \
+sh ./sync.sh
+```
 
 ### Safer default (`ssh-tunnel`)
 

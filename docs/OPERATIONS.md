@@ -2,6 +2,13 @@
 
 ## Mode-first troubleshooting
 
+### 0) `sync.sh` asks for SSH password multiple times
+- `sync.sh` runs from your local machine and performs three remote operations (`ssh mkdir`, `scp`, then remote `build-interactive.sh`).
+- It enables SSH multiplexing by default (`ControlMaster=auto` + `ControlPersist`) so one authenticated control session is reused.
+- If repeated prompts continue, verify your SSH client supports multiplexing and optionally set:
+  - `SSH_CONTROL_PERSIST_SECONDS=1200`
+  - `SSH_CONTROL_PATH="$HOME/.ssh/agime-sync-%r@%h:%p"`
+
 ### 1) ssh-tunnel mode is unreachable locally
 - Symptom: browser cannot load `http://127.0.0.1:18789` after tunnel setup.
 - Fix:

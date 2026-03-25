@@ -565,4 +565,5 @@ print_summary() {
   log "Gateway token: <redacted>"
   log "Container logs: docker logs openclaw"
   log "Pending device approvals: docker exec -it openclaw node dist/index.js devices list"
+  optional_tool_github_print_post_build_reminder
 }

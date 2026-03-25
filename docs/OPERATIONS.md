@@ -8,11 +8,11 @@
 - If repeated prompts continue, verify your SSH client supports multiplexing and optionally set:
   - `SSH_CONTROL_PERSIST_SECONDS=1200`
   - `SSH_CONTROL_PATH="$HOME/.ssh/agime-sync-%r@%h:%p"`
-- Prefer keeping sync options in `sync.conf` (copy from `sync.conf.example`) and enable `SYNC_PRINT_CONFIG=1` so current effective values are shown before each run.
-- For non-interactive deploys, use `SYNC_REMOTE_ENTRYPOINT=build.sh` and provide a remote env file via `SYNC_REMOTE_ENV_FILE`.
-- `sync.conf` and `.sync-build.env` are gitignored because they can contain secrets.
-- To reflect welcome answers into reusable config, set `SYNC_REMOTE_ENV_FILE=.sync-build.env` and `SYNC_MIRROR_ENV_FILE=1` so the generated env file is copied back to local.
-- `sync.sh` now uploads `sync.conf` (from `SYNC_CONFIG_FILE`) and the environment file (`SYNC_LOCAL_ENV_FILE`, fallback `SYNC_REMOTE_ENV_FILE` path) when present locally.
+- Prefer keeping sync + build options in `sync.conf` (copy from `sync.conf.example`) and enable `SYNC_PRINT_CONFIG=1` so current effective values are shown before each run.
+- If `sync.conf` is missing, `sync.sh` first tries to download remote `sync.conf`; if not found remotely, it runs local `build-interactive.sh` in config-generation mode and writes it locally.
+- For non-interactive deploys, use `SYNC_REMOTE_ENTRYPOINT=build.sh` and keep required build variables in `sync.conf` (single source of truth).
+- By default, `sync.sh` uploads `sync.conf` (from `SYNC_CONFIG_FILE`) and sources it remotely (`SYNC_REMOTE_ENV_FILE=sync.conf`).
+- Set `SYNC_MIRROR_ENV_FILE=1` when you want generated env values copied back locally after the run.
 - `build-interactive.sh` auto-runs non-interactive mode when `.sync-build.env` exists on host; set `OPENCLAW_FORCE_INTERACTIVE=1` to override.
 
 ### 1) ssh-tunnel mode is unreachable locally
@@ -145,7 +145,7 @@ Use this short checklist for final readiness reviews:
    - Prefer `OPENCLAW_ACCESS_MODE=ssh-tunnel` unless public HTTPS access is explicitly required.
    - In `public` mode, restrict inbound rules to only `22`, `80`, and `443`.
 3. **Secrets hygiene**
-   - Keep `sync.conf` and `.sync-build.env` local-only (gitignored).
+   - Keep `sync.conf` local-only (gitignored), especially when it contains API keys/tokens.
    - Ensure mirrored env files remain `chmod 600`.
 4. **Recoverability**
    - Take a pre-change backup (`backup.sh`) and confirm archive existence before upgrades.

@@ -51,34 +51,38 @@ REMOTE_HOST=<user>@<host> \
 sh ./sync.sh
 ```
 
-Use a local config file (so current sync settings are visible and reusable):
+Use a local config file (so current sync + build settings are visible and reusable):
 
 ```bash
-cp ./sync.conf.example ./sync.conf
+# optional: pre-create/edit; otherwise sync.sh will recover/bootstrap it
 $EDITOR ./sync.conf
 sh ./sync.sh
 ```
 
-`sync.sh` auto-loads `./sync.conf` when present. Set `SYNC_PRINT_CONFIG=1` to print the effective config before execution.
+`sync.sh` auto-loads `./sync.conf` when present.
+If missing, `sync.sh` first tries downloading remote `sync.conf`. If remote is also missing, it runs local `build-interactive.sh` in config-generation mode to create one, then appends `REMOTE_HOST`/`REMOTE_DIR` if absent.
+By default, the same `sync.conf` is sourced remotely before execution (`SYNC_REMOTE_ENV_FILE=sync.conf`) as a single source of truth.
+Set `SYNC_PRINT_CONFIG=1` to print the effective config before execution.
 `sync.conf` is intentionally gitignored (it may contain secrets), while `sync.conf.example` remains the safe template.
 
-For non-interactive remote deploys, set this in `sync.conf`:
+Single-file non-interactive remote deploy (`build.sh`) example:
 
 ```bash
-SYNC_REMOTE_ENTRYPOINT=build.sh
-SYNC_REMOTE_ENV_FILE=.sync-build.env
-SYNC_ITEMS="build-interactive.sh build.sh backup.sh update.sh add_tool.sh restore.sh sync.sh scripts templates docs README.md .sync-build.env"
+$EDITOR ./sync.conf
+sh ./sync.sh
 ```
 
-Then create `.sync-build.env` with required `build.sh` variables (for example `OVH_ENDPOINT_API_KEY=...`, optional access-mode settings). The file is uploaded and sourced remotely before `build.sh` runs.
-You can bootstrap from `.sync-build.env.example`.
+Set this in `sync.conf`:
+
+- `SYNC_REMOTE_ENTRYPOINT=build.sh`
+- add required `build.sh` variables directly to `sync.conf` (for example `OVH_ENDPOINT_API_KEY=...`, optional access-mode settings).
 
 If you run the welcome flow and want those selections reflected in reusable config:
 
-- set `SYNC_REMOTE_ENV_FILE=.sync-build.env`;
-- set `SYNC_MIRROR_ENV_FILE=1` (optional `SYNC_LOCAL_ENV_FILE=./.sync-build.env`).
+- keep `SYNC_REMOTE_ENV_FILE=sync.conf` (default);
+- set `SYNC_MIRROR_ENV_FILE=1` when you want remote updates copied back locally.
 
-With this, `sync.sh` uploads your local env file (`SYNC_LOCAL_ENV_FILE`, fallback `SYNC_REMOTE_ENV_FILE` path if present), `build-interactive.sh` can write updated values on the remote host, and `sync.sh` copies the remote env file back locally (chmod `600`) for future non-interactive runs.
+With this, `build-interactive.sh` can write updated values on the remote host and `sync.sh` copies the remote env file back locally (chmod `600`) so your local `sync.conf` stays current.
 
 `build-interactive.sh` also checks for `./.sync-build.env` on the host by default; when present, it skips prompts and runs `build.sh` directly. Set `OPENCLAW_FORCE_INTERACTIVE=1` to force the menu/prompts.
 

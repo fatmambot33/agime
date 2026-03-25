@@ -2,6 +2,19 @@
 
 ## Mode-first troubleshooting
 
+### 0) `sync.sh` asks for SSH password multiple times
+- `sync.sh` runs from your local machine and performs three remote operations (`ssh mkdir`, `scp`, then remote `build-interactive.sh`).
+- It enables SSH multiplexing by default (`ControlMaster=auto` + `ControlPersist`) so one authenticated control session is reused.
+- If repeated prompts continue, verify your SSH client supports multiplexing and optionally set:
+  - `SSH_CONTROL_PERSIST_SECONDS=1200`
+  - `SSH_CONTROL_PATH="$HOME/.ssh/agime-sync-%r@%h:%p"`
+- Prefer keeping sync options in `sync.conf` (copy from `sync.conf.example`) and enable `SYNC_PRINT_CONFIG=1` so current effective values are shown before each run.
+- For non-interactive deploys, use `SYNC_REMOTE_ENTRYPOINT=build.sh` and provide a remote env file via `SYNC_REMOTE_ENV_FILE`.
+- `sync.conf` and `.sync-build.env` are gitignored because they can contain secrets.
+- To reflect welcome answers into reusable config, set `SYNC_REMOTE_ENV_FILE=.sync-build.env` and `SYNC_MIRROR_ENV_FILE=1` so the generated env file is copied back to local.
+- `sync.sh` now uploads `sync.conf` (from `SYNC_CONFIG_FILE`) and `.sync-build.env` automatically when those files exist locally.
+- `build-interactive.sh` auto-runs non-interactive mode when `.sync-build.env` exists on host; set `OPENCLAW_FORCE_INTERACTIVE=1` to override.
+
 ### 1) ssh-tunnel mode is unreachable locally
 - Symptom: browser cannot load `http://127.0.0.1:18789` after tunnel setup.
 - Fix:
@@ -116,3 +129,22 @@ rm -rf "$HOME/openclaw" "$HOME/.openclaw" "$HOME/docker/traefik"
 ```
 
 For `ssh-tunnel`-only deployments, Traefik directory/network cleanup is usually a no-op.
+
+
+## OVH Ubuntu production posture checklist
+
+Use this short checklist for final readiness reviews:
+
+1. **Host baseline**
+   - Confirm Ubuntu LTS and Docker/Compose versions match the compatibility guidance in `docs/COMPATIBILITY_MATRIX.md`.
+2. **Network boundary**
+   - Prefer `OPENCLAW_ACCESS_MODE=ssh-tunnel` unless public HTTPS access is explicitly required.
+   - In `public` mode, restrict inbound rules to only `22`, `80`, and `443`.
+3. **Secrets hygiene**
+   - Keep `sync.conf` and `.sync-build.env` local-only (gitignored).
+   - Ensure mirrored env files remain `chmod 600`.
+4. **Recoverability**
+   - Take a pre-change backup (`backup.sh`) and confirm archive existence before upgrades.
+5. **Post-change verification**
+   - Run mode-specific health checks and inspect `docker logs openclaw` (plus `docker logs traefik` in public mode).
+

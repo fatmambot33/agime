@@ -20,11 +20,12 @@ Transform the repo into a maintainable, testable, and secure deployment toolkit 
 - Ensured `OPENCLAW_CONFIG_DIR` is prepared before ownership safety checks, including custom config-dir paths.
 - Added hermetic ownership/config-dir validation coverage and aligned contributor validation docs with current `make check` / `make check-strict` targets.
 - Added post-install helper scripts (`update.sh`, `add_tool.sh`) with git-checkout-aware update behavior and hermetic test coverage.
+- Added compatibility matrix documentation for OVH Ubuntu + Docker/Compose/Traefik/OpenClaw deployment baselines.
 
 ## Prioritized backlog (next 5 items)
 
-1. Document tested compatibility matrix for Docker/Traefik/OpenClaw versions.
-2. Add module-level tests for image stamp and validation helper paths.
-3. Add failure-injection tests for DNS mismatch and delayed ACME issuance.
-4. Add CI scenario that exercises both root and non-root ownership/permission checks.
-5. Add release checklist and version-tagging workflow.
+1. Add module-level tests for image stamp and validation helper paths.
+2. Add failure-injection tests for DNS mismatch and delayed ACME issuance.
+3. Add CI scenario that exercises both root and non-root ownership/permission checks.
+4. Add release checklist and version-tagging workflow.
+5. Add Ubuntu package drift guard checks to security audit automation.

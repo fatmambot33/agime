@@ -9,7 +9,9 @@ Automation scripts for deploying OpenClaw on a VPS with two explicit access mode
 
 - `build.sh`: non-interactive end-to-end setup script (environment-variable driven).
 - `build-interactive.sh`: guided entrypoint with a welcome menu (`Install`, `Update`, `Add Tool`, `Restore`, `Security`); `Install` collects inputs then runs `build.sh`.
-- `sync.sh`: helper to upload toolkit files to a VPS first (scripts/templates/docs/README), then run `build-interactive.sh` remotely (optionally preselecting `OPENCLAW_ACTION`).
+- `sync.sh`: local helper that uploads toolkit files to a VPS first (scripts/templates/docs/README), then runs `build-interactive.sh` remotely over SSH (optionally preselecting `OPENCLAW_ACTION`).
+- `sync.conf.example`: sample local config file for `sync.sh` (copy to `sync.conf` to track current sync/build defaults).
+- `.sync-build.env.example`: sample build environment file for non-interactive deploy runs.
 - `backup.sh`: creates a tarball backup of OpenClaw runtime data (`$OPENCLAW_CONFIG_DIR`, `$OPENCLAW_DIR/.env`, optional Traefik state).
 - `update.sh`: post-install helper that can fast-forward pull this toolkit checkout (auto-detected) and rerun `build.sh`.
 - `add_tool.sh`: post-install helper to enable one optional tool (`signal`, `github`, `himalaya`, `coding-agent`) and rerun `build.sh`.
@@ -21,8 +23,64 @@ Automation scripts for deploying OpenClaw on a VPS with two explicit access mode
 - `templates/traefik-compose.yml.tmpl`: Traefik compose template (public mode only).
 - `templates/openclaw.json.tmpl`: OpenClaw JSON config template.
 - `Makefile`: local quality checks.
+- `docs/COMPATIBILITY_MATRIX.md`: OVH Ubuntu compatibility baseline and version expectations.
 
 ## Quick start
+
+### Sync + remote welcome flow
+
+Run from your local machine:
+
+```bash
+REMOTE_HOST=<user>@<host> sh ./sync.sh
+```
+
+Behavior:
+
+- sync/upload is executed locally;
+- the welcome menu (`build-interactive.sh`) is executed on the SSH host.
+
+`sync.sh` now enables SSH connection multiplexing by default (`ControlMaster=auto` + `ControlPersist`), which usually avoids repeated password prompts across the multiple SSH/SCP calls.
+
+Tune if needed:
+
+```bash
+SSH_CONTROL_PERSIST_SECONDS=1200 \
+SSH_CONTROL_PATH="$HOME/.ssh/agime-sync-%r@%h:%p" \
+REMOTE_HOST=<user>@<host> \
+sh ./sync.sh
+```
+
+Use a local config file (so current sync settings are visible and reusable):
+
+```bash
+cp ./sync.conf.example ./sync.conf
+$EDITOR ./sync.conf
+sh ./sync.sh
+```
+
+`sync.sh` auto-loads `./sync.conf` when present. Set `SYNC_PRINT_CONFIG=1` to print the effective config before execution.
+`sync.conf` is intentionally gitignored (it may contain secrets), while `sync.conf.example` remains the safe template.
+
+For non-interactive remote deploys, set this in `sync.conf`:
+
+```bash
+SYNC_REMOTE_ENTRYPOINT=build.sh
+SYNC_REMOTE_ENV_FILE=.sync-build.env
+SYNC_ITEMS="build-interactive.sh build.sh backup.sh update.sh add_tool.sh restore.sh sync.sh scripts templates docs README.md .sync-build.env"
+```
+
+Then create `.sync-build.env` with required `build.sh` variables (for example `OVH_ENDPOINT_API_KEY=...`, optional access-mode settings). The file is uploaded and sourced remotely before `build.sh` runs.
+You can bootstrap from `.sync-build.env.example`.
+
+If you run the welcome flow and want those selections reflected in reusable config:
+
+- set `SYNC_REMOTE_ENV_FILE=.sync-build.env`;
+- set `SYNC_MIRROR_ENV_FILE=1` (optional `SYNC_LOCAL_ENV_FILE=./.sync-build.env`).
+
+With this, `build-interactive.sh` writes the chosen deploy env on the remote host, and `sync.sh` copies it back locally (chmod `600`) for future non-interactive runs.
+
+`build-interactive.sh` also checks for `./.sync-build.env` on the host by default; when present, it skips prompts and runs `build.sh` directly. Set `OPENCLAW_FORCE_INTERACTIVE=1` to force the menu/prompts.
 
 ### Safer default (`ssh-tunnel`)
 
@@ -181,7 +239,7 @@ make check
 Or run the syntax checks directly:
 
 ```bash
-sh -n build.sh build-interactive.sh sync.sh backup.sh update.sh add_tool.sh restore.sh scripts/build_lib.sh scripts/build_steps.sh tests/smoke_dry_run.sh tests/idempotency_dry_run.sh tests/security_template_checks.sh tests/sync_hermetic.sh tests/security_audit_scripts_hermetic.sh tests/backup_restore_hermetic.sh tests/build_interactive_backup_hermetic.sh tests/ownership_config_dir_hermetic.sh tests/post_install_helpers_hermetic.sh
+sh -n build.sh build-interactive.sh sync.sh backup.sh update.sh add_tool.sh restore.sh scripts/build_lib.sh scripts/build_steps.sh tests/smoke_dry_run.sh tests/idempotency_dry_run.sh tests/security_template_checks.sh tests/sync_hermetic.sh tests/security_audit_scripts_hermetic.sh tests/backup_restore_hermetic.sh tests/build_interactive_backup_hermetic.sh tests/build_interactive_autoload_env_hermetic.sh tests/ownership_config_dir_hermetic.sh tests/post_install_helpers_hermetic.sh
 ```
 
 ## Backup and restore mechanic

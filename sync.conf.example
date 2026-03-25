@@ -21,6 +21,22 @@ SYNC_REMOTE_ENTRYPOINT=build-interactive.sh
 # Useful to keep local non-interactive config in sync with latest welcome choices.
 # SYNC_MIRROR_ENV_FILE=1
 # SYNC_LOCAL_ENV_FILE=./.sync-build.env
+#
+# Single source-of-truth mode:
+# - `sync.sh` now auto-creates `sync.conf` from this template when missing.
+# - by default, `sync.conf` is also sourced remotely (SYNC_REMOTE_ENV_FILE=sync.conf)
+#   and mirrored locally (via SYNC_LOCAL_ENV_FILE=./sync.conf).
+# - add your build variables below to keep sync + build settings in one file.
+
+# Optional build variables for non-interactive build.sh
+# OPENCLAW_ACCESS_MODE=ssh-tunnel
+# OVH_ENDPOINT_API_KEY=replace_me
+# OPENCLAW_TOKEN=
+# OPENCLAW_DIR=$HOME/openclaw
+# OPENCLAW_CONFIG_DIR=$HOME/.openclaw
+# OPENCLAW_WORKSPACE_DIR=$HOME/.openclaw/workspace
+# OPENCLAW_USER=$USER
+# DRY_RUN=0
 
 # Default upload set (space-separated)
 SYNC_ITEMS="build-interactive.sh build.sh backup.sh update.sh add_tool.sh restore.sh sync.sh scripts templates docs README.md"

@@ -4,6 +4,13 @@ set -eu
 
 SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 SYNC_CONFIG_FILE=${SYNC_CONFIG_FILE:-"$SCRIPT_DIR/sync.conf"}
+SYNC_CONFIG_TEMPLATE=${SYNC_CONFIG_TEMPLATE:-"$SCRIPT_DIR/sync.conf.example"}
+
+if [ ! -f "$SYNC_CONFIG_FILE" ] && [ -f "$SYNC_CONFIG_TEMPLATE" ]; then
+  cp "$SYNC_CONFIG_TEMPLATE" "$SYNC_CONFIG_FILE"
+  chmod 600 "$SYNC_CONFIG_FILE"
+  printf 'sync.sh: created %s from template %s\n' "$SYNC_CONFIG_FILE" "$SYNC_CONFIG_TEMPLATE"
+fi
 
 if [ -f "$SYNC_CONFIG_FILE" ]; then
   set -a
@@ -16,8 +23,8 @@ REMOTE_HOST=${REMOTE_HOST:-my-vps}
 REMOTE_DIR=${REMOTE_DIR:-/tmp/agime}
 OPENCLAW_ACTION=${OPENCLAW_ACTION:-}
 SYNC_REMOTE_ENTRYPOINT=${SYNC_REMOTE_ENTRYPOINT:-build-interactive.sh}
-SYNC_REMOTE_ENV_FILE=${SYNC_REMOTE_ENV_FILE:-}
-SYNC_LOCAL_ENV_FILE=${SYNC_LOCAL_ENV_FILE:-"$SCRIPT_DIR/.sync-build.env"}
+SYNC_REMOTE_ENV_FILE=${SYNC_REMOTE_ENV_FILE:-"$(basename "$SYNC_CONFIG_FILE")"}
+SYNC_LOCAL_ENV_FILE=${SYNC_LOCAL_ENV_FILE:-"$SYNC_CONFIG_FILE"}
 SYNC_MIRROR_ENV_FILE=${SYNC_MIRROR_ENV_FILE:-0}
 SYNC_PRINT_CONFIG=${SYNC_PRINT_CONFIG:-0}
 SYNC_ITEMS=${SYNC_ITEMS:-"build-interactive.sh build.sh backup.sh update.sh add_tool.sh restore.sh sync.sh scripts templates docs README.md"}

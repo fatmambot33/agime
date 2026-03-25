@@ -26,7 +26,7 @@ bootstrap_local_config() {
   OPENCLAW_FORCE_INTERACTIVE=1 \
     OPENCLAW_GENERATE_ENV_ONLY=1 \
     OPENCLAW_EXPORT_ENV_FILE="$SYNC_LOCAL_ENV_FILE" \
-    sh "$SCRIPT_DIR/build-interactive.sh"
+    sh "$SCRIPT_DIR/configure.sh"
 
   if ! grep -Eq '^REMOTE_HOST=' "$SYNC_LOCAL_ENV_FILE"; then
     printf '\nREMOTE_HOST=%s\n' "$REMOTE_HOST" >> "$SYNC_LOCAL_ENV_FILE"
@@ -35,7 +35,7 @@ bootstrap_local_config() {
     printf 'REMOTE_DIR=%s\n' "$REMOTE_DIR" >> "$SYNC_LOCAL_ENV_FILE"
   fi
   chmod 600 "$SYNC_LOCAL_ENV_FILE"
-  printf 'sync.sh: created %s via local build-interactive wizard\n' "$SYNC_LOCAL_ENV_FILE"
+  printf 'sync.sh: created %s via local configure wizard\n' "$SYNC_LOCAL_ENV_FILE"
 }
 
 if [ ! -f "$SYNC_LOCAL_ENV_FILE" ]; then
@@ -53,7 +53,7 @@ OPENCLAW_ACTION=${OPENCLAW_ACTION:-}
 SYNC_REMOTE_ENTRYPOINT=${SYNC_REMOTE_ENTRYPOINT:-build.sh}
 SYNC_MIRROR_ENV_FILE=${SYNC_MIRROR_ENV_FILE:-0}
 SYNC_PRINT_CONFIG=${SYNC_PRINT_CONFIG:-0}
-SYNC_ITEMS=${SYNC_ITEMS:-"build-interactive.sh build.sh backup.sh update.sh add_tool.sh restore.sh sync.sh scripts templates docs README.md"}
+SYNC_ITEMS=${SYNC_ITEMS:-"build.sh backup.sh update.sh add_tool.sh restore.sh scripts templates docs README.md"}
 
 ssh_exec() {
   # Keep sync orchestration local: only the wrapped command runs remotely.
@@ -189,11 +189,11 @@ else
 fi
 
 case "$SYNC_REMOTE_ENTRYPOINT" in
-  build-interactive.sh)
+  configure.sh)
     if [ -n "$OPENCLAW_ACTION" ]; then
-      ssh_exec -t "$REMOTE_HOST" "cd '$REMOTE_DIR' && chmod +x ./*.sh && ${REMOTE_ENV_SETUP}OPENCLAW_ACTION='$OPENCLAW_ACTION' OPENCLAW_EXPORT_ENV_FILE='${SYNC_REMOTE_ENV_FILE:-}' ./build-interactive.sh"
+      ssh_exec -t "$REMOTE_HOST" "cd '$REMOTE_DIR' && chmod +x ./*.sh && ${REMOTE_ENV_SETUP}OPENCLAW_ACTION='$OPENCLAW_ACTION' OPENCLAW_EXPORT_ENV_FILE='${SYNC_REMOTE_ENV_FILE:-}' ./configure.sh"
     else
-      ssh_exec -t "$REMOTE_HOST" "cd '$REMOTE_DIR' && chmod +x ./*.sh && ${REMOTE_ENV_SETUP}OPENCLAW_EXPORT_ENV_FILE='${SYNC_REMOTE_ENV_FILE:-}' ./build-interactive.sh"
+      ssh_exec -t "$REMOTE_HOST" "cd '$REMOTE_DIR' && chmod +x ./*.sh && ${REMOTE_ENV_SETUP}OPENCLAW_EXPORT_ENV_FILE='${SYNC_REMOTE_ENV_FILE:-}' ./configure.sh"
     fi
     ;;
   build.sh)

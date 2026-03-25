@@ -39,9 +39,9 @@ All notable changes to this repository are documented in this file.
 - Expanded backup coverage/options to include `docker-compose.yml` by default plus opt-in full repo capture (`INCLUDE_OPENCLAW_REPO=1`) and arbitrary extra paths (`EXTRA_BACKUP_PATHS`).
 - Fixed `backup.sh` handling for relative `BACKUP_OUTPUT` so archives are written relative to caller working directory (not staging temp dir).
 - Hardened `restore.sh` root safety check by normalizing `RESTORE_ROOT` path variants (for example `//`) before enforcing `RESTORE_FORCE=1`.
-- Integrated pre-deploy backup flow into `build-interactive.sh` with explicit operator prompts and backup option passthrough.
+- Integrated pre-deploy backup flow into `configure.sh` with explicit operator prompts and backup option passthrough.
 - Fixed backup staging path merge behavior so `INCLUDE_OPENCLAW_REPO=1` no longer nests restore paths as `<OPENCLAW_DIR>/openclaw/...`.
-- Removed legacy compatibility exports from `build-interactive.sh` so `build.sh` owns all default resolution directly.
+- Removed legacy compatibility exports from `configure.sh` so `build.sh` owns all default resolution directly.
 - Fixed backup staging for relative source paths so archives include relative `OPENCLAW_DIR`, `OPENCLAW_CONFIG_DIR`, and `EXTRA_BACKUP_PATHS` entries correctly.
 - Fixed ownership correction in `prepare_openclaw_repo` to support both root and non-root execution contexts by using `sudo` only when required.
 - Fixed custom `OPENCLAW_CONFIG_DIR` brittleness by preparing the config path before ownership safety checks.
@@ -55,3 +55,6 @@ All notable changes to this repository are documented in this file.
 - Updated `sync.sh` env-file handling to upload `SYNC_LOCAL_ENV_FILE` (fallback `SYNC_REMOTE_ENV_FILE`) to the configured remote env path before remote execution.
 - Expanded backup coverage for workspace, skills, hooks, and paired-device state paths (with override env vars for non-default locations).
 - Changed OpenClaw JSON backup behavior to write timestamped `.bak` files under `OPENCLAW_JSON_BACKUP_DIR` (default `$HOME/openclaw-backups`) instead of `.openclaw`.
+- Renamed the interactive setup entrypoint from `build-interactive.sh` to `configure.sh` to make config-authoring responsibilities explicit.
+- Removed `build-interactive.sh`; `configure.sh` is now the only supported interactive/configuration entrypoint.
+- Updated sync defaults/docs so remote `sync.conf` is explicit source of truth, deployment execution remains remote (`build.sh`), and default `SYNC_ITEMS` is limited to runtime deployment files.

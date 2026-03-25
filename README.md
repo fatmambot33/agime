@@ -8,8 +8,8 @@ Automation scripts for deploying OpenClaw on a VPS with two explicit access mode
 ## Current repository contents
 
 - `build.sh`: non-interactive end-to-end setup script (environment-variable driven).
-- `build-interactive.sh`: guided entrypoint with a welcome menu (`Install`, `Update`, `Add Tool`, `Restore`, `Security`); `Install` collects inputs then runs `build.sh`.
-- `sync.sh`: local helper that uploads toolkit files to a VPS first (scripts/templates/docs/README), then runs `build.sh` remotely over SSH by default (set `SYNC_REMOTE_ENTRYPOINT=build-interactive.sh` to use the welcome menu).
+- `configure.sh`: guided entrypoint with a welcome menu (`Install`, `Update`, `Add Tool`, `Restore`, `Security`); `Install` collects inputs then runs `build.sh`.
+- `sync.sh`: local helper that reconciles `sync.conf`, uploads the runtime deployment bundle to a VPS, then runs remote deployment (`build.sh`) by default (set `SYNC_REMOTE_ENTRYPOINT=configure.sh` to use the remote welcome menu intentionally).
 - `sync.conf.example`: sample local config file for `sync.sh` (copy to `sync.conf` to track current sync/build defaults).
 - `.sync-build.env.example`: sample build environment file for non-interactive deploy runs.
 - `backup.sh`: creates a tarball backup of OpenClaw runtime data (`$OPENCLAW_CONFIG_DIR`, `$OPENCLAW_DIR/.env`, optional Traefik state).
@@ -61,10 +61,10 @@ sh ./sync.sh
 
 `sync.sh` auto-loads `./sync.conf` when present.
 It then prioritizes an existing remote env file (`SYNC_REMOTE_ENV_FILE`, default `sync.conf`): when found, that remote file is downloaded locally and used as the source of truth for the run.
-If the remote file is missing, `sync.sh` uses local config; and when local is also missing, it runs local `build-interactive.sh` in config-generation mode to create one, then appends `REMOTE_HOST`/`REMOTE_DIR` if absent.
+If the remote file is missing, `sync.sh` uses local config; and when local is also missing, it runs local `configure.sh` in config-generation mode to create one, then appends `REMOTE_HOST`/`REMOTE_DIR` if absent.
 By default, the same `sync.conf` is sourced remotely before execution (`SYNC_REMOTE_ENV_FILE=sync.conf`) under `set -a`, so plain `KEY=value` assignments are auto-exported for the selected remote entrypoint.
 When `SYNC_REMOTE_ENV_FILE` points to the same file already included in `SYNC_ITEMS` (default: `sync.conf`), `sync.sh` uploads it once to avoid duplicate transfer lines.
-When `build-interactive.sh` is launched from `sync.sh`, values already present in `sync.conf` are reused as prompt defaults (for example `OPENCLAW_ACCESS_MODE`, directories, and optional tool flags), so pressing Enter keeps existing config values.
+When `configure.sh` is launched from `sync.sh`, values already present in `sync.conf` are reused as prompt defaults (for example `OPENCLAW_ACCESS_MODE`, directories, and optional tool flags), so pressing Enter keeps existing config values.
 Set `SYNC_PRINT_CONFIG=1` to print the effective config before execution.
 `sync.conf` is intentionally gitignored (it may contain secrets), while `sync.conf.example` remains the safe template.
 
@@ -83,13 +83,20 @@ Set this in `sync.conf`:
 
 If you prefer the welcome flow and want those selections reflected in reusable config:
 
-- set `SYNC_REMOTE_ENTRYPOINT=build-interactive.sh`;
+- set `SYNC_REMOTE_ENTRYPOINT=configure.sh`;
 - keep `SYNC_REMOTE_ENV_FILE=sync.conf` (default);
 - set `SYNC_MIRROR_ENV_FILE=1` when you want remote updates copied back locally.
 
-With this, `build-interactive.sh` can write updated values on the remote host and `sync.sh` copies the remote env file back locally (chmod `600`) so your local `sync.conf` stays current.
+With this, `configure.sh` can write updated values on the remote host and `sync.sh` copies the remote env file back locally (chmod `600`) so your local `sync.conf` stays current.
 
-`build-interactive.sh` also checks for `./.sync-build.env` on the host by default; when present, it skips prompts and runs `build.sh` directly. Set `OPENCLAW_FORCE_INTERACTIVE=1` to force the menu/prompts.
+`configure.sh` also checks for `./.sync-build.env` on the host by default; when present, it skips prompts and runs `build.sh` directly. Set `OPENCLAW_FORCE_INTERACTIVE=1` to force the menu/prompts.
+
+### Machine boundary and remote footprint
+
+- **Local workstation:** run `configure.sh` to author/update config and run `sync.sh` to reconcile and upload files.
+- **Remote VPS:** run `build.sh` (or other selected entrypoint) to apply deployment changes.
+- Default upload payload is runtime-only: `build.sh backup.sh update.sh add_tool.sh restore.sh scripts templates docs README.md` (plus `sync.conf` when needed).
+- Local authoring helpers are intentionally excluded from default payload; override with `SYNC_ITEMS` only when you explicitly need a different bundle.
 
 ### Safer default (`ssh-tunnel`)
 
@@ -248,12 +255,12 @@ make check
 Or run the syntax checks directly:
 
 ```bash
-sh -n build.sh build-interactive.sh sync.sh backup.sh update.sh add_tool.sh restore.sh scripts/build_lib.sh scripts/build_steps.sh tests/smoke_dry_run.sh tests/idempotency_dry_run.sh tests/security_template_checks.sh tests/sync_hermetic.sh tests/security_audit_scripts_hermetic.sh tests/backup_restore_hermetic.sh tests/build_interactive_backup_hermetic.sh tests/build_interactive_autoload_env_hermetic.sh tests/ownership_config_dir_hermetic.sh tests/post_install_helpers_hermetic.sh
+sh -n build.sh configure.sh sync.sh backup.sh update.sh add_tool.sh restore.sh scripts/build_lib.sh scripts/build_steps.sh tests/smoke_dry_run.sh tests/idempotency_dry_run.sh tests/security_template_checks.sh tests/sync_hermetic.sh tests/security_audit_scripts_hermetic.sh tests/backup_restore_hermetic.sh tests/configure_backup_hermetic.sh tests/configure_autoload_env_hermetic.sh tests/ownership_config_dir_hermetic.sh tests/post_install_helpers_hermetic.sh
 ```
 
 ## Backup and restore mechanic
 
-`build-interactive.sh` includes an explicit pre-deploy backup prompt (enabled by default unless `DRY_RUN=1`) so you can capture a restore point before changes are applied.
+`configure.sh` includes an explicit pre-deploy backup prompt (enabled by default unless `DRY_RUN=1`) so you can capture a restore point before changes are applied.
 
 Backup defaults:
 - Includes `$OPENCLAW_CONFIG_DIR` (default `$HOME/.openclaw`).

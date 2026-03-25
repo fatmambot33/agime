@@ -7,10 +7,10 @@
 REMOTE_HOST=user@example-vps
 REMOTE_DIR=/tmp/agime
 
-# Run one of: build.sh (default, non-interactive) or build-interactive.sh (welcome menu)
+# Run one of: build.sh (default, non-interactive) or configure.sh (welcome menu)
 SYNC_REMOTE_ENTRYPOINT=build.sh
 
-# Optional: pre-select welcome action when using build-interactive.sh
+# Optional: pre-select welcome action when using configure.sh
 # OPENCLAW_ACTION=install
 
 # Optional: source this file remotely before entrypoint execution.
@@ -25,7 +25,7 @@ SYNC_REMOTE_ENTRYPOINT=build.sh
 # Single source-of-truth mode:
 # - `sync.sh` treats this file as your single source of truth.
 # - if local `sync.conf` is missing, `sync.sh` tries downloading remote `sync.conf`;
-#   if missing remotely too, it runs local `build-interactive.sh` once to create it.
+#   if missing remotely too, it runs local `configure.sh` once to create it.
 # - set SYNC_MIRROR_ENV_FILE=1 to copy remote updates back locally after each run.
 # - add your build variables below to keep sync + build settings in one file.
 
@@ -39,8 +39,8 @@ SYNC_REMOTE_ENTRYPOINT=build.sh
 # OPENCLAW_USER=$USER
 # DRY_RUN=0
 
-# Default upload set (space-separated)
-SYNC_ITEMS="build-interactive.sh build.sh backup.sh update.sh add_tool.sh restore.sh sync.sh scripts templates docs README.md"
+# Default upload set (space-separated, runtime bundle only)
+SYNC_ITEMS="build.sh backup.sh update.sh add_tool.sh restore.sh scripts templates docs README.md"
 
 # SSH multiplexing tunables
 SSH_CONTROL_PERSIST_SECONDS=600

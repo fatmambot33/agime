@@ -250,16 +250,18 @@ Behavior when enabled:
 
 - Auto-installs `gh` inside the running `openclaw` container when missing (apt-get based).
 - Validates that `gh` is available inside the running `openclaw` container runtime after restart.
+- By default (`OPENCLAW_GH_REQUIRE_AUTH=1`), validates `gh auth status` inside the running container runtime after restart.
 
 If you prefer to install/auth manually in the container, use:
 
 1. Install `gh` in the running container:
    - `docker exec -u 0 openclaw sh -lc 'apt-get update && apt-get install -y gh'`
 2. Authenticate in the runtime context as needed for your workflow.
+   - `docker exec openclaw sh -lc 'gh auth login'`
 3. Verify runtime visibility:
    - `docker exec openclaw sh -lc 'command -v gh'`
-
-Note: `OPENCLAW_GH_REQUIRE_AUTH` is retained for interface compatibility, but auth is no longer validated on the VPS host during build (runtime state depends on your in-container workflow).
+4. If `OPENCLAW_GH_REQUIRE_AUTH=1` (default), verify auth:
+   - `docker exec openclaw sh -lc 'gh auth status'`
 
 ## Himalaya skill prerequisites
 
@@ -303,6 +305,7 @@ OVH_ENDPOINT_API_KEY=xxxxx \
 
 This lets you inject credentials/config from your secret manager at runtime instead of running `himalaya account configure` interactively.
 
+- `OPENCLAW_CODING_AGENT_REQUIRE_VERSION_CHECK` is retained for interface compatibility, but `<backend> --version` checks are not enforced during build.
 ## Coding-agent skill prerequisites
 
 If you plan to use the coding-agent skill, enable prerequisite handling in the build:
@@ -329,6 +332,7 @@ Behavior when enabled:
   - `pi`: `npm i -g @mariozechner/pi-coding-agent`
 - `opencode` remains manual install.
 - Validates that the selected backend binary is available inside the running `openclaw` container runtime after restart.
+- By default (`OPENCLAW_CODING_AGENT_REQUIRE_VERSION_CHECK=1`), validates `<backend> --version` inside the running `openclaw` container runtime after restart.
 
 Safety guidance:
 

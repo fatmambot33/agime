@@ -59,8 +59,10 @@ echo "DRY_RUN signal smoke test passed"
 )
 
 grep -q '\[DRY_RUN\] validate GitHub skill prerequisites runtime binary inside openclaw container: gh' "$OUTPUT_SKILLS_FILE"
+grep -q '\[DRY_RUN\] validate GitHub skill prerequisites runtime command inside openclaw container: gh auth status' "$OUTPUT_SKILLS_FILE"
 grep -q '\[DRY_RUN\] validate Himalaya skill prerequisites runtime binary inside openclaw container: himalaya' "$OUTPUT_SKILLS_FILE"
 grep -q '\[DRY_RUN\] validate coding-agent skill prerequisites runtime binary inside openclaw container: codex' "$OUTPUT_SKILLS_FILE"
+grep -q '\[DRY_RUN\] validate coding-agent skill prerequisites runtime command inside openclaw container: codex --version' "$OUTPUT_SKILLS_FILE"
 grep -q 'OpenClaw deployment finished' "$OUTPUT_SKILLS_FILE"
 
 echo "DRY_RUN optional-skill runtime smoke test passed"

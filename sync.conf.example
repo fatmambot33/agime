@@ -14,7 +14,7 @@ SYNC_REMOTE_ENTRYPOINT=build-interactive.sh
 # OPENCLAW_ACTION=install
 
 # Optional: source this file remotely before entrypoint execution.
-# Add this file to SYNC_ITEMS if you use it.
+# Local file is auto-uploaded when present.
 # SYNC_REMOTE_ENV_FILE=.sync-build.env
 #
 # Optional: copy the remote env file back locally after the run.

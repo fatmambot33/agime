@@ -90,6 +90,7 @@ EOF
 grep -Fq "sync.sh effective config:" "$TMP_DIR/config.stdout"
 grep -Fq "REMOTE_HOST=config-host" "$TMP_DIR/config.stdout"
 grep -Eq "ssh .*config-host mkdir -p '/tmp/config-agime'" "$CALLS_FILE"
+grep -Eq "scp .* $CONFIG_FILE config-host:/tmp/config-agime/" "$CALLS_FILE"
 grep -Eq "ssh .* config-host cd '/tmp/config-agime' && chmod \+x \./\*\.sh && \. '\./\.sync-build\.env' && \./build.sh" "$CALLS_FILE"
 grep -Eq "scp .* config-host:/tmp/config-agime/\.sync-build\.env $TMP_DIR/mirrored\.env" "$CALLS_FILE"
 

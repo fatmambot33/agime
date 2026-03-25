@@ -36,7 +36,7 @@ scp_exec() {
 }
 
 cleanup_ssh_master() {
-  ssh_exec -O exit "$REMOTE_HOST" >/dev/null 2>&1 || true
+  ssh_exec -O exit "$REMOTE_HOST" > /dev/null 2>&1 || true
 }
 
 print_effective_config() {
@@ -60,8 +60,23 @@ fi
 
 trap 'cleanup_ssh_master' EXIT INT TERM
 
+UPLOAD_ITEMS=$SYNC_ITEMS
+if [ -f "$SYNC_CONFIG_FILE" ]; then
+  case " $UPLOAD_ITEMS " in
+    *" $SYNC_CONFIG_FILE "*) ;;
+    *) UPLOAD_ITEMS="$UPLOAD_ITEMS $SYNC_CONFIG_FILE" ;;
+  esac
+fi
+
+if [ -n "$SYNC_REMOTE_ENV_FILE" ] && [ -f "$SYNC_REMOTE_ENV_FILE" ]; then
+  case " $UPLOAD_ITEMS " in
+    *" $SYNC_REMOTE_ENV_FILE "*) ;;
+    *) UPLOAD_ITEMS="$UPLOAD_ITEMS $SYNC_REMOTE_ENV_FILE" ;;
+  esac
+fi
+
 ssh_exec "$REMOTE_HOST" "mkdir -p '$REMOTE_DIR'"
-set -- $SYNC_ITEMS
+set -- $UPLOAD_ITEMS
 scp_exec -r "$@" "$REMOTE_HOST:$REMOTE_DIR/"
 
 if [ -n "$SYNC_REMOTE_ENV_FILE" ]; then

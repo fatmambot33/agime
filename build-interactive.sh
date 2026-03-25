@@ -223,6 +223,19 @@ if [ ! -f "$BUILD_SCRIPT" ]; then
   fail "build script not found at $BUILD_SCRIPT"
 fi
 
+OPENCLAW_AUTO_ENV_FILE=${OPENCLAW_AUTO_ENV_FILE:-"$SCRIPT_DIR/.sync-build.env"}
+if [ -z "${OPENCLAW_ACTION:-}" ] && [ "${OPENCLAW_FORCE_INTERACTIVE:-0}" != "1" ] && [ -f "$OPENCLAW_AUTO_ENV_FILE" ]; then
+  milestone "Detected existing environment file: $OPENCLAW_AUTO_ENV_FILE"
+  milestone "Skipping prompts and running non-interactive build"
+  set -a
+  # shellcheck disable=SC1090
+  . "$OPENCLAW_AUTO_ENV_FILE"
+  set +a
+  sh "$BUILD_SCRIPT"
+  milestone "Non-interactive setup completed."
+  exit 0
+fi
+
 choose_welcome_action
 case "$OPENCLAW_ACTION" in
   install) ;;

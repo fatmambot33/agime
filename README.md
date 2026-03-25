@@ -11,6 +11,7 @@ Automation scripts for deploying OpenClaw on a VPS with two explicit access mode
 - `build-interactive.sh`: guided entrypoint with a welcome menu (`Install`, `Update`, `Add Tool`, `Restore`, `Security`); `Install` collects inputs then runs `build.sh`.
 - `sync.sh`: local helper that uploads toolkit files to a VPS first (scripts/templates/docs/README), then runs `build-interactive.sh` remotely over SSH (optionally preselecting `OPENCLAW_ACTION`).
 - `sync.conf.example`: sample local config file for `sync.sh` (copy to `sync.conf` to track current sync/build defaults).
+- `.sync-build.env.example`: sample build environment file for non-interactive deploy runs.
 - `backup.sh`: creates a tarball backup of OpenClaw runtime data (`$OPENCLAW_CONFIG_DIR`, `$OPENCLAW_DIR/.env`, optional Traefik state).
 - `update.sh`: post-install helper that can fast-forward pull this toolkit checkout (auto-detected) and rerun `build.sh`.
 - `add_tool.sh`: post-install helper to enable one optional tool (`signal`, `github`, `himalaya`, `coding-agent`) and rerun `build.sh`.
@@ -69,6 +70,7 @@ SYNC_ITEMS="build-interactive.sh build.sh backup.sh update.sh add_tool.sh restor
 ```
 
 Then create `.sync-build.env` with required `build.sh` variables (for example `OVH_ENDPOINT_API_KEY=...`, optional access-mode settings). The file is uploaded and sourced remotely before `build.sh` runs.
+You can bootstrap from `.sync-build.env.example`.
 
 If you run the welcome flow and want those selections reflected in reusable config:
 
@@ -76,6 +78,8 @@ If you run the welcome flow and want those selections reflected in reusable conf
 - set `SYNC_MIRROR_ENV_FILE=1` (optional `SYNC_LOCAL_ENV_FILE=./.sync-build.env`).
 
 With this, `build-interactive.sh` writes the chosen deploy env on the remote host, and `sync.sh` copies it back locally (chmod `600`) for future non-interactive runs.
+
+`build-interactive.sh` also checks for `./.sync-build.env` on the host by default; when present, it skips prompts and runs `build.sh` directly. Set `OPENCLAW_FORCE_INTERACTIVE=1` to force the menu/prompts.
 
 ### Safer default (`ssh-tunnel`)
 
@@ -234,7 +238,7 @@ make check
 Or run the syntax checks directly:
 
 ```bash
-sh -n build.sh build-interactive.sh sync.sh backup.sh update.sh add_tool.sh restore.sh scripts/build_lib.sh scripts/build_steps.sh tests/smoke_dry_run.sh tests/idempotency_dry_run.sh tests/security_template_checks.sh tests/sync_hermetic.sh tests/security_audit_scripts_hermetic.sh tests/backup_restore_hermetic.sh tests/build_interactive_backup_hermetic.sh tests/ownership_config_dir_hermetic.sh tests/post_install_helpers_hermetic.sh
+sh -n build.sh build-interactive.sh sync.sh backup.sh update.sh add_tool.sh restore.sh scripts/build_lib.sh scripts/build_steps.sh tests/smoke_dry_run.sh tests/idempotency_dry_run.sh tests/security_template_checks.sh tests/sync_hermetic.sh tests/security_audit_scripts_hermetic.sh tests/backup_restore_hermetic.sh tests/build_interactive_backup_hermetic.sh tests/build_interactive_autoload_env_hermetic.sh tests/ownership_config_dir_hermetic.sh tests/post_install_helpers_hermetic.sh
 ```
 
 ## Backup and restore mechanic

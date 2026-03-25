@@ -171,4 +171,38 @@ if grep -Eq "scp .* $REMOTE_PRIORITY_CONFIG remote-priority-host:/tmp/remote-pri
   exit 1
 fi
 
+PORTABLE_DIR="$TMP_DIR/portable"
+mkdir -p "$PORTABLE_DIR"
+cp "$REPO_DIR/sync.sh" "$PORTABLE_DIR/sync.sh"
+cat > "$PORTABLE_DIR/configure.sh" << EOF
+#!/usr/bin/env sh
+set -eu
+cat > "\$OPENCLAW_EXPORT_ENV_FILE" << EOF_INNER
+OPENCLAW_DIR=$TMP_DIR/home/openclaw
+OPENCLAW_CONFIG_DIR=$TMP_DIR/home/.openclaw
+OPENCLAW_WORKSPACE_DIR=$TMP_DIR/home/.openclaw/workspace
+TRAEFIK_DIR=$TMP_DIR/home/docker/traefik
+OPENCLAW_JSON_BACKUP_DIR=$TMP_DIR/home/openclaw-backups
+EOF_INNER
+EOF
+chmod +x "$PORTABLE_DIR/sync.sh" "$PORTABLE_DIR/configure.sh"
+
+(
+  cd "$PORTABLE_DIR"
+  HOME="$TMP_DIR/home" \
+    PATH="$BIN_DIR:$PATH" \
+    SYNC_CONFIG_FILE="$PORTABLE_DIR/sync.conf" \
+    REMOTE_HOST=portable-host \
+    REMOTE_DIR=/tmp/portable-agime \
+    sh ./sync.sh > "$TMP_DIR/portable.stdout" 2>&1
+)
+
+grep -Fq "sync.sh: created $PORTABLE_DIR/sync.conf via local configure wizard" "$TMP_DIR/portable.stdout"
+grep -Fq "OPENCLAW_DIR=~/openclaw" "$PORTABLE_DIR/sync.conf"
+grep -Fq "OPENCLAW_CONFIG_DIR=~/.openclaw" "$PORTABLE_DIR/sync.conf"
+grep -Fq "OPENCLAW_WORKSPACE_DIR=~/.openclaw/workspace" "$PORTABLE_DIR/sync.conf"
+grep -Fq "TRAEFIK_DIR=~/docker/traefik" "$PORTABLE_DIR/sync.conf"
+grep -Fq "OPENCLAW_JSON_BACKUP_DIR=~/openclaw-backups" "$PORTABLE_DIR/sync.conf"
+grep -Eq "scp .* -r build.sh backup.sh update.sh add_tool.sh restore.sh scripts templates docs README.md $PORTABLE_DIR/sync\\.conf portable-host:/tmp/portable-agime/" "$CALLS_FILE"
+
 echo "sync.sh hermetic test passed"

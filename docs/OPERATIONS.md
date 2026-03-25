@@ -10,6 +10,7 @@
   - `SSH_CONTROL_PATH="$HOME/.ssh/agime-sync-%r@%h:%p"`
 - Prefer keeping sync + build options in `sync.conf` (copy from `sync.conf.example`) and enable `SYNC_PRINT_CONFIG=1` so current effective values are shown before each run.
 - If `sync.conf` is missing, `sync.sh` first tries to download remote `sync.conf`; if not found remotely, it runs local `configure.sh` in config-generation mode and writes it locally.
+- Shared `sync.conf` is normalized to home-relative paths (for example `~/openclaw`, `~/.openclaw`) for `OPENCLAW_*` + `TRAEFIK_DIR`, which keeps one machine-agnostic config usable on both workstation and VPS.
 - Treat `configure.sh` as a local config wizard (author/update), not the default deployment entrypoint.
 - `SYNC_REMOTE_CONFIG_PRIORITY=1` by default: if remote `SYNC_REMOTE_ENV_FILE` already exists, `sync.sh` treats it as authoritative for the run and refreshes local `sync.conf` from it.
 - For non-interactive deploys, use `SYNC_REMOTE_ENTRYPOINT=build.sh` and keep required build variables in `sync.conf` (single source of truth).

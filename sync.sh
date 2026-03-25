@@ -14,10 +14,54 @@ SSH_CONTROL_PERSIST_SECONDS=${SSH_CONTROL_PERSIST_SECONDS:-600}
 SSH_CONTROL_PATH=${SSH_CONTROL_PATH:-"$HOME/.ssh/agime-sync-%r@%h:%p"}
 SSH_BASE_ARGS="-o ControlMaster=auto -o ControlPersist=${SSH_CONTROL_PERSIST_SECONDS} -o ControlPath=$SSH_CONTROL_PATH"
 
+canonicalize_home_path() {
+  value=$1
+  home_dir=${HOME:-}
+  [ -n "$home_dir" ] || {
+    printf '%s' "$value"
+    return 0
+  }
+
+  case "$value" in
+    "$home_dir")
+      printf '~'
+      ;;
+    "$home_dir"/*)
+      printf '~/%s' "${value#"$home_dir"/}"
+      ;;
+    *)
+      printf '%s' "$value"
+      ;;
+  esac
+}
+
+normalize_shared_home_paths() {
+  env_file=$1
+  [ -f "$env_file" ] || return 0
+
+  tmp_file=$(mktemp)
+  while IFS= read -r line || [ -n "$line" ]; do
+    case "$line" in
+      OPENCLAW_DIR=* | OPENCLAW_CONFIG_DIR=* | OPENCLAW_WORKSPACE_DIR=* | TRAEFIK_DIR=* | OPENCLAW_JSON_BACKUP_DIR=*)
+        key=${line%%=*}
+        value=${line#*=}
+        value=$(canonicalize_home_path "$value")
+        printf '%s=%s\n' "$key" "$value" >> "$tmp_file"
+        ;;
+      *)
+        printf '%s\n' "$line" >> "$tmp_file"
+        ;;
+    esac
+  done < "$env_file"
+
+  mv "$tmp_file" "$env_file"
+}
+
 try_download_remote_config() {
   ssh $SSH_BASE_ARGS "$REMOTE_HOST" "test -f '$REMOTE_DIR/$SYNC_REMOTE_ENV_FILE'" || return 1
   mkdir -p "$(dirname "$SYNC_LOCAL_ENV_FILE")"
   scp $SSH_BASE_ARGS "$REMOTE_HOST:$REMOTE_DIR/$SYNC_REMOTE_ENV_FILE" "$SYNC_LOCAL_ENV_FILE"
+  normalize_shared_home_paths "$SYNC_LOCAL_ENV_FILE"
   chmod 600 "$SYNC_LOCAL_ENV_FILE"
   printf 'sync.sh: downloaded %s from %s:%s/%s\n' "$SYNC_LOCAL_ENV_FILE" "$REMOTE_HOST" "$REMOTE_DIR" "$SYNC_REMOTE_ENV_FILE"
 }
@@ -34,6 +78,7 @@ bootstrap_local_config() {
   if ! grep -Eq '^REMOTE_DIR=' "$SYNC_LOCAL_ENV_FILE"; then
     printf 'REMOTE_DIR=%s\n' "$REMOTE_DIR" >> "$SYNC_LOCAL_ENV_FILE"
   fi
+  normalize_shared_home_paths "$SYNC_LOCAL_ENV_FILE"
   chmod 600 "$SYNC_LOCAL_ENV_FILE"
   printf 'sync.sh: created %s via local configure wizard\n' "$SYNC_LOCAL_ENV_FILE"
 }
@@ -208,5 +253,6 @@ esac
 if [ "$SYNC_MIRROR_ENV_FILE" = "1" ] && [ -n "$SYNC_REMOTE_ENV_FILE" ]; then
   mkdir -p "$(dirname "$SYNC_LOCAL_ENV_FILE")"
   scp_exec "$REMOTE_HOST:$REMOTE_DIR/$SYNC_REMOTE_ENV_FILE" "$SYNC_LOCAL_ENV_FILE"
+  normalize_shared_home_paths "$SYNC_LOCAL_ENV_FILE"
   chmod 600 "$SYNC_LOCAL_ENV_FILE"
 fi

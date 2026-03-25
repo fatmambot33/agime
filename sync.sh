@@ -35,7 +35,7 @@ bootstrap_local_config() {
     printf 'REMOTE_DIR=%s\n' "$REMOTE_DIR" >> "$SYNC_LOCAL_ENV_FILE"
   fi
   chmod 600 "$SYNC_LOCAL_ENV_FILE"
-  printf 'sync.sh: created %s via local build-interactive wizard\n' "$SYNC_LOCAL_ENV_FILE"
+  printf 'sync.sh: created %s via local configure wizard\n' "$SYNC_LOCAL_ENV_FILE"
 }
 
 if [ ! -f "$SYNC_LOCAL_ENV_FILE" ]; then
@@ -189,7 +189,7 @@ else
 fi
 
 case "$SYNC_REMOTE_ENTRYPOINT" in
-  configure.sh | build-interactive.sh)
+  configure.sh)
     if [ -n "$OPENCLAW_ACTION" ]; then
       ssh_exec -t "$REMOTE_HOST" "cd '$REMOTE_DIR' && chmod +x ./*.sh && ${REMOTE_ENV_SETUP}OPENCLAW_ACTION='$OPENCLAW_ACTION' OPENCLAW_EXPORT_ENV_FILE='${SYNC_REMOTE_ENV_FILE:-}' ./configure.sh"
     else

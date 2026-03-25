@@ -150,23 +150,6 @@ EOF
 
 grep -Eq "ssh .* -t interactive-host cd '/tmp/interactive-agime' && chmod \+x \./\*\.sh && set -a && \. '\./interactive-sync\.conf' && set \+a && OPENCLAW_ACTION='security' OPENCLAW_EXPORT_ENV_FILE='interactive-sync\\.conf' \./configure.sh" "$CALLS_FILE"
 
-LEGACY_INTERACTIVE_CONFIG_FILE="$TMP_DIR/legacy-interactive-sync.conf"
-cat > "$LEGACY_INTERACTIVE_CONFIG_FILE" << EOF
-REMOTE_HOST=legacy-interactive-host
-REMOTE_DIR=/tmp/legacy-interactive-agime
-SYNC_REMOTE_ENTRYPOINT=build-interactive.sh
-EOF
-
-(
-  cd "$REPO_DIR"
-  PATH="$BIN_DIR:$PATH" \
-    SYNC_CONFIG_FILE="$LEGACY_INTERACTIVE_CONFIG_FILE" \
-    OPENCLAW_ACTION=security \
-    sh ./sync.sh
-)
-
-grep -Eq "ssh .* -t legacy-interactive-host cd '/tmp/legacy-interactive-agime' && chmod \+x \./\*\.sh && set -a && \. '\./legacy-interactive-sync\.conf' && set \+a && OPENCLAW_ACTION='security' OPENCLAW_EXPORT_ENV_FILE='legacy-interactive-sync\\.conf' \./configure.sh" "$CALLS_FILE"
-
 REMOTE_PRIORITY_CONFIG="$TMP_DIR/remote-priority.conf"
 cat > "$REMOTE_PRIORITY_CONFIG" << EOF
 REMOTE_HOST=remote-priority-host

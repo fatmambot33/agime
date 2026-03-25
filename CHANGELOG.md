@@ -56,5 +56,5 @@ All notable changes to this repository are documented in this file.
 - Expanded backup coverage for workspace, skills, hooks, and paired-device state paths (with override env vars for non-default locations).
 - Changed OpenClaw JSON backup behavior to write timestamped `.bak` files under `OPENCLAW_JSON_BACKUP_DIR` (default `$HOME/openclaw-backups`) instead of `.openclaw`.
 - Renamed the interactive setup entrypoint from `build-interactive.sh` to `configure.sh` to make config-authoring responsibilities explicit.
-- Kept `build-interactive.sh` as a compatibility shim that delegates to `configure.sh` with a deprecation warning.
+- Removed `build-interactive.sh`; `configure.sh` is now the only supported interactive/configuration entrypoint.
 - Updated sync defaults/docs so remote `sync.conf` is explicit source of truth, deployment execution remains remote (`build.sh`), and default `SYNC_ITEMS` is limited to runtime deployment files.

@@ -34,6 +34,7 @@ Optional environment variables:
  OPENCLAW_DIR Default: \$HOME/openclaw
  OPENCLAW_CONFIG_DIR Default: \$HOME/.openclaw
  OPENCLAW_WORKSPACE_DIR Default: \$HOME/.openclaw/workspace
+ OPENCLAW_JSON_BACKUP_DIR Default: \$HOME/openclaw-backups. Stores timestamped openclaw.json backups.
  TRAEFIK_DIR Default: \$HOME/docker/traefik
  OPENCLAW_REPO Default: https://github.com/openclaw/openclaw.git
  OPENCLAW_IMAGE Default: openclaw:local

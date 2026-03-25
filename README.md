@@ -78,7 +78,7 @@ If you run the welcome flow and want those selections reflected in reusable conf
 - set `SYNC_REMOTE_ENV_FILE=.sync-build.env`;
 - set `SYNC_MIRROR_ENV_FILE=1` (optional `SYNC_LOCAL_ENV_FILE=./.sync-build.env`).
 
-With this, `build-interactive.sh` writes the chosen deploy env on the remote host, and `sync.sh` copies it back locally (chmod `600`) for future non-interactive runs.
+With this, `sync.sh` uploads your local env file (`SYNC_LOCAL_ENV_FILE`, fallback `SYNC_REMOTE_ENV_FILE` path if present), `build-interactive.sh` can write updated values on the remote host, and `sync.sh` copies the remote env file back locally (chmod `600`) for future non-interactive runs.
 
 `build-interactive.sh` also checks for `./.sync-build.env` on the host by default; when present, it skips prompts and runs `build.sh` directly. Set `OPENCLAW_FORCE_INTERACTIVE=1` to force the menu/prompts.
 
@@ -248,11 +248,16 @@ sh -n build.sh build-interactive.sh sync.sh backup.sh update.sh add_tool.sh rest
 
 Backup defaults:
 - Includes `$OPENCLAW_CONFIG_DIR` (default `$HOME/.openclaw`).
+- Includes `OPENCLAW_WORKSPACE_DIR` (default `$OPENCLAW_CONFIG_DIR/workspace`) so workspace data is captured even when moved outside `$OPENCLAW_CONFIG_DIR`.
+- Includes `OPENCLAW_SKILLS_DIR` (default `$OPENCLAW_CONFIG_DIR/skills`) and `OPENCLAW_HOOKS_DIR` (default `$OPENCLAW_CONFIG_DIR/hooks`) when present.
+- Includes `OPENCLAW_PAIRED_DEVICES_PATH` (default `$OPENCLAW_CONFIG_DIR/paired-devices.json`) when present.
 - Includes `$OPENCLAW_DIR/.env` (default `$HOME/openclaw/.env`).
 - Includes `$OPENCLAW_DIR/docker-compose.yml` when present.
 - Excludes Traefik data by default unless `INCLUDE_TRAEFIK=1`.
 - Excludes full OpenClaw git checkout by default unless `INCLUDE_OPENCLAW_REPO=1`.
 - Supports additional paths via `EXTRA_BACKUP_PATHS` (space-separated).
+
+During deploy, when `openclaw.json` already exists, `build.sh` now writes timestamped backups to `OPENCLAW_JSON_BACKUP_DIR` (default `$HOME/openclaw-backups`) instead of writing `.bak` files inside `$OPENCLAW_CONFIG_DIR`.
 
 Create a backup:
 

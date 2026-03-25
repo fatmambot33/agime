@@ -20,6 +20,7 @@ initialize_defaults() {
   OPENCLAW_DIR=${OPENCLAW_DIR:-"$HOME_DIR/openclaw"}
   OPENCLAW_CONFIG_DIR=${OPENCLAW_CONFIG_DIR:-"$HOME_DIR/.openclaw"}
   OPENCLAW_WORKSPACE_DIR=${OPENCLAW_WORKSPACE_DIR:-"$OPENCLAW_CONFIG_DIR/workspace"}
+  OPENCLAW_JSON_BACKUP_DIR=${OPENCLAW_JSON_BACKUP_DIR:-"$HOME_DIR/openclaw-backups"}
   TRAEFIK_DIR=${TRAEFIK_DIR:-"$HOME_DIR/docker/traefik"}
   OPENCLAW_REPO=${OPENCLAW_REPO:-"https://github.com/openclaw/openclaw.git"}
   OPENCLAW_IMAGE=${OPENCLAW_IMAGE:-"openclaw:local"}
@@ -377,8 +378,12 @@ validate_optional_skill_container_runtime() {
 write_openclaw_json_config() {
   OPENCLAW_JSON="$OPENCLAW_CONFIG_DIR/openclaw.json"
   if [ -f "$OPENCLAW_JSON" ]; then
-    run_cmd cp "$OPENCLAW_JSON" "${OPENCLAW_JSON}.bak"
-    run_cmd chmod 600 "${OPENCLAW_JSON}.bak"
+    OPENCLAW_JSON_BACKUP_TIMESTAMP=$(date +%Y%m%d-%H%M%S)
+    OPENCLAW_JSON_BACKUP_FILE="$OPENCLAW_JSON_BACKUP_DIR/openclaw.json.$OPENCLAW_JSON_BACKUP_TIMESTAMP.bak"
+    run_cmd mkdir -p "$OPENCLAW_JSON_BACKUP_DIR"
+    run_cmd chmod 700 "$OPENCLAW_JSON_BACKUP_DIR"
+    run_cmd cp "$OPENCLAW_JSON" "$OPENCLAW_JSON_BACKUP_FILE"
+    run_cmd chmod 600 "$OPENCLAW_JSON_BACKUP_FILE"
   fi
 
   log "Writing $OPENCLAW_JSON"

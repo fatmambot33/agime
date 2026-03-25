@@ -68,16 +68,21 @@ if [ -f "$SYNC_CONFIG_FILE" ]; then
   esac
 fi
 
-if [ -n "$SYNC_REMOTE_ENV_FILE" ] && [ -f "$SYNC_REMOTE_ENV_FILE" ]; then
-  case " $UPLOAD_ITEMS " in
-    *" $SYNC_REMOTE_ENV_FILE "*) ;;
-    *) UPLOAD_ITEMS="$UPLOAD_ITEMS $SYNC_REMOTE_ENV_FILE" ;;
-  esac
+ENV_UPLOAD_SOURCE=""
+if [ -n "$SYNC_REMOTE_ENV_FILE" ]; then
+  if [ -f "$SYNC_LOCAL_ENV_FILE" ]; then
+    ENV_UPLOAD_SOURCE=$SYNC_LOCAL_ENV_FILE
+  elif [ -f "$SYNC_REMOTE_ENV_FILE" ]; then
+    ENV_UPLOAD_SOURCE=$SYNC_REMOTE_ENV_FILE
+  fi
 fi
 
 ssh_exec "$REMOTE_HOST" "mkdir -p '$REMOTE_DIR'"
 set -- $UPLOAD_ITEMS
 scp_exec -r "$@" "$REMOTE_HOST:$REMOTE_DIR/"
+if [ -n "$ENV_UPLOAD_SOURCE" ] && [ -n "$SYNC_REMOTE_ENV_FILE" ]; then
+  scp_exec "$ENV_UPLOAD_SOURCE" "$REMOTE_HOST:$REMOTE_DIR/$SYNC_REMOTE_ENV_FILE"
+fi
 
 if [ -n "$SYNC_REMOTE_ENV_FILE" ]; then
   REMOTE_ENV_SETUP=". './$SYNC_REMOTE_ENV_FILE' && "

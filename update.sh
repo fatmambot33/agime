@@ -26,7 +26,6 @@ run_cmd() {
   "$@"
 }
 
-
 load_ovh_api_key_from_env_file() {
   [ -n "${OVH_ENDPOINT_API_KEY:-}" ] && return 0
 
@@ -43,7 +42,7 @@ load_ovh_api_key_from_env_file() {
 }
 
 usage() {
-  cat <<'EOF2'
+  cat << 'EOF2'
 Usage:
   sh ./update.sh
   sh ./update.sh -- --help

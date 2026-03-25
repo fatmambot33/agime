@@ -10,7 +10,7 @@ cp "$REPO_DIR/update.sh" "$TMP_DIR/update.sh"
 cp "$REPO_DIR/add_tool.sh" "$TMP_DIR/add_tool.sh"
 chmod +x "$TMP_DIR/update.sh" "$TMP_DIR/add_tool.sh"
 
-cat > "$TMP_DIR/build.sh" <<'EOS'
+cat > "$TMP_DIR/build.sh" << 'EOS'
 #!/usr/bin/env sh
 set -eu
 printf 'build called\n'
@@ -23,7 +23,7 @@ EOS
 chmod +x "$TMP_DIR/build.sh"
 
 mkdir -p "$TMP_DIR/openclaw"
-cat > "$TMP_DIR/openclaw/.env" <<'EOS'
+cat > "$TMP_DIR/openclaw/.env" << 'EOS'
 OVH_ENDPOINT_API_KEY=from-env-file
 EOS
 

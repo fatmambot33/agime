@@ -24,7 +24,7 @@ fail() {
 }
 
 usage() {
-  cat <<'EOF2'
+  cat << 'EOF2'
 Usage:
   TOOL=github sh ./add_tool.sh
   sh ./add_tool.sh signal

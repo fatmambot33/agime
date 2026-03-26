@@ -108,7 +108,6 @@ ensure_openclaw_env_overrides
 write_openclaw_json_config
 ensure_openclaw_image
 restart_openclaw
-install_optional_skill_container_runtime_dependencies
 validate_optional_skill_container_runtime
 post_build_connectivity_test
 print_summary

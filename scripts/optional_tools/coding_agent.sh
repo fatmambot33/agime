@@ -17,10 +17,6 @@ optional_tool_coding_agent_prepare() {
   log "Coding-agent skill enabled; backend '$OPENCLAW_CODING_AGENT_BACKEND' will be validated inside Docker container after restart"
 }
 
-optional_tool_coding_agent_install_runtime() {
-  return 0
-}
-
 optional_tool_coding_agent_validate_runtime() {
   [ "$OPENCLAW_ENABLE_CODING_AGENT_SKILL" = "1" ] || return 0
   validate_container_binary "coding-agent skill prerequisites" "$OPENCLAW_CODING_AGENT_BIN"

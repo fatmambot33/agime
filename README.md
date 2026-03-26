@@ -17,7 +17,7 @@ Automation scripts for deploying OpenClaw on a VPS with two explicit access mode
 - `add_tool.sh`: post-install helper to enable one optional tool (`signal`, `github`, `himalaya`, `coding-agent`) and rerun `build.sh`.
 - `restore.sh`: restores a backup tarball into a chosen root path (requires explicit force flag for `/`).
 - `scripts/build_lib.sh` + `scripts/build_steps.sh`: shared helpers and modular deployment steps used by `build.sh`.
-- `scripts/optional_tools/*.sh`: per-tool optional runtime handlers (GitHub, Himalaya, coding-agent) plus shared container install/validation helpers.
+- `scripts/optional_tools/*.sh`: per-tool optional runtime handlers (GitHub, Himalaya, coding-agent) plus shared container validation helpers.
 - `scripts/build_custom_image.sh`: helper to build/push a prebuilt custom OpenClaw image with optional tooling baked in.
 - `templates/openclaw-compose.ssh-tunnel.yml.tmpl`: private/local compose template.
 - `templates/openclaw-compose.public.yml.tmpl`: Traefik-integrated compose template.

@@ -47,6 +47,7 @@ All notable changes to this repository are documented in this file.
 - Fixed ownership correction in `prepare_openclaw_repo` to support both root and non-root execution contexts by using `sudo` only when required.
 - Fixed custom `OPENCLAW_CONFIG_DIR` brittleness by preparing the config path before ownership safety checks.
 - Updated `README.md` and `docs/CONTRIBUTING.md` validation guidance to match current `make check` and `make check-strict` behavior.
+- Simplified optional-tool runtime flow by removing dead no-op installer hooks and running validation-only checks directly.
 - Updated optional skill prerequisite flow to validate runtime binaries (`gh`, `himalaya`, coding-agent backend) inside the running `openclaw` container.
 - Updated Signal prerequisite flow to validate `signal-cli` inside the running `openclaw` container (no host-side installer path).
 - Updated default `OPENCLAW_HIMALAYA_CONFIG_PATH` to `$OPENCLAW_CONFIG_DIR/himalaya/config.toml` and mounted `${OPENCLAW_CONFIG_DIR}/himalaya` into the container for runtime config access.

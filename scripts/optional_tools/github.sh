@@ -8,10 +8,6 @@ optional_tool_github_prepare() {
   log "GitHub skill enabled; runtime dependency will be validated inside Docker container after restart"
 }
 
-optional_tool_github_install_runtime() {
-  return 0
-}
-
 optional_tool_github_validate_runtime() {
   [ "$OPENCLAW_ENABLE_GITHUB_SKILL" = "1" ] || return 0
   validate_container_binary "GitHub skill prerequisites" "$OPENCLAW_GH_CLI_PATH"

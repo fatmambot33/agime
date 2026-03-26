@@ -34,10 +34,6 @@ optional_tool_himalaya_write_config_from_env() {
   run_cmd chmod 600 "$OPENCLAW_HIMALAYA_CONFIG_PATH"
 }
 
-optional_tool_himalaya_install_runtime() {
-  return 0
-}
-
 optional_tool_himalaya_validate_runtime() {
   [ "$OPENCLAW_ENABLE_HIMALAYA_SKILL" = "1" ] || return 0
   validate_container_binary "Himalaya skill prerequisites" "$OPENCLAW_HIMALAYA_CLI_PATH"

@@ -301,10 +301,6 @@ ensure_openclaw_env_overrides() {
   fi
 }
 
-install_optional_skill_container_runtime_dependencies() {
-  return 0
-}
-
 validate_optional_skill_container_runtime() {
   if [ "$OPENCLAW_ENABLE_SIGNAL" = "1" ]; then
     validate_container_binary "Signal channel prerequisites" "$OPENCLAW_SIGNAL_CLI_PATH"

@@ -93,8 +93,8 @@ choose_welcome_action() {
 Welcome to the OpenClaw toolkit.
 Choose an action:
   1) Install
-  2) Update
-  3) Image
+  2) Image
+  3) Update
   4) Add Tool
   5) Restore
   6) Security
@@ -107,11 +107,11 @@ EOF2
     1 | install)
       OPENCLAW_ACTION=install
       ;;
-    2 | update)
-      OPENCLAW_ACTION=update
-      ;;
-    3 | image)
+    2 | image)
       OPENCLAW_ACTION=image
+      ;;
+    3 | update)
+      OPENCLAW_ACTION=update
       ;;
     4 | addtool | add-tool | "add tool")
       OPENCLAW_ACTION=add_tool

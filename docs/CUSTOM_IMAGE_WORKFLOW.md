@@ -10,7 +10,36 @@ This runbook provides a simple, repeatable process for building the custom image
   - `OPENCLAW_IMAGE=<registry>/<name>:<tag>`
   - `SKIP_OPENCLAW_IMAGE_BUILD=1`
 
-## Quick start
+## Quick start (interactive first-time publish)
+
+Use the guided entrypoint and select `Image`:
+
+```sh
+sh ./configure.sh
+```
+
+The workflow prompts for:
+
+- GitHub user/org owner
+- image name
+- tag
+- push preference
+
+Then it computes and displays:
+
+```text
+ghcr.io/<github-user-or-org>/<image-name>:<tag>
+```
+
+If push is enabled, it prints prerequisite authentication guidance before running:
+
+- package publishing permissions for the chosen owner
+- a token with package write scope
+- `docker login ghcr.io` (for example via `--password-stdin`)
+
+`Image` is intended for first-time bootstrap. `Update` remains the repeat maintenance path after your image workflow is established.
+
+## Quick start (non-interactive)
 
 From this repo root:
 

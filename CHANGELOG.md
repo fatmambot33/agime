@@ -22,6 +22,7 @@ All notable changes to this repository are documented in this file.
   - `add_tool.sh` to enable optional tools (`signal`, `github`, `himalaya`, `coding-agent`) and rerun deploy.
 - Added `tests/post_install_helpers_hermetic.sh` to validate helper behavior without Docker/network dependencies.
 - Added `scripts/build_custom_image.sh` helper to build/push a custom prebuilt OpenClaw image for image-first VPS deployments.
+- Added `image.sh` top-level helper wrapper for custom image build/push workflow parity with other maintenance entrypoints.
 - Added `templates/openclaw-custom-image.Dockerfile.tmpl` and `docs/CUSTOM_IMAGE_WORKFLOW.md` for a documented custom-image build workflow.
 - Added image-first `sync.conf` preset guidance (`OPENCLAW_IMAGE` + `SKIP_OPENCLAW_IMAGE_BUILD=1`) in `sync.conf.example` and README.
 - Hardened `scripts/build_custom_image.sh` template rendering by escaping base-image replacement values and requiring Docker availability before build.
@@ -52,6 +53,8 @@ All notable changes to this repository are documented in this file.
 - Updated optional skill prerequisite flow to validate runtime binaries (`gh`, `himalaya`, coding-agent backend) inside the running `openclaw` container.
 - Updated Signal prerequisite flow to validate `signal-cli` inside the running `openclaw` container (no host-side installer path).
 - Updated `configure.sh` prompts/exports to remove obsolete Signal auto-install settings and align Himalaya default config path with `$OPENCLAW_CONFIG_DIR/himalaya/config.toml`.
+- Updated `configure.sh` welcome menu/action flow to include direct `Image` workflow execution.
+- Updated sync payload defaults/tests/examples to include `image.sh` in runtime bundle uploads.
 - Updated default `OPENCLAW_HIMALAYA_CONFIG_PATH` to `$OPENCLAW_CONFIG_DIR/himalaya/config.toml` and mounted `${OPENCLAW_CONFIG_DIR}/himalaya` into the container for runtime config access.
 - Refactored optional skill handling into per-tool scripts under `scripts/optional_tools/` for cleaner extension as new tools are added.
 - Updated `update.sh` to be git-checkout aware (`GIT_PULL=auto` by default) so it works in both cloned and synced toolkit directories.

@@ -8,12 +8,13 @@ Automation scripts for deploying OpenClaw on a VPS with two explicit access mode
 ## Current repository contents
 
 - `build.sh`: non-interactive end-to-end setup script (environment-variable driven).
-- `configure.sh`: guided entrypoint with a welcome menu (`Install`, `Update`, `Add Tool`, `Restore`, `Security`); `Install` collects inputs then runs `build.sh`.
+- `configure.sh`: guided entrypoint with a welcome menu (`Install`, `Update`, `Image`, `Add Tool`, `Restore`, `Security`); `Install` collects inputs then runs `build.sh`.
 - `sync.sh`: local helper that reconciles `sync.conf`, uploads the runtime deployment bundle to a VPS, then runs remote deployment (`build.sh`) by default (set `SYNC_REMOTE_ENTRYPOINT=configure.sh` to use the remote welcome menu intentionally).
 - `sync.conf.example`: sample local config file for `sync.sh` (copy to `sync.conf` to track current sync/build defaults).
 - `.sync-build.env.example`: sample build environment file for non-interactive deploy runs.
 - `backup.sh`: creates a tarball backup of OpenClaw runtime data (`$OPENCLAW_CONFIG_DIR`, `$OPENCLAW_DIR/.env`, optional Traefik state).
 - `update.sh`: post-install helper that can fast-forward pull this toolkit checkout (auto-detected) and rerun `build.sh`.
+- `image.sh`: top-level helper for custom image build/push workflow (wrapper around `scripts/build_custom_image.sh`).
 - `add_tool.sh`: post-install helper to enable one optional tool (`signal`, `github`, `himalaya`, `coding-agent`) and rerun `build.sh`.
 - `restore.sh`: restores a backup tarball into a chosen root path (requires explicit force flag for `/`).
 - `scripts/build_lib.sh` + `scripts/build_steps.sh`: shared helpers and modular deployment steps used by `build.sh`.
@@ -99,7 +100,7 @@ With this, `configure.sh` can write updated values on the remote host and `sync.
 
 - **Local workstation:** run `configure.sh` to author/update config and run `sync.sh` to reconcile and upload files.
 - **Remote VPS:** run `build.sh` (or other selected entrypoint) to apply deployment changes.
-- Default upload payload is runtime-only: `build.sh backup.sh update.sh add_tool.sh restore.sh scripts templates docs README.md` (plus `sync.conf` when needed).
+- Default upload payload is runtime-only: `build.sh backup.sh update.sh image.sh add_tool.sh restore.sh scripts templates docs README.md` (plus `sync.conf` when needed).
 - Local authoring helpers are intentionally excluded from default payload; override with `SYNC_ITEMS` only when you explicitly need a different bundle.
 
 ### Safer default (`ssh-tunnel`)

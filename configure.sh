@@ -6,6 +6,7 @@ SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
 BUILD_SCRIPT="$SCRIPT_DIR/build.sh"
 BACKUP_SCRIPT="$SCRIPT_DIR/backup.sh"
 UPDATE_SCRIPT="$SCRIPT_DIR/update.sh"
+IMAGE_SCRIPT="$SCRIPT_DIR/image.sh"
 ADD_TOOL_SCRIPT="$SCRIPT_DIR/add_tool.sh"
 RESTORE_SCRIPT="$SCRIPT_DIR/restore.sh"
 SECURITY_SCRIPT="$SCRIPT_DIR/scripts/run_security_audit.sh"
@@ -93,9 +94,10 @@ Welcome to the OpenClaw toolkit.
 Choose an action:
   1) Install
   2) Update
-  3) Add Tool
-  4) Restore
-  5) Security
+  3) Image
+  4) Add Tool
+  5) Restore
+  6) Security
 EOF2
     printf 'Selection [1]: '
     read value
@@ -108,13 +110,16 @@ EOF2
     2 | update)
       OPENCLAW_ACTION=update
       ;;
-    3 | addtool | add-tool | "add tool")
+    3 | image)
+      OPENCLAW_ACTION=image
+      ;;
+    4 | addtool | add-tool | "add tool")
       OPENCLAW_ACTION=add_tool
       ;;
-    4 | restore)
+    5 | restore)
       OPENCLAW_ACTION=restore
       ;;
-    5 | security)
+    6 | security)
       OPENCLAW_ACTION=security
       ;;
     *)
@@ -249,6 +254,12 @@ case "$OPENCLAW_ACTION" in
     [ -f "$UPDATE_SCRIPT" ] || fail "update script not found at $UPDATE_SCRIPT"
     milestone "Running update workflow"
     sh "$UPDATE_SCRIPT"
+    exit 0
+    ;;
+  image)
+    [ -f "$IMAGE_SCRIPT" ] || fail "image helper script not found at $IMAGE_SCRIPT"
+    milestone "Running image build workflow"
+    sh "$IMAGE_SCRIPT"
     exit 0
     ;;
   add_tool)

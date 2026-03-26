@@ -2,6 +2,8 @@
 
 ## Mode-first troubleshooting
 
+Deployment model note: Docker is the required runtime boundary for supported VPS deployments. Optional tooling (`gh`, `himalaya`, coding-agent backends, `signal-cli`) is expected inside the selected `OPENCLAW_IMAGE`, not installed on the host at deploy time.
+
 ### 0) `sync.sh` asks for SSH password multiple times
 - `sync.sh` runs from your local machine and performs three remote operations (`ssh mkdir`, `scp`, then remote entrypoint execution; default is `build.sh`).
 - It enables SSH multiplexing by default (`ControlMaster=auto` + `ControlPersist`) so one authenticated control session is reused.
@@ -42,11 +44,11 @@
 ### 3) Signal channel is enabled but not receiving messages
 - Symptom: deploy succeeds, but Signal DMs do not produce replies.
 - Fix:
-  1. Confirm `signal-cli` exists on host and is executable:
-     `signal-cli --version`.
+  1. Confirm `signal-cli` exists inside the running OpenClaw container:
+     `docker exec openclaw sh -lc 'signal-cli --version'`.
   2. Confirm `openclaw.json` has a valid E.164 Signal account under `channels.signal.account`.
   3. Complete Signal link/register flow, then restart gateway:
-     `systemctl --user restart openclaw-gateway` (or restart your container/service).
+     restart your OpenClaw container/service.
   4. Check pairing queue and approve pending codes:
      `openclaw pairing list signal`
      `openclaw pairing approve signal <CODE>`
@@ -90,11 +92,24 @@ sh ./backup.sh
 # update toolkit + rerun deploy (git pull is auto-detected)
 sh ./update.sh
 
+# update.sh default flow: backup -> load ./.sync-build.env ->
+# optional docker pull for OPENCLAW_IMAGE (image-first mode) -> build/deploy.
+# backup step is validated: update fails early if backup archive is missing.
+
 # enable one optional tool post-install
 TOOL=github sh ./add_tool.sh
 
 # force update pull only when this directory is a git checkout
 GIT_PULL=1 sh ./update.sh
+
+# skip loading deployment defaults file for one run
+LOAD_DEPLOY_ENV=0 sh ./update.sh
+
+# skip automatic backup or image pull for a one-off run
+RUN_BACKUP=0 RUN_IMAGE_PULL=0 sh ./update.sh
+
+# attempt automatic rollback from update backup when build fails
+RESTORE_ON_FAILURE=1 sh ./update.sh
 ```
 
 ```sh
@@ -110,7 +125,7 @@ EXTRA_BACKUP_PATHS="$HOME/notes/IDENTITY.md" \
 sh ./backup.sh
 ```
 
-Interactive deploy note: `sh ./configure.sh` now starts with a welcome menu (`Install`, `Update`, `Add Tool`, `Restore`, `Security`). The `Install` path still offers a pre-deploy backup step before running `build.sh`.
+Interactive deploy note: `sh ./configure.sh` now starts with a welcome menu (`Image`, `Install`, `Update`, `Add Tool`, `Backup`, `Restore`, `Security`) and defaults to `Install` when pressing Enter. The `Install` path still offers a pre-deploy backup step before running `build.sh`.
 
 Restore safely to a sandbox path first:
 

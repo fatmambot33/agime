@@ -10,6 +10,22 @@ cp "$REPO_DIR/update.sh" "$TMP_DIR/update.sh"
 cp "$REPO_DIR/add_tool.sh" "$TMP_DIR/add_tool.sh"
 chmod +x "$TMP_DIR/update.sh" "$TMP_DIR/add_tool.sh"
 
+cat > "$TMP_DIR/backup.sh" << 'EOS'
+#!/usr/bin/env sh
+set -eu
+printf 'backup called output=%s\n' "${BACKUP_OUTPUT:-unset}"
+: > "${BACKUP_OUTPUT:?backup output path required}"
+EOS
+chmod +x "$TMP_DIR/backup.sh"
+
+mkdir -p "$TMP_DIR/bin"
+cat > "$TMP_DIR/bin/docker" << 'EOS'
+#!/usr/bin/env sh
+set -eu
+printf 'docker called: %s\n' "$*"
+EOS
+chmod +x "$TMP_DIR/bin/docker"
+
 cat > "$TMP_DIR/build.sh" << 'EOS'
 #!/usr/bin/env sh
 set -eu
@@ -19,6 +35,9 @@ printf 'signal=%s github=%s himalaya=%s coding_agent=%s\n' \
   "${OPENCLAW_ENABLE_GITHUB_SKILL:-0}" \
   "${OPENCLAW_ENABLE_HIMALAYA_SKILL:-0}" \
   "${OPENCLAW_ENABLE_CODING_AGENT_SKILL:-0}"
+printf 'openclaw_image=%s skip_build=%s\n' \
+  "${OPENCLAW_IMAGE:-unset}" \
+  "${SKIP_OPENCLAW_IMAGE_BUILD:-unset}"
 EOS
 chmod +x "$TMP_DIR/build.sh"
 
@@ -27,15 +46,24 @@ cat > "$TMP_DIR/openclaw/.env" << 'EOS'
 OVH_ENDPOINT_API_KEY=from-env-file
 EOS
 
+cat > "$TMP_DIR/.sync-build.env" << 'EOS'
+OPENCLAW_IMAGE=ghcr.io/example/openclaw-agent:20260326
+SKIP_OPENCLAW_IMAGE_BUILD=1
+EOS
+
 UPDATE_OUT="$TMP_DIR/update.out"
 (
   cd "$TMP_DIR"
-  OPENCLAW_DIR="$TMP_DIR/openclaw" GIT_PULL=auto RUN_BUILD=1 sh ./update.sh > "$UPDATE_OUT"
+  PATH="$TMP_DIR/bin:$PATH" OPENCLAW_DIR="$TMP_DIR/openclaw" GIT_PULL=auto RUN_BUILD=1 sh ./update.sh > "$UPDATE_OUT"
 )
 
 grep -q 'Skipping repository update (no .git checkout found; GIT_PULL=auto)' "$UPDATE_OUT"
 grep -q 'Loaded OVH_ENDPOINT_API_KEY from .*openclaw/.env' "$UPDATE_OUT"
+grep -q 'Loaded deployment defaults from .*/.sync-build.env' "$UPDATE_OUT"
+grep -q 'backup called output=.*/openclaw-update-backup-' "$UPDATE_OUT"
+grep -q 'docker called: pull ghcr.io/example/openclaw-agent:20260326' "$UPDATE_OUT"
 grep -q 'build called' "$UPDATE_OUT"
+grep -q 'openclaw_image=ghcr.io/example/openclaw-agent:20260326 skip_build=1' "$UPDATE_OUT"
 
 ADD_TOOL_OUT="$TMP_DIR/add_tool.out"
 (

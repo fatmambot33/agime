@@ -1,6 +1,6 @@
 # Compatibility Matrix (OVH VPS / Ubuntu)
 
-Last reviewed: 2026-03-25
+Last reviewed: 2026-03-26
 
 This toolkit targets Ubuntu-based OVH VPS hosts and Docker Engine deployments.
 
@@ -11,13 +11,14 @@ This toolkit targets Ubuntu-based OVH VPS hosts and Docker Engine deployments.
 | Ubuntu | 24.04 LTS | 22.04 LTS | LTS-only baseline for predictable package lifecycle. |
 | Docker Engine | 26.x | 24.x | Must support Compose plugin v2. |
 | Docker Compose plugin (`docker compose`) | 2.24+ | 2.20+ | Required by `build.sh` and compose templates. |
-| OpenClaw image/runtime | `openclaw:local` from repo checkout | N/A | Built locally from synced checkout. |
+| OpenClaw image/runtime | Prebuilt custom image (`OPENCLAW_IMAGE=<registry>/<name>:<tag>`) | `openclaw:local` | VPS production path should use prebuilt image + `SKIP_OPENCLAW_IMAGE_BUILD=1`; local build is fallback/dev. |
 | Traefik | v3 (as rendered by template) | v3 | Used only in `OPENCLAW_ACCESS_MODE=public`. |
 
 ## Host profile assumptions
 
 - VPS provider: OVH (public IPv4 reachable from your workstation).
 - OS user has sudo rights for package install / Docker setup.
+- Docker is the required runtime boundary for the supported VPS + agent model.
 - DNS control available when using `OPENCLAW_ACCESS_MODE=public`.
 - Ports:
   - `22/tcp` for SSH always.

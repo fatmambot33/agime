@@ -5,7 +5,8 @@
 optional_tool_himalaya_prepare() {
   [ "$OPENCLAW_ENABLE_HIMALAYA_SKILL" = "1" ] || return 0
 
-  log "Himalaya skill enabled; runtime dependency will be installed/validated inside Docker container after restart"
+  announce_container_runtime_validation_mode
+  log "Himalaya skill enabled; runtime dependency will be validated inside Docker container after restart"
   optional_tool_himalaya_write_config_from_env
 
   if [ "$OPENCLAW_HIMALAYA_REQUIRE_CONFIG" = "1" ]; then
@@ -33,12 +34,11 @@ optional_tool_himalaya_write_config_from_env() {
   run_cmd chmod 600 "$OPENCLAW_HIMALAYA_CONFIG_PATH"
 }
 
-optional_tool_himalaya_install_runtime() {
-  [ "$OPENCLAW_ENABLE_HIMALAYA_SKILL" = "1" ] || return 0
-  install_container_apt_package_if_missing himalaya "$OPENCLAW_HIMALAYA_CLI_PATH"
-}
-
 optional_tool_himalaya_validate_runtime() {
   [ "$OPENCLAW_ENABLE_HIMALAYA_SKILL" = "1" ] || return 0
   validate_container_binary "Himalaya skill prerequisites" "$OPENCLAW_HIMALAYA_CLI_PATH"
+  run_container_validation_command \
+    "Himalaya skill prerequisites" \
+    "$OPENCLAW_HIMALAYA_CLI_PATH --version" \
+    sh -c '"$1" --version > /dev/null 2>&1' sh "$OPENCLAW_HIMALAYA_CLI_PATH"
 }

@@ -8,22 +8,26 @@ Automation scripts for deploying OpenClaw on a VPS with two explicit access mode
 ## Current repository contents
 
 - `build.sh`: non-interactive end-to-end setup script (environment-variable driven).
-- `configure.sh`: guided entrypoint with a welcome menu (`Install`, `Update`, `Add Tool`, `Restore`, `Security`); `Install` collects inputs then runs `build.sh`.
+- `configure.sh`: guided entrypoint with a welcome menu (`Image`, `Install`, `Update`, `Add Tool`, `Backup`, `Restore`, `Security`); `Install` collects inputs then runs `build.sh`.
 - `sync.sh`: local helper that reconciles `sync.conf`, uploads the runtime deployment bundle to a VPS, then runs remote deployment (`build.sh`) by default (set `SYNC_REMOTE_ENTRYPOINT=configure.sh` to use the remote welcome menu intentionally).
 - `sync.conf.example`: sample local config file for `sync.sh` (copy to `sync.conf` to track current sync/build defaults).
 - `.sync-build.env.example`: sample build environment file for non-interactive deploy runs.
 - `backup.sh`: creates a tarball backup of OpenClaw runtime data (`$OPENCLAW_CONFIG_DIR`, `$OPENCLAW_DIR/.env`, optional Traefik state).
 - `update.sh`: post-install helper that can fast-forward pull this toolkit checkout (auto-detected) and rerun `build.sh`.
+- `image.sh`: top-level helper for custom image build/push workflow (wrapper around `scripts/build_custom_image.sh`).
 - `add_tool.sh`: post-install helper to enable one optional tool (`signal`, `github`, `himalaya`, `coding-agent`) and rerun `build.sh`.
 - `restore.sh`: restores a backup tarball into a chosen root path (requires explicit force flag for `/`).
 - `scripts/build_lib.sh` + `scripts/build_steps.sh`: shared helpers and modular deployment steps used by `build.sh`.
-- `scripts/optional_tools/*.sh`: per-tool optional runtime handlers (GitHub, Himalaya, coding-agent) plus shared container install/validation helpers.
+- `scripts/optional_tools/*.sh`: per-tool optional runtime handlers (GitHub, Himalaya, coding-agent) plus shared container validation helpers.
+- `scripts/build_custom_image.sh`: helper to build/push a prebuilt custom OpenClaw image with optional tooling baked in.
 - `templates/openclaw-compose.ssh-tunnel.yml.tmpl`: private/local compose template.
 - `templates/openclaw-compose.public.yml.tmpl`: Traefik-integrated compose template.
 - `templates/traefik-compose.yml.tmpl`: Traefik compose template (public mode only).
 - `templates/openclaw.json.tmpl`: OpenClaw JSON config template.
+- `templates/openclaw-custom-image.Dockerfile.tmpl`: starter Dockerfile template used by `scripts/build_custom_image.sh`.
 - `Makefile`: local quality checks.
 - `docs/COMPATIBILITY_MATRIX.md`: OVH Ubuntu compatibility baseline and version expectations.
+- `docs/CUSTOM_IMAGE_WORKFLOW.md`: step-by-step custom image build/push/deploy workflow.
 
 ## Quick start
 
@@ -96,7 +100,7 @@ With this, `configure.sh` can write updated values on the remote host and `sync.
 
 - **Local workstation:** run `configure.sh` to author/update config and run `sync.sh` to reconcile and upload files.
 - **Remote VPS:** run `build.sh` (or other selected entrypoint) to apply deployment changes.
-- Default upload payload is runtime-only: `build.sh backup.sh update.sh add_tool.sh restore.sh scripts templates docs README.md` (plus `sync.conf` when needed).
+- Default upload payload is runtime-only: `build.sh backup.sh update.sh image.sh add_tool.sh restore.sh scripts templates docs README.md` (plus `sync.conf` when needed).
 - Local authoring helpers are intentionally excluded from default payload; override with `SYNC_ITEMS` only when you explicitly need a different bundle.
 
 ### Safer default (`ssh-tunnel`)
@@ -184,20 +188,69 @@ Operational note: pairing by itself is not a network exposure boundary; prefer `
 - Post-build validation probes `https://$OPENCLAW_DOMAIN`.
 - Validation accepts successful TLS/connectivity even if root returns `404`.
 
-## Change-aware local image rebuilds
+## Image-first deployment model (recommended)
 
-The deployment builds `openclaw:local` only when needed:
+Use a prebuilt custom image that already contains optional tools used by your agent workflows.
 
-- image missing,
-- revision stamp missing, or
-- OpenClaw git revision changed.
-
-Last built revision is saved in `$OPENCLAW_CONFIG_DIR/openclaw-image-revision.txt`.
-
-Escape hatch:
+Recommended settings:
 
 ```bash
+OPENCLAW_IMAGE=ghcr.io/<org>/<openclaw-image>:<tag> \
 SKIP_OPENCLAW_IMAGE_BUILD=1 ./build.sh
+```
+
+`build.sh` still supports local rebuilds (`SKIP_OPENCLAW_IMAGE_BUILD=0`) for migration scenarios, but production-like VPS deployments should prefer image-first with immutable tags.
+
+Standard VPS deployment contract:
+
+```bash
+OPENCLAW_IMAGE=<registry>/<name>:<tag> \
+SKIP_OPENCLAW_IMAGE_BUILD=1 \
+OPENCLAW_ACCESS_MODE=ssh-tunnel \
+OVH_ENDPOINT_API_KEY=... \
+./build.sh
+```
+
+Host responsibilities are intentionally limited to Docker Engine, Docker Compose v2, SSH access, firewall/networking, and persistent bind mounts. Optional tools (`gh`, `himalaya`, `codex`, `claude`, `opencode`, `pi`, `signal-cli`) must be present in the selected `OPENCLAW_IMAGE`.
+
+## Build your custom image (easy path)
+
+Use the bundled helper:
+
+```bash
+CUSTOM_OPENCLAW_IMAGE=ghcr.io/<org>/openclaw-agent-tools:<tag> \
+sh ./scripts/build_custom_image.sh
+```
+
+Tip: for production builds, pin your base OpenClaw image tag/digest instead of relying on `:latest` (set `CUSTOM_OPENCLAW_BASE_IMAGE=...`).
+
+Push in the same step:
+
+```bash
+CUSTOM_OPENCLAW_IMAGE=ghcr.io/<org>/openclaw-agent-tools:<tag> \
+CUSTOM_OPENCLAW_PUSH=1 \
+sh ./scripts/build_custom_image.sh
+```
+
+Then deploy with:
+
+```bash
+OPENCLAW_IMAGE=ghcr.io/<org>/openclaw-agent-tools:<tag> \
+SKIP_OPENCLAW_IMAGE_BUILD=1 \
+OPENCLAW_ACCESS_MODE=ssh-tunnel \
+OVH_ENDPOINT_API_KEY=... \
+sh ./build.sh
+```
+
+Advanced options and tunables are documented in `docs/CUSTOM_IMAGE_WORKFLOW.md`.
+
+For `sync.sh` users, add this to `sync.conf`:
+
+```bash
+OPENCLAW_IMAGE=ghcr.io/<org>/openclaw-agent-tools:<tag>
+SKIP_OPENCLAW_IMAGE_BUILD=1
+OPENCLAW_ACCESS_MODE=ssh-tunnel
+OVH_ENDPOINT_API_KEY=...
 ```
 
 ## Post-build connectivity validation
@@ -213,7 +266,7 @@ Public-mode retry logic treats temporary default/self-signed cert states as tran
 
 ## Signal channel setup (optional)
 
-This toolkit can bootstrap Signal prerequisites and preconfigure `channels.signal` in `openclaw.json`.
+This toolkit preconfigures `channels.signal` in `openclaw.json` and validates `signal-cli` inside the running container.
 
 ```bash
 OPENCLAW_ENABLE_SIGNAL=1 \
@@ -225,7 +278,7 @@ OVH_ENDPOINT_API_KEY=xxxxx \
 
 Behavior:
 
-- When `OPENCLAW_ENABLE_SIGNAL=1`, the script validates `signal-cli` and can auto-install it from upstream GitHub releases (`OPENCLAW_SIGNAL_AUTO_INSTALL=1`, default).
+- When `OPENCLAW_ENABLE_SIGNAL=1`, the script validates `signal-cli` is available inside the running `openclaw` container.
 - Rendered config includes `channels.signal.enabled=true`, the configured account, `cliPath`, and optional single-entry DM allowlist.
 - After deployment, complete Signal registration/linking and approve pairing codes from the host:
   - `openclaw pairing list signal`
@@ -314,6 +367,8 @@ RESTORE_FORCE=1 \
 sh ./restore.sh
 ```
 
+`restore.sh` also validates archive entry paths and refuses extraction when unsafe entries (absolute paths or `..` traversal segments) are detected.
+
 ## Post-install helpers
 
 Create a backup before maintenance changes:
@@ -328,11 +383,24 @@ Update this toolkit checkout and rerun deployment (works in both a git clone and
 sh ./update.sh
 ```
 
+`update.sh` now runs an easy maintenance flow by default:
+
+1) create a pre-update backup archive,  
+2) auto-load `./.sync-build.env` when present,  
+3) pull `OPENCLAW_IMAGE` when `SKIP_OPENCLAW_IMAGE_BUILD=1` (image-first mode),  
+4) run `build.sh` to deploy, validate optional tools, and apply changes.
+
+Safety guard: when backup is enabled, `update.sh` now verifies the backup archive file was actually created before continuing.
+
 Control pull behavior explicitly when needed:
 
 ```bash
 GIT_PULL=1 sh ./update.sh      # require git checkout and pull
 GIT_PULL=0 sh ./update.sh      # skip pull and only rerun build
+LOAD_DEPLOY_ENV=0 sh ./update.sh  # ignore .sync-build.env for this run
+RUN_BACKUP=0 sh ./update.sh    # skip automatic pre-update backup
+RUN_IMAGE_PULL=0 sh ./update.sh  # skip docker pull
+RESTORE_ON_FAILURE=1 sh ./update.sh  # auto-restore backup if build fails
 ```
 
 Enable one optional tool after initial install (example: GitHub CLI runtime support):
@@ -366,20 +434,11 @@ OVH_ENDPOINT_API_KEY=xxxxx \
 
 Behavior when enabled:
 
-- Auto-installs `gh` inside the running `openclaw` container when missing (apt-get based).
 - Validates that `gh` is available inside the running `openclaw` container runtime after restart.
+- Assumes `gh` is already baked into your custom `OPENCLAW_IMAGE`.
 - Prints a post-build reminder to run `gh auth login` / `gh auth status` in the running container before using the GitHub skill.
 
-If you prefer to install/auth manually in the container, use:
-
-1. Install `gh` in the running container:
-   - `docker exec -u 0 openclaw sh -lc 'apt-get update && apt-get install -y gh'`
-2. Authenticate in the runtime context as needed for your workflow.
-   - `docker exec openclaw sh -lc 'gh auth login'`
-3. Verify runtime visibility:
-   - `docker exec openclaw sh -lc 'command -v gh'`
-4. Verify auth:
-   - `docker exec openclaw sh -lc 'gh auth status'`
+Image-first note: this repo does not install `gh` at runtime. Bake `gh` into your custom `OPENCLAW_IMAGE`, then authenticate in-container as needed (`gh auth login`).
 
 ## Himalaya skill prerequisites
 
@@ -393,19 +452,13 @@ OVH_ENDPOINT_API_KEY=xxxxx \
 
 Behavior when enabled:
 
-- Auto-installs `himalaya` inside the running `openclaw` container when missing (apt-get based).
+- Validates that `himalaya` is available inside the running `openclaw` container runtime after restart.
+- Assumes `himalaya` is already baked into your custom `OPENCLAW_IMAGE`.
 - If `OPENCLAW_HIMALAYA_CONFIG_TOML_BASE64` is set, the script writes that content to `OPENCLAW_HIMALAYA_CONFIG_PATH` with `chmod 600`.
 - Validates config presence by default (`OPENCLAW_HIMALAYA_REQUIRE_CONFIG=1`) at `OPENCLAW_HIMALAYA_CONFIG_PATH` (default `$OPENCLAW_CONFIG_DIR/himalaya/config.toml`).
 - Mounts `${OPENCLAW_CONFIG_DIR}/himalaya` into the container as `/home/node/.config/himalaya`.
-- Validates that `himalaya` is available inside the running `openclaw` container runtime after restart.
 
-If you prefer to install/configure manually in the container, use:
-
-1. Install `himalaya` in the running container:
-   - `docker exec -u 0 openclaw sh -lc 'apt-get update && apt-get install -y himalaya'`
-2. Populate config at mounted path `${OPENCLAW_CONFIG_DIR}/himalaya/config.toml` (or use `OPENCLAW_HIMALAYA_CONFIG_TOML_BASE64`).
-3. Verify runtime visibility:
-   - `docker exec openclaw sh -lc 'command -v himalaya'`
+Image-first note: this repo does not install `himalaya` at runtime. Bake it into your custom `OPENCLAW_IMAGE`, and keep config at `${OPENCLAW_CONFIG_DIR}/himalaya/config.toml` (or inject via `OPENCLAW_HIMALAYA_CONFIG_TOML_BASE64`).
 
 If config validation fails, run `himalaya account configure` (or set `OPENCLAW_HIMALAYA_CONFIG_PATH` to your existing config) and rerun `build.sh`.
 
@@ -435,19 +488,15 @@ OVH_ENDPOINT_API_KEY=xxxxx \
 
 Supported backends (`OPENCLAW_CODING_AGENT_BACKEND`):
 
-- `claude` → auto-install in container with `npm i -g @anthropic-ai/claude-code`
-- `codex` → auto-install in container with `npm i -g @openai/codex`
-- `pi` → auto-install in container with `npm i -g @mariozechner/pi-coding-agent`
-- `opencode` → manual install required in container (script validates binary only)
+- `claude`
+- `codex`
+- `pi`
+- `opencode`
 
 Behavior when enabled:
 
-- Auto-installs supported backends inside the running `openclaw` container:
-  - `claude`: `npm i -g @anthropic-ai/claude-code`
-  - `codex`: `npm i -g @openai/codex`
-  - `pi`: `npm i -g @mariozechner/pi-coding-agent`
-- `opencode` remains manual install.
-- Validates that the selected backend binary is available inside the running `openclaw` container runtime after restart.
+- Validates the selected backend binary inside the running `openclaw` container runtime after restart.
+- Assumes backend binaries are already baked into your custom `OPENCLAW_IMAGE`.
 - Validates `<backend> --version` inside the running `openclaw` container runtime after restart.
 
 Safety guidance:

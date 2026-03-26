@@ -6,6 +6,7 @@ SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
 BUILD_SCRIPT="$SCRIPT_DIR/build.sh"
 BACKUP_SCRIPT="$SCRIPT_DIR/backup.sh"
 UPDATE_SCRIPT="$SCRIPT_DIR/update.sh"
+IMAGE_SCRIPT="$SCRIPT_DIR/image.sh"
 ADD_TOOL_SCRIPT="$SCRIPT_DIR/add_tool.sh"
 RESTORE_SCRIPT="$SCRIPT_DIR/restore.sh"
 SECURITY_SCRIPT="$SCRIPT_DIR/scripts/run_security_audit.sh"
@@ -91,30 +92,38 @@ choose_welcome_action() {
     cat << 'EOF2'
 Welcome to the OpenClaw toolkit.
 Choose an action:
-  1) Install
-  2) Update
-  3) Add Tool
-  4) Restore
-  5) Security
+  1) Image
+  2) Install
+  3) Update
+  4) Add Tool
+  5) Backup
+  6) Restore
+  7) Security
 EOF2
-    printf 'Selection [1]: '
+    printf 'Selection [2]: '
     read value
-    value=$(to_lower "${value:-1}")
+    value=$(to_lower "${value:-2}")
   fi
   case "$value" in
-    1 | install)
+    1 | image)
+      OPENCLAW_ACTION=image
+      ;;
+    2 | install)
       OPENCLAW_ACTION=install
       ;;
-    2 | update)
+    3 | update)
       OPENCLAW_ACTION=update
       ;;
-    3 | addtool | add-tool | "add tool")
+    4 | addtool | add-tool | "add tool")
       OPENCLAW_ACTION=add_tool
       ;;
-    4 | restore)
+    5 | backup)
+      OPENCLAW_ACTION=backup
+      ;;
+    6 | restore)
       OPENCLAW_ACTION=restore
       ;;
-    5 | security)
+    7 | security)
       OPENCLAW_ACTION=security
       ;;
     *)
@@ -153,7 +162,6 @@ ask_var() {
     OPENCLAW_SIGNAL_ACCOUNT) OPENCLAW_SIGNAL_ACCOUNT=$value ;;
     OPENCLAW_SIGNAL_ALLOW_FROM) OPENCLAW_SIGNAL_ALLOW_FROM=$value ;;
     OPENCLAW_SIGNAL_CLI_PATH) OPENCLAW_SIGNAL_CLI_PATH=$value ;;
-    OPENCLAW_SIGNAL_AUTO_INSTALL) OPENCLAW_SIGNAL_AUTO_INSTALL=$value ;;
     OPENCLAW_ENABLE_GITHUB_SKILL) OPENCLAW_ENABLE_GITHUB_SKILL=$value ;;
     OPENCLAW_GH_CLI_PATH) OPENCLAW_GH_CLI_PATH=$value ;;
     OPENCLAW_ENABLE_HIMALAYA_SKILL) OPENCLAW_ENABLE_HIMALAYA_SKILL=$value ;;
@@ -206,7 +214,6 @@ persist_env_file() {
       printf 'OPENCLAW_SIGNAL_ACCOUNT=%s\n' "$OPENCLAW_SIGNAL_ACCOUNT"
       printf 'OPENCLAW_SIGNAL_ALLOW_FROM=%s\n' "$OPENCLAW_SIGNAL_ALLOW_FROM"
       printf 'OPENCLAW_SIGNAL_CLI_PATH=%s\n' "$OPENCLAW_SIGNAL_CLI_PATH"
-      printf 'OPENCLAW_SIGNAL_AUTO_INSTALL=%s\n' "$OPENCLAW_SIGNAL_AUTO_INSTALL"
     fi
 
     if [ "${OPENCLAW_ENABLE_GITHUB_SKILL:-0}" = "1" ]; then
@@ -251,6 +258,18 @@ case "$OPENCLAW_ACTION" in
     [ -f "$UPDATE_SCRIPT" ] || fail "update script not found at $UPDATE_SCRIPT"
     milestone "Running update workflow"
     sh "$UPDATE_SCRIPT"
+    exit 0
+    ;;
+  image)
+    [ -f "$IMAGE_SCRIPT" ] || fail "image helper script not found at $IMAGE_SCRIPT"
+    milestone "Running image build workflow"
+    sh "$IMAGE_SCRIPT"
+    exit 0
+    ;;
+  backup)
+    [ -f "$BACKUP_SCRIPT" ] || fail "backup script not found at $BACKUP_SCRIPT"
+    milestone "Running backup workflow"
+    sh "$BACKUP_SCRIPT"
     exit 0
     ;;
   add_tool)
@@ -299,8 +318,7 @@ ask_var OPENCLAW_ENABLE_SIGNAL "Enable Signal channel setup (1=yes, 0=no)" "$(en
 if [ "${OPENCLAW_ENABLE_SIGNAL:-0}" = "1" ]; then
   ask_var OPENCLAW_SIGNAL_ACCOUNT "Signal bot account number (E.164, e.g. +15551234567)" ""
   ask_var OPENCLAW_SIGNAL_ALLOW_FROM "Signal DM allowlist sender (optional E.164 or uuid:<id>)" ""
-  ask_var OPENCLAW_SIGNAL_CLI_PATH "Signal CLI command/path" "$(env_or_default OPENCLAW_SIGNAL_CLI_PATH signal-cli)"
-  ask_var OPENCLAW_SIGNAL_AUTO_INSTALL "Auto-install signal-cli if missing (1=yes, 0=no)" "$(env_or_default OPENCLAW_SIGNAL_AUTO_INSTALL 1)"
+  ask_var OPENCLAW_SIGNAL_CLI_PATH "Signal CLI command/path inside container image" "$(env_or_default OPENCLAW_SIGNAL_CLI_PATH signal-cli)"
 fi
 ask_var OPENCLAW_ENABLE_GITHUB_SKILL "Enable GitHub skill prerequisites (1=yes, 0=no)" "$(env_or_default OPENCLAW_ENABLE_GITHUB_SKILL 0)"
 if [ "${OPENCLAW_ENABLE_GITHUB_SKILL:-0}" = "1" ]; then
@@ -310,7 +328,7 @@ ask_var OPENCLAW_ENABLE_HIMALAYA_SKILL "Enable Himalaya skill prerequisites (1=y
 if [ "${OPENCLAW_ENABLE_HIMALAYA_SKILL:-0}" = "1" ]; then
   ask_var OPENCLAW_HIMALAYA_CLI_PATH "Himalaya CLI command/path" "$(env_or_default OPENCLAW_HIMALAYA_CLI_PATH himalaya)"
   ask_var OPENCLAW_HIMALAYA_REQUIRE_CONFIG "Require Himalaya config file exists (1=yes, 0=no)" "$(env_or_default OPENCLAW_HIMALAYA_REQUIRE_CONFIG 1)"
-  ask_var OPENCLAW_HIMALAYA_CONFIG_PATH "Himalaya config file path" "$(env_or_default OPENCLAW_HIMALAYA_CONFIG_PATH "$HOME/.config/himalaya/config.toml")"
+  ask_var OPENCLAW_HIMALAYA_CONFIG_PATH "Himalaya config file path" "$(env_or_default OPENCLAW_HIMALAYA_CONFIG_PATH "$OPENCLAW_CONFIG_DIR/himalaya/config.toml")"
 fi
 ask_var OPENCLAW_ENABLE_CODING_AGENT_SKILL "Enable coding-agent skill prerequisites (1=yes, 0=no)" "$(env_or_default OPENCLAW_ENABLE_CODING_AGENT_SKILL 0)"
 if [ "${OPENCLAW_ENABLE_CODING_AGENT_SKILL:-0}" = "1" ]; then
@@ -368,7 +386,6 @@ if [ "${OPENCLAW_ENABLE_SIGNAL:-0}" = "1" ]; then
 OPENCLAW_SIGNAL_ACCOUNT=$OPENCLAW_SIGNAL_ACCOUNT
 OPENCLAW_SIGNAL_ALLOW_FROM=$OPENCLAW_SIGNAL_ALLOW_FROM
 OPENCLAW_SIGNAL_CLI_PATH=$OPENCLAW_SIGNAL_CLI_PATH
-OPENCLAW_SIGNAL_AUTO_INSTALL=$OPENCLAW_SIGNAL_AUTO_INSTALL
 EOF2
 fi
 
@@ -422,7 +439,7 @@ export OPENCLAW_ENABLE_CODING_AGENT_SKILL
 export DRY_RUN
 
 if [ "${OPENCLAW_ENABLE_SIGNAL:-0}" = "1" ]; then
-  export OPENCLAW_SIGNAL_ACCOUNT OPENCLAW_SIGNAL_ALLOW_FROM OPENCLAW_SIGNAL_CLI_PATH OPENCLAW_SIGNAL_AUTO_INSTALL
+  export OPENCLAW_SIGNAL_ACCOUNT OPENCLAW_SIGNAL_ALLOW_FROM OPENCLAW_SIGNAL_CLI_PATH
 fi
 
 if [ "${OPENCLAW_ENABLE_GITHUB_SKILL:-0}" = "1" ]; then
@@ -454,7 +471,7 @@ fi
 if [ "${OPENCLAW_ENABLE_SIGNAL:-0}" = "1" ]; then
   cat << 'EOF2'
 - Signal setup enabled. Next steps after deploy:
-  - Verify signal-cli registration/linking on host.
+  - Verify signal-cli registration/linking inside the container runtime context.
   - Run: openclaw pairing list signal
 EOF2
 fi

@@ -1,0 +1,60 @@
+# Custom OpenClaw Image Workflow (Agent-Enabled VPS)
+
+This runbook provides a simple, repeatable process for building the custom image expected by this repository's image-first deployment model.
+
+## Goals
+
+- Keep VPS hosts thin (Docker + Compose + SSH + networking + bind mounts).
+- Bake optional tools into the image (`gh`, `himalaya`, `codex`, `claude`, `opencode`, `pi`, `signal-cli`).
+- Deploy with:
+  - `OPENCLAW_IMAGE=<registry>/<name>:<tag>`
+  - `SKIP_OPENCLAW_IMAGE_BUILD=1`
+
+## Quick start
+
+From this repo root:
+
+```sh
+CUSTOM_OPENCLAW_IMAGE=ghcr.io/<org>/openclaw-agent-tools:2026-03-26 \
+sh ./scripts/build_custom_image.sh
+```
+
+Optional push:
+
+```sh
+CUSTOM_OPENCLAW_IMAGE=ghcr.io/<org>/openclaw-agent-tools:2026-03-26 \
+CUSTOM_OPENCLAW_PUSH=1 \
+sh ./scripts/build_custom_image.sh
+```
+
+## Tunables
+
+- `CUSTOM_OPENCLAW_IMAGE` (required): output image tag.
+- `CUSTOM_OPENCLAW_BASE_IMAGE` (default `ghcr.io/openclaw/openclaw:latest`): upstream/base OpenClaw image.
+- For production, prefer a pinned base tag/digest over `:latest`.
+- `CUSTOM_OPENCLAW_DOCKERFILE_TEMPLATE` (default `templates/openclaw-custom-image.Dockerfile.tmpl`).
+- `CUSTOM_OPENCLAW_BROWSER_DEPS` (default `0`): set to `1` to install extra browser runtime deps.
+- `CUSTOM_OPENCLAW_PUSH` (default `0`): set to `1` to push after successful build.
+
+## Deploy with the built image
+
+```sh
+OPENCLAW_IMAGE=ghcr.io/<org>/openclaw-agent-tools:2026-03-26 \
+SKIP_OPENCLAW_IMAGE_BUILD=1 \
+OPENCLAW_ACCESS_MODE=ssh-tunnel \
+OVH_ENDPOINT_API_KEY=... \
+sh ./build.sh
+```
+
+If you deploy through `sync.sh`, place the same values in `sync.conf`:
+
+```sh
+OPENCLAW_IMAGE=ghcr.io/<org>/openclaw-agent-tools:2026-03-26
+SKIP_OPENCLAW_IMAGE_BUILD=1
+OPENCLAW_ACCESS_MODE=ssh-tunnel
+OVH_ENDPOINT_API_KEY=...
+```
+
+## Validation behavior after deploy
+
+When optional features are enabled, `build.sh` validates tool binaries and basic `--version` calls in the running `openclaw` container. No host/runtime installer path is used.

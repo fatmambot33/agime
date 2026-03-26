@@ -92,23 +92,23 @@ choose_welcome_action() {
     cat << 'EOF2'
 Welcome to the OpenClaw toolkit.
 Choose an action:
-  1) Install
-  2) Image
+  1) Image
+  2) Install
   3) Update
   4) Add Tool
   5) Restore
   6) Security
 EOF2
-    printf 'Selection [1]: '
+    printf 'Selection [2]: '
     read value
-    value=$(to_lower "${value:-1}")
+    value=$(to_lower "${value:-2}")
   fi
   case "$value" in
-    1 | install)
-      OPENCLAW_ACTION=install
-      ;;
-    2 | image)
+    1 | image)
       OPENCLAW_ACTION=image
+      ;;
+    2 | install)
+      OPENCLAW_ACTION=install
       ;;
     3 | update)
       OPENCLAW_ACTION=update

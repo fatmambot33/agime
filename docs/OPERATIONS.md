@@ -112,7 +112,7 @@ EXTRA_BACKUP_PATHS="$HOME/notes/IDENTITY.md" \
 sh ./backup.sh
 ```
 
-Interactive deploy note: `sh ./configure.sh` now starts with a welcome menu (`Install`, `Update`, `Add Tool`, `Restore`, `Security`). The `Install` path still offers a pre-deploy backup step before running `build.sh`.
+Interactive deploy note: `sh ./configure.sh` now starts with a welcome menu (`Image`, `Install`, `Update`, `Add Tool`, `Restore`, `Security`) and defaults to `Install` when pressing Enter. The `Install` path still offers a pre-deploy backup step before running `build.sh`.
 
 Restore safely to a sandbox path first:
 

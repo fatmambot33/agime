@@ -21,6 +21,26 @@ fail() {
   exit 1
 }
 
+validate_custom_image_reference() {
+  image_ref=$1
+
+  case "$image_ref" in
+    ghcr.io/*/*:*)
+      image_without_registry=${image_ref#ghcr.io/}
+      image_repo=${image_without_registry%:*}
+      ;;
+    *)
+      fail "CUSTOM_OPENCLAW_IMAGE must follow ghcr.io/<owner>/<image-name>:<tag> (got: $image_ref)"
+      ;;
+  esac
+
+  case "$image_repo" in
+    *[A-Z]*)
+      fail "CUSTOM_OPENCLAW_IMAGE owner/image must be lowercase for GHCR (got: $image_ref)"
+      ;;
+  esac
+}
+
 require_command() {
   command_name=$1
   if ! command -v "$command_name" > /dev/null 2>&1; then
@@ -77,6 +97,7 @@ escape_sed_replacement() {
 
 [ -n "$CUSTOM_OPENCLAW_IMAGE" ] || fail "CUSTOM_OPENCLAW_IMAGE is required (example: ghcr.io/<org>/openclaw-agent-tools:2026-03-26)"
 [ -f "$CUSTOM_OPENCLAW_DOCKERFILE_TEMPLATE" ] || fail "Dockerfile template not found: $CUSTOM_OPENCLAW_DOCKERFILE_TEMPLATE"
+validate_custom_image_reference "$CUSTOM_OPENCLAW_IMAGE"
 ensure_docker_available
 
 if [ "$CUSTOM_OPENCLAW_BASE_IMAGE" = "ghcr.io/openclaw/openclaw:latest" ]; then

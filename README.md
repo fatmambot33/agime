@@ -366,6 +366,8 @@ RESTORE_FORCE=1 \
 sh ./restore.sh
 ```
 
+`restore.sh` also validates archive entry paths and refuses extraction when unsafe entries (absolute paths or `..` traversal segments) are detected.
+
 ## Post-install helpers
 
 Create a backup before maintenance changes:

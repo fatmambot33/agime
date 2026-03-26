@@ -40,6 +40,7 @@ All notable changes to this repository are documented in this file.
 - Expanded backup coverage/options to include `docker-compose.yml` by default plus opt-in full repo capture (`INCLUDE_OPENCLAW_REPO=1`) and arbitrary extra paths (`EXTRA_BACKUP_PATHS`).
 - Fixed `backup.sh` handling for relative `BACKUP_OUTPUT` so archives are written relative to caller working directory (not staging temp dir).
 - Hardened `restore.sh` root safety check by normalizing `RESTORE_ROOT` path variants (for example `//`) before enforcing `RESTORE_FORCE=1`.
+- Hardened `restore.sh` archive safety by rejecting path-traversal entries (absolute paths / `..` segments) before extraction.
 - Integrated pre-deploy backup flow into `configure.sh` with explicit operator prompts and backup option passthrough.
 - Fixed backup staging path merge behavior so `INCLUDE_OPENCLAW_REPO=1` no longer nests restore paths as `<OPENCLAW_DIR>/openclaw/...`.
 - Removed legacy compatibility exports from `configure.sh` so `build.sh` owns all default resolution directly.

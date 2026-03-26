@@ -26,6 +26,7 @@ RELATIVE_OUTPUT_DIR="$TMP_DIR/relative-output"
 RELATIVE_SOURCE_DIR="$TMP_DIR/relative-source"
 RESTORE_ROOT="$TMP_DIR/restore"
 ROOT_GUARD_LOG="$TMP_DIR/root-guard.log"
+UNSAFE_ARCHIVE_LOG="$TMP_DIR/unsafe-archive.log"
 RELATIVE_ARCHIVE_NAME="relative-backup.tgz"
 RELATIVE_SOURCE_ARCHIVE="relative-source-backup.tgz"
 RELATIVE_SOURCE_RESTORE="$TMP_DIR/relative-source-restore"
@@ -136,5 +137,30 @@ if (
   exit 1
 fi
 grep -Fq 'Refusing to restore into / without RESTORE_FORCE=1' "$ROOT_GUARD_LOG"
+
+UNSAFE_ARCHIVE="$TMP_DIR/unsafe-backup.tgz"
+python3 - << 'PY' "$UNSAFE_ARCHIVE"
+import io
+import tarfile
+import sys
+
+archive_path = sys.argv[1]
+with tarfile.open(archive_path, "w:gz") as tar:
+    data = b"unsafe"
+    info = tarfile.TarInfo("../outside.txt")
+    info.size = len(data)
+    tar.addfile(info, io.BytesIO(data))
+PY
+
+if (
+  cd "$REPO_DIR"
+  RESTORE_ARCHIVE="$UNSAFE_ARCHIVE" \
+    RESTORE_ROOT="$RESTORE_ROOT" \
+    sh ./restore.sh
+) > /dev/null 2> "$UNSAFE_ARCHIVE_LOG"; then
+  echo "restore.sh should reject archives with unsafe paths" >&2
+  exit 1
+fi
+grep -Fq 'Refusing to restore archive with unsafe path entry: ../outside.txt' "$UNSAFE_ARCHIVE_LOG"
 
 echo "backup_restore_hermetic test passed"

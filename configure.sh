@@ -59,6 +59,30 @@ ask_optional_assign() {
   eval "$var_name=\$value"
 }
 
+ask_required_with_default() {
+  var_name=$1
+  prompt=$2
+  default=$3
+
+  while :; do
+    if [ -n "$default" ]; then
+      printf '%s [%s]: ' "$prompt" "$default"
+      read value
+      value=${value:-$default}
+    else
+      printf '%s: ' "$prompt"
+      read value
+    fi
+
+    if [ -n "$value" ]; then
+      eval "$var_name=\$value"
+      return 0
+    fi
+
+    printf 'Please enter a value for %s.\n' "$var_name"
+  done
+}
+
 ask_access_mode() {
   current_mode=${OPENCLAW_ACCESS_MODE:-ssh-tunnel}
   printf 'Access mode [ssh-tunnel/public] [%s]: ' "$current_mode"
@@ -262,7 +286,65 @@ case "$OPENCLAW_ACTION" in
     ;;
   image)
     [ -f "$IMAGE_SCRIPT" ] || fail "image helper script not found at $IMAGE_SCRIPT"
-    milestone "Running image build workflow"
+    milestone "Interactive custom-image publish workflow"
+    cat << 'EOF2'
+This workflow helps you publish a first custom OpenClaw image to GitHub Container Registry (GHCR).
+You will be asked for:
+  - GitHub user/org owner for ghcr.io
+  - image name (repository name inside GHCR)
+  - tag (version label)
+  - push preference after build
+EOF2
+
+    default_image_owner=$(env_or_default CUSTOM_OPENCLAW_IMAGE_OWNER "${GITHUB_USER:-}")
+    default_image_name=$(env_or_default CUSTOM_OPENCLAW_IMAGE_NAME openclaw-agent-tools)
+    default_image_tag=$(env_or_default CUSTOM_OPENCLAW_IMAGE_TAG "$(date +%Y-%m-%d)")
+
+    ask_required_with_default CUSTOM_OPENCLAW_IMAGE_OWNER "GitHub user or organization (becomes ghcr.io/<owner>/...)" "$default_image_owner"
+    ask_required_with_default CUSTOM_OPENCLAW_IMAGE_NAME "Image name/repository (becomes ghcr.io/<owner>/<image-name>:...)" "$default_image_name"
+    ask_required_with_default CUSTOM_OPENCLAW_IMAGE_TAG "Image tag (version label after ':')" "$default_image_tag"
+
+    if ask_yes_no "Push to GHCR after build?" "$(env_or_default CUSTOM_OPENCLAW_PUSH_DEFAULT y)"; then
+      CUSTOM_OPENCLAW_PUSH=1
+    else
+      CUSTOM_OPENCLAW_PUSH=0
+    fi
+
+    CUSTOM_OPENCLAW_IMAGE="ghcr.io/$CUSTOM_OPENCLAW_IMAGE_OWNER/$CUSTOM_OPENCLAW_IMAGE_NAME:$CUSTOM_OPENCLAW_IMAGE_TAG"
+
+    cat << EOF2
+
+Computed image reference:
+  $CUSTOM_OPENCLAW_IMAGE
+
+Use this value later as:
+  CUSTOM_OPENCLAW_IMAGE=$CUSTOM_OPENCLAW_IMAGE
+  OPENCLAW_IMAGE=$CUSTOM_OPENCLAW_IMAGE
+  SKIP_OPENCLAW_IMAGE_BUILD=1
+EOF2
+
+    if [ "$CUSTOM_OPENCLAW_PUSH" = "1" ]; then
+      cat << 'EOF2'
+
+Push prerequisites (required before docker push):
+  1) A GitHub account/org with permission to publish packages for the selected owner.
+  2) A Personal Access Token (classic) or fine-grained token with package write permissions.
+  3) Docker login to GHCR, for example:
+       echo "$CR_PAT" | docker login ghcr.io -u <github-user> --password-stdin
+EOF2
+    else
+      cat << 'EOF2'
+
+Push is disabled for this run. The image will be built locally only.
+EOF2
+    fi
+
+    if ! ask_yes_no "Continue with build workflow using the computed image reference?" "y"; then
+      fail "User aborted image workflow before build."
+    fi
+
+    export CUSTOM_OPENCLAW_IMAGE CUSTOM_OPENCLAW_PUSH
+    milestone "Running image build workflow for $CUSTOM_OPENCLAW_IMAGE"
     sh "$IMAGE_SCRIPT"
     exit 0
     ;;

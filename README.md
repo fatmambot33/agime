@@ -215,7 +215,29 @@ Host responsibilities are intentionally limited to Docker Engine, Docker Compose
 
 ## Build your custom image (easy path)
 
-Use the bundled helper:
+For first-time publishing, use the interactive workflow:
+
+```bash
+sh ./configure.sh
+# choose: Image
+```
+
+The `Image` action now walks through:
+
+- GitHub owner (`ghcr.io/<owner>/...`)
+- image name (`ghcr.io/<owner>/<image-name>:...`)
+- tag (`ghcr.io/<owner>/<image-name>:<tag>`)
+- whether to push after build
+
+Then it prints the exact computed image reference before running the build:
+
+```text
+ghcr.io/<github-user-or-org>/openclaw-agent-tools:<tag>
+```
+
+If push is enabled, it also explains GHCR auth prerequisites (`docker login ghcr.io` with package write permissions) before attempting `docker push`.
+
+Advanced/non-interactive usage remains available via direct environment variables:
 
 ```bash
 CUSTOM_OPENCLAW_IMAGE=ghcr.io/<org>/openclaw-agent-tools:<tag> \

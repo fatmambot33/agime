@@ -23,6 +23,7 @@ All notable changes to this repository are documented in this file.
 - Added `tests/post_install_helpers_hermetic.sh` to validate helper behavior without Docker/network dependencies.
 - Added `scripts/build_custom_image.sh` helper to build/push a custom prebuilt OpenClaw image for image-first VPS deployments.
 - Added `templates/openclaw-custom-image.Dockerfile.tmpl` and `docs/CUSTOM_IMAGE_WORKFLOW.md` for a documented custom-image build workflow.
+- Added image-first `sync.conf` preset guidance (`OPENCLAW_IMAGE` + `SKIP_OPENCLAW_IMAGE_BUILD=1`) in `sync.conf.example` and README.
 
 ### Changed
 - Changed default deployment posture to private mode (`ssh-tunnel`) with loopback-only binding on `127.0.0.1:18789`.

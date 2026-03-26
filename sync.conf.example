@@ -33,6 +33,9 @@ SYNC_REMOTE_ENTRYPOINT=build.sh
 # OPENCLAW_ACCESS_MODE=ssh-tunnel
 # OVH_ENDPOINT_API_KEY=replace_me
 # OPENCLAW_TOKEN=
+# Image-first VPS preset (recommended):
+# OPENCLAW_IMAGE=ghcr.io/<org>/openclaw-agent-tools:<tag>
+# SKIP_OPENCLAW_IMAGE_BUILD=1
 # Keep shared paths machine-agnostic using home-relative values.
 # OPENCLAW_DIR=~/openclaw
 # OPENCLAW_CONFIG_DIR=~/.openclaw

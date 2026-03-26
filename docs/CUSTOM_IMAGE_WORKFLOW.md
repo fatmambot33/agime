@@ -45,6 +45,15 @@ OVH_ENDPOINT_API_KEY=... \
 sh ./build.sh
 ```
 
+If you deploy through `sync.sh`, place the same values in `sync.conf`:
+
+```sh
+OPENCLAW_IMAGE=ghcr.io/<org>/openclaw-agent-tools:2026-03-26
+SKIP_OPENCLAW_IMAGE_BUILD=1
+OPENCLAW_ACCESS_MODE=ssh-tunnel
+OVH_ENDPOINT_API_KEY=...
+```
+
 ## Validation behavior after deploy
 
 When optional features are enabled, `build.sh` validates tool binaries and basic `--version` calls in the running `openclaw` container. No host/runtime installer path is used.

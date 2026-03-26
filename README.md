@@ -241,6 +241,15 @@ sh ./build.sh
 
 Advanced options and tunables are documented in `docs/CUSTOM_IMAGE_WORKFLOW.md`.
 
+For `sync.sh` users, add this to `sync.conf`:
+
+```bash
+OPENCLAW_IMAGE=ghcr.io/<org>/openclaw-agent-tools:<tag>
+SKIP_OPENCLAW_IMAGE_BUILD=1
+OPENCLAW_ACCESS_MODE=ssh-tunnel
+OVH_ENDPOINT_API_KEY=...
+```
+
 ## Post-build connectivity validation
 
 Enabled by default (`POST_BUILD_TEST=1`). Tunables:

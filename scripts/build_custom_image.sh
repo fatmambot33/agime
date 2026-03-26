@@ -11,6 +11,7 @@ CUSTOM_OPENCLAW_PUSH=${CUSTOM_OPENCLAW_PUSH:-"0"}
 CUSTOM_OPENCLAW_BROWSER_DEPS=${CUSTOM_OPENCLAW_BROWSER_DEPS:-"0"}
 SIGNAL_CLI_VERSION=${SIGNAL_CLI_VERSION:-"0.13.18"}
 OPENCODE_NPM_PACKAGE=${OPENCODE_NPM_PACKAGE:-"@opencode-ai/cli"}
+CUSTOM_OPENCLAW_AUTO_INSTALL_DOCKER=${CUSTOM_OPENCLAW_AUTO_INSTALL_DOCKER:-"0"}
 
 log() {
   printf '%s\n' "$*"
@@ -28,6 +29,52 @@ require_command() {
   fi
 }
 
+run_with_optional_sudo() {
+  if [ "$(id -u)" -eq 0 ]; then
+    "$@"
+    return 0
+  fi
+
+  if command -v sudo > /dev/null 2>&1; then
+    sudo "$@"
+    return 0
+  fi
+
+  fail "Root privileges are required for Docker install. Run as root or install 'sudo'."
+}
+
+docker_install_supported_platform() {
+  [ -f /etc/os-release ] || return 1
+
+  os_id=$(awk -F= '/^ID=/{gsub(/"/,"",$2); print $2}' /etc/os-release)
+  os_like=$(awk -F= '/^ID_LIKE=/{gsub(/"/,"",$2); print $2}' /etc/os-release)
+
+  case "$os_id:$os_like" in
+    debian:* | ubuntu:* | *:debian* | *:ubuntu*) return 0 ;;
+    *) return 1 ;;
+  esac
+}
+
+install_docker_if_enabled() {
+  if [ "$CUSTOM_OPENCLAW_AUTO_INSTALL_DOCKER" != "1" ]; then
+    fail "Required command not found: docker. Install Docker Engine + docker compose plugin, or set CUSTOM_OPENCLAW_AUTO_INSTALL_DOCKER=1 to auto-install on Debian/Ubuntu."
+  fi
+
+  docker_install_supported_platform || fail "CUSTOM_OPENCLAW_AUTO_INSTALL_DOCKER=1 is currently supported on Debian/Ubuntu hosts only."
+
+  log "docker not found; attempting automatic install (CUSTOM_OPENCLAW_AUTO_INSTALL_DOCKER=1)"
+  run_with_optional_sudo sh -c 'apt-get update && apt-get install -y docker.io docker-compose-v2'
+}
+
+ensure_docker_available() {
+  if command -v docker > /dev/null 2>&1; then
+    return 0
+  fi
+
+  install_docker_if_enabled
+  require_command docker
+}
+
 escape_sed_replacement() {
   # Escape characters significant in sed replacement strings.
   printf '%s' "$1" | sed 's/[\/&]/\\&/g'
@@ -35,7 +82,7 @@ escape_sed_replacement() {
 
 [ -n "$CUSTOM_OPENCLAW_IMAGE" ] || fail "CUSTOM_OPENCLAW_IMAGE is required (example: ghcr.io/<org>/openclaw-agent-tools:2026-03-26)"
 [ -f "$CUSTOM_OPENCLAW_DOCKERFILE_TEMPLATE" ] || fail "Dockerfile template not found: $CUSTOM_OPENCLAW_DOCKERFILE_TEMPLATE"
-require_command docker
+ensure_docker_available
 
 if [ "$CUSTOM_OPENCLAW_BASE_IMAGE" = "ghcr.io/openclaw/openclaw:latest" ]; then
   log "Warning: using floating base tag '$CUSTOM_OPENCLAW_BASE_IMAGE'. Prefer a pinned tag/digest for production."

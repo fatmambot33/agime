@@ -244,7 +244,7 @@ CUSTOM_OPENCLAW_IMAGE=ghcr.io/<org>/openclaw-agent-tools:<tag> \
 sh ./scripts/build_custom_image.sh
 ```
 
-`scripts/build_custom_image.sh` requires `docker` to be available on the host. Docker is not installed automatically by these scripts, so install Docker Engine before running the image workflow.
+`scripts/build_custom_image.sh` requires `docker` to be available on the host. If Docker is missing, set `CUSTOM_OPENCLAW_AUTO_INSTALL_DOCKER=1` to allow automatic install on Debian/Ubuntu hosts; otherwise install Docker Engine manually before running the image workflow.
 
 Tip: for production builds, pin your base OpenClaw image tag/digest instead of relying on `:latest` (set `CUSTOM_OPENCLAW_BASE_IMAGE=...`).
 

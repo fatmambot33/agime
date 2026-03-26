@@ -296,7 +296,7 @@ You will be asked for:
   - push preference after build
 Prerequisite:
   - Docker Engine + docker compose plugin installed and available as 'docker'
-  - Docker is not auto-installed by this workflow
+  - Optional: set CUSTOM_OPENCLAW_AUTO_INSTALL_DOCKER=1 for Debian/Ubuntu auto-install fallback
 EOF2
 
     default_image_owner=$(env_or_default CUSTOM_OPENCLAW_IMAGE_OWNER "${GITHUB_USER:-}")

@@ -2,6 +2,8 @@
 
 ## Mode-first troubleshooting
 
+Deployment model note: Docker is the required runtime boundary for supported VPS deployments. Optional tooling (`gh`, `himalaya`, coding-agent backends, `signal-cli`) is expected inside the selected `OPENCLAW_IMAGE`, not installed on the host at deploy time.
+
 ### 0) `sync.sh` asks for SSH password multiple times
 - `sync.sh` runs from your local machine and performs three remote operations (`ssh mkdir`, `scp`, then remote entrypoint execution; default is `build.sh`).
 - It enables SSH multiplexing by default (`ControlMaster=auto` + `ControlPersist`) so one authenticated control session is reused.
@@ -42,11 +44,11 @@
 ### 3) Signal channel is enabled but not receiving messages
 - Symptom: deploy succeeds, but Signal DMs do not produce replies.
 - Fix:
-  1. Confirm `signal-cli` exists on host and is executable:
-     `signal-cli --version`.
+  1. Confirm `signal-cli` exists inside the running OpenClaw container:
+     `docker exec openclaw sh -lc 'signal-cli --version'`.
   2. Confirm `openclaw.json` has a valid E.164 Signal account under `channels.signal.account`.
   3. Complete Signal link/register flow, then restart gateway:
-     `systemctl --user restart openclaw-gateway` (or restart your container/service).
+     restart your OpenClaw container/service.
   4. Check pairing queue and approve pending codes:
      `openclaw pairing list signal`
      `openclaw pairing approve signal <CODE>`

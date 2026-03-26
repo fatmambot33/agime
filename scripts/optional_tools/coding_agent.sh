@@ -13,24 +13,12 @@ optional_tool_coding_agent_prepare() {
     *) fail "Unsupported coding-agent backend: $OPENCLAW_CODING_AGENT_BACKEND" ;;
   esac
 
-  log "Coding-agent skill enabled; backend '$OPENCLAW_CODING_AGENT_BACKEND' will be installed/validated inside Docker container after restart"
+  announce_container_runtime_validation_mode
+  log "Coding-agent skill enabled; backend '$OPENCLAW_CODING_AGENT_BACKEND' will be validated inside Docker container after restart"
 }
 
 optional_tool_coding_agent_install_runtime() {
-  [ "$OPENCLAW_ENABLE_CODING_AGENT_SKILL" = "1" ] || return 0
-
-  case "$OPENCLAW_CODING_AGENT_BACKEND" in
-    claude)
-      install_container_npm_package_if_missing @anthropic-ai/claude-code "$OPENCLAW_CODING_AGENT_BIN"
-      ;;
-    codex)
-      install_container_npm_package_if_missing @openai/codex "$OPENCLAW_CODING_AGENT_BIN"
-      ;;
-    pi)
-      install_container_npm_package_if_missing @mariozechner/pi-coding-agent "$OPENCLAW_CODING_AGENT_BIN"
-      ;;
-    opencode) ;;
-  esac
+  return 0
 }
 
 optional_tool_coding_agent_validate_runtime() {

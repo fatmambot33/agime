@@ -18,12 +18,15 @@ Automation scripts for deploying OpenClaw on a VPS with two explicit access mode
 - `restore.sh`: restores a backup tarball into a chosen root path (requires explicit force flag for `/`).
 - `scripts/build_lib.sh` + `scripts/build_steps.sh`: shared helpers and modular deployment steps used by `build.sh`.
 - `scripts/optional_tools/*.sh`: per-tool optional runtime handlers (GitHub, Himalaya, coding-agent) plus shared container install/validation helpers.
+- `scripts/build_custom_image.sh`: helper to build/push a prebuilt custom OpenClaw image with optional tooling baked in.
 - `templates/openclaw-compose.ssh-tunnel.yml.tmpl`: private/local compose template.
 - `templates/openclaw-compose.public.yml.tmpl`: Traefik-integrated compose template.
 - `templates/traefik-compose.yml.tmpl`: Traefik compose template (public mode only).
 - `templates/openclaw.json.tmpl`: OpenClaw JSON config template.
+- `templates/openclaw-custom-image.Dockerfile.tmpl`: starter Dockerfile template used by `scripts/build_custom_image.sh`.
 - `Makefile`: local quality checks.
 - `docs/COMPATIBILITY_MATRIX.md`: OVH Ubuntu compatibility baseline and version expectations.
+- `docs/CUSTOM_IMAGE_WORKFLOW.md`: step-by-step custom image build/push/deploy workflow.
 
 ## Quick start
 
@@ -184,21 +187,59 @@ Operational note: pairing by itself is not a network exposure boundary; prefer `
 - Post-build validation probes `https://$OPENCLAW_DOMAIN`.
 - Validation accepts successful TLS/connectivity even if root returns `404`.
 
-## Change-aware local image rebuilds
+## Image-first deployment model (recommended)
 
-The deployment builds `openclaw:local` only when needed:
+Use a prebuilt custom image that already contains optional tools used by your agent workflows.
 
-- image missing,
-- revision stamp missing, or
-- OpenClaw git revision changed.
-
-Last built revision is saved in `$OPENCLAW_CONFIG_DIR/openclaw-image-revision.txt`.
-
-Escape hatch:
+Recommended settings:
 
 ```bash
+OPENCLAW_IMAGE=ghcr.io/<org>/<openclaw-image>:<tag> \
 SKIP_OPENCLAW_IMAGE_BUILD=1 ./build.sh
 ```
+
+`build.sh` still supports local rebuilds (`SKIP_OPENCLAW_IMAGE_BUILD=0`) for migration scenarios, but production-like VPS deployments should prefer image-first with immutable tags.
+
+Standard VPS deployment contract:
+
+```bash
+OPENCLAW_IMAGE=<registry>/<name>:<tag> \
+SKIP_OPENCLAW_IMAGE_BUILD=1 \
+OPENCLAW_ACCESS_MODE=ssh-tunnel \
+OVH_ENDPOINT_API_KEY=... \
+./build.sh
+```
+
+Host responsibilities are intentionally limited to Docker Engine, Docker Compose v2, SSH access, firewall/networking, and persistent bind mounts. Optional tools (`gh`, `himalaya`, `codex`, `claude`, `opencode`, `pi`, `signal-cli`) must be present in the selected `OPENCLAW_IMAGE`.
+
+## Build your custom image (easy path)
+
+Use the bundled helper:
+
+```bash
+CUSTOM_OPENCLAW_IMAGE=ghcr.io/<org>/openclaw-agent-tools:<tag> \
+sh ./scripts/build_custom_image.sh
+```
+
+Push in the same step:
+
+```bash
+CUSTOM_OPENCLAW_IMAGE=ghcr.io/<org>/openclaw-agent-tools:<tag> \
+CUSTOM_OPENCLAW_PUSH=1 \
+sh ./scripts/build_custom_image.sh
+```
+
+Then deploy with:
+
+```bash
+OPENCLAW_IMAGE=ghcr.io/<org>/openclaw-agent-tools:<tag> \
+SKIP_OPENCLAW_IMAGE_BUILD=1 \
+OPENCLAW_ACCESS_MODE=ssh-tunnel \
+OVH_ENDPOINT_API_KEY=... \
+sh ./build.sh
+```
+
+Advanced options and tunables are documented in `docs/CUSTOM_IMAGE_WORKFLOW.md`.
 
 ## Post-build connectivity validation
 
@@ -213,7 +254,7 @@ Public-mode retry logic treats temporary default/self-signed cert states as tran
 
 ## Signal channel setup (optional)
 
-This toolkit can bootstrap Signal prerequisites and preconfigure `channels.signal` in `openclaw.json`.
+This toolkit preconfigures `channels.signal` in `openclaw.json` and validates `signal-cli` inside the running container.
 
 ```bash
 OPENCLAW_ENABLE_SIGNAL=1 \
@@ -225,7 +266,7 @@ OVH_ENDPOINT_API_KEY=xxxxx \
 
 Behavior:
 
-- When `OPENCLAW_ENABLE_SIGNAL=1`, the script validates `signal-cli` and can auto-install it from upstream GitHub releases (`OPENCLAW_SIGNAL_AUTO_INSTALL=1`, default).
+- When `OPENCLAW_ENABLE_SIGNAL=1`, the script validates `signal-cli` is available inside the running `openclaw` container.
 - Rendered config includes `channels.signal.enabled=true`, the configured account, `cliPath`, and optional single-entry DM allowlist.
 - After deployment, complete Signal registration/linking and approve pairing codes from the host:
   - `openclaw pairing list signal`
@@ -366,20 +407,11 @@ OVH_ENDPOINT_API_KEY=xxxxx \
 
 Behavior when enabled:
 
-- Auto-installs `gh` inside the running `openclaw` container when missing (apt-get based).
 - Validates that `gh` is available inside the running `openclaw` container runtime after restart.
+- Assumes `gh` is already baked into your custom `OPENCLAW_IMAGE`.
 - Prints a post-build reminder to run `gh auth login` / `gh auth status` in the running container before using the GitHub skill.
 
-If you prefer to install/auth manually in the container, use:
-
-1. Install `gh` in the running container:
-   - `docker exec -u 0 openclaw sh -lc 'apt-get update && apt-get install -y gh'`
-2. Authenticate in the runtime context as needed for your workflow.
-   - `docker exec openclaw sh -lc 'gh auth login'`
-3. Verify runtime visibility:
-   - `docker exec openclaw sh -lc 'command -v gh'`
-4. Verify auth:
-   - `docker exec openclaw sh -lc 'gh auth status'`
+Image-first note: this repo does not install `gh` at runtime. Bake `gh` into your custom `OPENCLAW_IMAGE`, then authenticate in-container as needed (`gh auth login`).
 
 ## Himalaya skill prerequisites
 
@@ -393,19 +425,13 @@ OVH_ENDPOINT_API_KEY=xxxxx \
 
 Behavior when enabled:
 
-- Auto-installs `himalaya` inside the running `openclaw` container when missing (apt-get based).
+- Validates that `himalaya` is available inside the running `openclaw` container runtime after restart.
+- Assumes `himalaya` is already baked into your custom `OPENCLAW_IMAGE`.
 - If `OPENCLAW_HIMALAYA_CONFIG_TOML_BASE64` is set, the script writes that content to `OPENCLAW_HIMALAYA_CONFIG_PATH` with `chmod 600`.
 - Validates config presence by default (`OPENCLAW_HIMALAYA_REQUIRE_CONFIG=1`) at `OPENCLAW_HIMALAYA_CONFIG_PATH` (default `$OPENCLAW_CONFIG_DIR/himalaya/config.toml`).
 - Mounts `${OPENCLAW_CONFIG_DIR}/himalaya` into the container as `/home/node/.config/himalaya`.
-- Validates that `himalaya` is available inside the running `openclaw` container runtime after restart.
 
-If you prefer to install/configure manually in the container, use:
-
-1. Install `himalaya` in the running container:
-   - `docker exec -u 0 openclaw sh -lc 'apt-get update && apt-get install -y himalaya'`
-2. Populate config at mounted path `${OPENCLAW_CONFIG_DIR}/himalaya/config.toml` (or use `OPENCLAW_HIMALAYA_CONFIG_TOML_BASE64`).
-3. Verify runtime visibility:
-   - `docker exec openclaw sh -lc 'command -v himalaya'`
+Image-first note: this repo does not install `himalaya` at runtime. Bake it into your custom `OPENCLAW_IMAGE`, and keep config at `${OPENCLAW_CONFIG_DIR}/himalaya/config.toml` (or inject via `OPENCLAW_HIMALAYA_CONFIG_TOML_BASE64`).
 
 If config validation fails, run `himalaya account configure` (or set `OPENCLAW_HIMALAYA_CONFIG_PATH` to your existing config) and rerun `build.sh`.
 
@@ -435,19 +461,15 @@ OVH_ENDPOINT_API_KEY=xxxxx \
 
 Supported backends (`OPENCLAW_CODING_AGENT_BACKEND`):
 
-- `claude` → auto-install in container with `npm i -g @anthropic-ai/claude-code`
-- `codex` → auto-install in container with `npm i -g @openai/codex`
-- `pi` → auto-install in container with `npm i -g @mariozechner/pi-coding-agent`
-- `opencode` → manual install required in container (script validates binary only)
+- `claude`
+- `codex`
+- `pi`
+- `opencode`
 
 Behavior when enabled:
 
-- Auto-installs supported backends inside the running `openclaw` container:
-  - `claude`: `npm i -g @anthropic-ai/claude-code`
-  - `codex`: `npm i -g @openai/codex`
-  - `pi`: `npm i -g @mariozechner/pi-coding-agent`
-- `opencode` remains manual install.
-- Validates that the selected backend binary is available inside the running `openclaw` container runtime after restart.
+- Validates the selected backend binary inside the running `openclaw` container runtime after restart.
+- Assumes backend binaries are already baked into your custom `OPENCLAW_IMAGE`.
 - Validates `<backend> --version` inside the running `openclaw` container runtime after restart.
 
 Safety guidance:

@@ -15,14 +15,14 @@ All notable changes to this repository are documented in this file.
   - `OPENCLAW_SIGNAL_ACCOUNT`
   - `OPENCLAW_SIGNAL_ALLOW_FROM`
   - `OPENCLAW_SIGNAL_CLI_PATH`
-  - `OPENCLAW_SIGNAL_AUTO_INSTALL`
-- Added automatic `signal-cli` dependency check/installation flow (opt-out via `OPENCLAW_SIGNAL_AUTO_INSTALL=0`) when Signal is enabled.
 - Added `backup.sh` and `restore.sh` mechanics for reproducible backup/restore of deployment data with explicit restore safety guard (`RESTORE_FORCE=1` for `/`).
 - Added `tests/ownership_config_dir_hermetic.sh` to cover ownership handling for root/non-root execution and custom `OPENCLAW_CONFIG_DIR` preparation flows.
 - Added post-install helpers:
   - `update.sh` to rerun maintenance deploys with optional git update behavior.
   - `add_tool.sh` to enable optional tools (`signal`, `github`, `himalaya`, `coding-agent`) and rerun deploy.
 - Added `tests/post_install_helpers_hermetic.sh` to validate helper behavior without Docker/network dependencies.
+- Added `scripts/build_custom_image.sh` helper to build/push a custom prebuilt OpenClaw image for image-first VPS deployments.
+- Added `templates/openclaw-custom-image.Dockerfile.tmpl` and `docs/CUSTOM_IMAGE_WORKFLOW.md` for a documented custom-image build workflow.
 
 ### Changed
 - Changed default deployment posture to private mode (`ssh-tunnel`) with loopback-only binding on `127.0.0.1:18789`.
@@ -34,7 +34,6 @@ All notable changes to this repository are documented in this file.
 - Updated interactive setup prompts and completion output to reflect selected mode.
 - Updated README, operations runbook, and follow-up plan to reflect private-first guidance.
 - Updated OpenClaw JSON template defaults to include a `channels.signal` section with explicit `enabled`, `account`, `cliPath`, and DM pairing-oriented defaults.
-- Updated Signal auto-install validation to verify the configured `OPENCLAW_SIGNAL_CLI_PATH` (including custom command/path values) after installation.
 - Updated README and operations runbook with backup/restore usage and safe restore workflow.
 - Expanded backup coverage/options to include `docker-compose.yml` by default plus opt-in full repo capture (`INCLUDE_OPENCLAW_REPO=1`) and arbitrary extra paths (`EXTRA_BACKUP_PATHS`).
 - Fixed `backup.sh` handling for relative `BACKUP_OUTPUT` so archives are written relative to caller working directory (not staging temp dir).
@@ -46,7 +45,8 @@ All notable changes to this repository are documented in this file.
 - Fixed ownership correction in `prepare_openclaw_repo` to support both root and non-root execution contexts by using `sudo` only when required.
 - Fixed custom `OPENCLAW_CONFIG_DIR` brittleness by preparing the config path before ownership safety checks.
 - Updated `README.md` and `docs/CONTRIBUTING.md` validation guidance to match current `make check` and `make check-strict` behavior.
-- Updated optional skill prerequisite flow to install/validate runtime binaries (`gh`, `himalaya`, coding-agent backend) inside the running `openclaw` container.
+- Updated optional skill prerequisite flow to validate runtime binaries (`gh`, `himalaya`, coding-agent backend) inside the running `openclaw` container.
+- Updated Signal prerequisite flow to validate `signal-cli` inside the running `openclaw` container (no host-side installer path).
 - Updated default `OPENCLAW_HIMALAYA_CONFIG_PATH` to `$OPENCLAW_CONFIG_DIR/himalaya/config.toml` and mounted `${OPENCLAW_CONFIG_DIR}/himalaya` into the container for runtime config access.
 - Refactored optional skill handling into per-tool scripts under `scripts/optional_tools/` for cleaner extension as new tools are added.
 - Updated `update.sh` to be git-checkout aware (`GIT_PULL=auto` by default) so it works in both cloned and synced toolkit directories.

@@ -46,7 +46,6 @@ initialize_defaults() {
   OPENCLAW_SIGNAL_ACCOUNT=${OPENCLAW_SIGNAL_ACCOUNT:-""}
   OPENCLAW_SIGNAL_ALLOW_FROM=${OPENCLAW_SIGNAL_ALLOW_FROM:-""}
   OPENCLAW_SIGNAL_CLI_PATH=${OPENCLAW_SIGNAL_CLI_PATH:-"signal-cli"}
-  OPENCLAW_SIGNAL_AUTO_INSTALL=${OPENCLAW_SIGNAL_AUTO_INSTALL:-"1"}
   OPENCLAW_ENABLE_GITHUB_SKILL=${OPENCLAW_ENABLE_GITHUB_SKILL:-"0"}
   OPENCLAW_GH_CLI_PATH=${OPENCLAW_GH_CLI_PATH:-"gh"}
   OPENCLAW_ENABLE_HIMALAYA_SKILL=${OPENCLAW_ENABLE_HIMALAYA_SKILL:-"0"}
@@ -84,13 +83,6 @@ validate_access_mode() {
   if [ "$OPENCLAW_ENABLE_SIGNAL" = "1" ]; then
     require_env OPENCLAW_SIGNAL_ACCOUNT
   fi
-
-  case "$OPENCLAW_SIGNAL_AUTO_INSTALL" in
-    0 | 1) ;;
-    *)
-      fail "OPENCLAW_SIGNAL_AUTO_INSTALL must be either '0' or '1'"
-      ;;
-  esac
 
   case "$OPENCLAW_ENABLE_GITHUB_SKILL" in
     0 | 1) ;;
@@ -177,17 +169,7 @@ setup_signal_channel_prerequisites() {
     return 0
   fi
 
-  log "Signal channel enabled; validating signal-cli dependency"
-  if command -v "$OPENCLAW_SIGNAL_CLI_PATH" > /dev/null 2>&1; then
-    log "signal-cli found at $OPENCLAW_SIGNAL_CLI_PATH"
-    return 0
-  fi
-
-  if [ "$OPENCLAW_SIGNAL_AUTO_INSTALL" != "1" ]; then
-    fail "signal-cli not found at '$OPENCLAW_SIGNAL_CLI_PATH' and OPENCLAW_SIGNAL_AUTO_INSTALL=0"
-  fi
-
-  install_signal_cli
+  log "Signal channel enabled; runtime dependency will be validated inside Docker container after restart"
 }
 
 setup_github_skill_prerequisites() {
@@ -200,50 +182,6 @@ setup_himalaya_skill_prerequisites() {
 
 setup_coding_agent_skill_prerequisites() {
   optional_tool_coding_agent_prepare
-}
-
-install_signal_cli() {
-  if [ "$DRY_RUN" = "1" ]; then
-    log "[DRY_RUN] install signal-cli (Linux native build) from upstream GitHub releases"
-    if [ "$OPENCLAW_SIGNAL_CLI_PATH" != "signal-cli" ]; then
-      log "[DRY_RUN] link installed signal-cli to configured OPENCLAW_SIGNAL_CLI_PATH=$OPENCLAW_SIGNAL_CLI_PATH"
-      log "[DRY_RUN] validate configured Signal CLI path: $OPENCLAW_SIGNAL_CLI_PATH"
-    fi
-    return 0
-  fi
-
-  require_command curl
-  require_command tar
-  tmp_dir=$(mktemp -d)
-  trap 'rm -rf "$tmp_dir"' EXIT INT HUP TERM
-
-  version=$(curl -fsSL -o /dev/null -w '%{url_effective}' https://github.com/AsamK/signal-cli/releases/latest | sed 's#^.*/v##')
-  [ -n "$version" ] || fail "Unable to resolve latest signal-cli version"
-  archive="signal-cli-${version}-Linux-native.tar.gz"
-  download_url="https://github.com/AsamK/signal-cli/releases/download/v${version}/${archive}"
-
-  log "Installing signal-cli ${version}"
-  run_cmd curl -fsSL "$download_url" -o "$tmp_dir/$archive"
-  run_with_optional_sudo tar xf "$tmp_dir/$archive" -C /opt
-  installed_signal_cli="/opt/signal-cli-${version}/bin/signal-cli"
-  run_with_optional_sudo ln -sfn "$installed_signal_cli" /usr/local/bin/signal-cli
-
-  if [ "$OPENCLAW_SIGNAL_CLI_PATH" != "signal-cli" ]; then
-    case "$OPENCLAW_SIGNAL_CLI_PATH" in
-      */*)
-        run_with_optional_sudo mkdir -p "$(dirname "$OPENCLAW_SIGNAL_CLI_PATH")"
-        run_with_optional_sudo ln -sfn "$installed_signal_cli" "$OPENCLAW_SIGNAL_CLI_PATH"
-        ;;
-      *)
-        run_with_optional_sudo ln -sfn "$installed_signal_cli" "/usr/local/bin/$OPENCLAW_SIGNAL_CLI_PATH"
-        ;;
-    esac
-  fi
-
-  rm -rf "$tmp_dir"
-  trap - EXIT INT HUP TERM
-
-  command -v "$OPENCLAW_SIGNAL_CLI_PATH" > /dev/null 2>&1 || fail "signal-cli installation completed but configured OPENCLAW_SIGNAL_CLI_PATH '$OPENCLAW_SIGNAL_CLI_PATH' is still unavailable"
 }
 
 setup_access_mode_prerequisites() {
@@ -364,12 +302,17 @@ ensure_openclaw_env_overrides() {
 }
 
 install_optional_skill_container_runtime_dependencies() {
-  optional_tool_github_install_runtime
-  optional_tool_himalaya_install_runtime
-  optional_tool_coding_agent_install_runtime
+  return 0
 }
 
 validate_optional_skill_container_runtime() {
+  if [ "$OPENCLAW_ENABLE_SIGNAL" = "1" ]; then
+    validate_container_binary "Signal channel prerequisites" "$OPENCLAW_SIGNAL_CLI_PATH"
+    run_container_validation_command \
+      "Signal channel prerequisites" \
+      "$OPENCLAW_SIGNAL_CLI_PATH --version" \
+      sh -c '"$1" --version > /dev/null 2>&1' sh "$OPENCLAW_SIGNAL_CLI_PATH"
+  fi
   optional_tool_github_validate_runtime
   optional_tool_himalaya_validate_runtime
   optional_tool_coding_agent_validate_runtime

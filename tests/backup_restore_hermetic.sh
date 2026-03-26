@@ -139,7 +139,7 @@ fi
 grep -Fq 'Refusing to restore into / without RESTORE_FORCE=1' "$ROOT_GUARD_LOG"
 
 UNSAFE_ARCHIVE="$TMP_DIR/unsafe-backup.tgz"
-python3 - << 'PY' "$UNSAFE_ARCHIVE"
+python3 - "$UNSAFE_ARCHIVE" << 'PY'
 import io
 import tarfile
 import sys

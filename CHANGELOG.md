@@ -50,6 +50,7 @@ All notable changes to this repository are documented in this file.
 - Simplified optional-tool runtime flow by removing dead no-op installer hooks and running validation-only checks directly.
 - Updated optional skill prerequisite flow to validate runtime binaries (`gh`, `himalaya`, coding-agent backend) inside the running `openclaw` container.
 - Updated Signal prerequisite flow to validate `signal-cli` inside the running `openclaw` container (no host-side installer path).
+- Updated `configure.sh` prompts/exports to remove obsolete Signal auto-install settings and align Himalaya default config path with `$OPENCLAW_CONFIG_DIR/himalaya/config.toml`.
 - Updated default `OPENCLAW_HIMALAYA_CONFIG_PATH` to `$OPENCLAW_CONFIG_DIR/himalaya/config.toml` and mounted `${OPENCLAW_CONFIG_DIR}/himalaya` into the container for runtime config access.
 - Refactored optional skill handling into per-tool scripts under `scripts/optional_tools/` for cleaner extension as new tools are added.
 - Updated `update.sh` to be git-checkout aware (`GIT_PULL=auto` by default) so it works in both cloned and synced toolkit directories.

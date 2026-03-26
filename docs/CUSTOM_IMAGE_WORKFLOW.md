@@ -31,6 +31,7 @@ sh ./scripts/build_custom_image.sh
 
 - `CUSTOM_OPENCLAW_IMAGE` (required): output image tag.
 - `CUSTOM_OPENCLAW_BASE_IMAGE` (default `ghcr.io/openclaw/openclaw:latest`): upstream/base OpenClaw image.
+- For production, prefer a pinned base tag/digest over `:latest`.
 - `CUSTOM_OPENCLAW_DOCKERFILE_TEMPLATE` (default `templates/openclaw-custom-image.Dockerfile.tmpl`).
 - `CUSTOM_OPENCLAW_BROWSER_DEPS` (default `0`): set to `1` to install extra browser runtime deps.
 - `CUSTOM_OPENCLAW_PUSH` (default `0`): set to `1` to push after successful build.

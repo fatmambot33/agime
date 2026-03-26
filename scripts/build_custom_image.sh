@@ -21,8 +21,23 @@ fail() {
   exit 1
 }
 
+require_command() {
+  command_name=$1
+  command -v "$command_name" > /dev/null 2>&1 || fail "Required command not found: $command_name"
+}
+
+escape_sed_replacement() {
+  # Escape characters significant in sed replacement strings.
+  printf '%s' "$1" | sed 's/[\/&]/\\&/g'
+}
+
 [ -n "$CUSTOM_OPENCLAW_IMAGE" ] || fail "CUSTOM_OPENCLAW_IMAGE is required (example: ghcr.io/<org>/openclaw-agent-tools:2026-03-26)"
 [ -f "$CUSTOM_OPENCLAW_DOCKERFILE_TEMPLATE" ] || fail "Dockerfile template not found: $CUSTOM_OPENCLAW_DOCKERFILE_TEMPLATE"
+require_command docker
+
+if [ "$CUSTOM_OPENCLAW_BASE_IMAGE" = "ghcr.io/openclaw/openclaw:latest" ]; then
+  log "Warning: using floating base tag '$CUSTOM_OPENCLAW_BASE_IMAGE'. Prefer a pinned tag/digest for production."
+fi
 
 case "$CUSTOM_OPENCLAW_PUSH" in
   0 | 1) ;;
@@ -38,7 +53,8 @@ tmp_dir=$(mktemp -d)
 trap 'rm -rf "$tmp_dir"' EXIT INT HUP TERM
 
 rendered_dockerfile="$tmp_dir/Dockerfile"
-sed "s#__CUSTOM_OPENCLAW_BASE_IMAGE__#${CUSTOM_OPENCLAW_BASE_IMAGE}#g" "$CUSTOM_OPENCLAW_DOCKERFILE_TEMPLATE" > "$rendered_dockerfile"
+escaped_base_image=$(escape_sed_replacement "$CUSTOM_OPENCLAW_BASE_IMAGE")
+sed "s/__CUSTOM_OPENCLAW_BASE_IMAGE__/${escaped_base_image}/g" "$CUSTOM_OPENCLAW_DOCKERFILE_TEMPLATE" > "$rendered_dockerfile"
 
 log "Building custom image: $CUSTOM_OPENCLAW_IMAGE"
 log "Base image: $CUSTOM_OPENCLAW_BASE_IMAGE"

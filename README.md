@@ -221,6 +221,8 @@ CUSTOM_OPENCLAW_IMAGE=ghcr.io/<org>/openclaw-agent-tools:<tag> \
 sh ./scripts/build_custom_image.sh
 ```
 
+Tip: for production builds, pin your base OpenClaw image tag/digest instead of relying on `:latest` (set `CUSTOM_OPENCLAW_BASE_IMAGE=...`).
+
 Push in the same step:
 
 ```bash

@@ -96,8 +96,9 @@ Choose an action:
   2) Install
   3) Update
   4) Add Tool
-  5) Restore
-  6) Security
+  5) Backup
+  6) Restore
+  7) Security
 EOF2
     printf 'Selection [2]: '
     read value
@@ -116,10 +117,13 @@ EOF2
     4 | addtool | add-tool | "add tool")
       OPENCLAW_ACTION=add_tool
       ;;
-    5 | restore)
+    5 | backup)
+      OPENCLAW_ACTION=backup
+      ;;
+    6 | restore)
       OPENCLAW_ACTION=restore
       ;;
-    6 | security)
+    7 | security)
       OPENCLAW_ACTION=security
       ;;
     *)
@@ -260,6 +264,12 @@ case "$OPENCLAW_ACTION" in
     [ -f "$IMAGE_SCRIPT" ] || fail "image helper script not found at $IMAGE_SCRIPT"
     milestone "Running image build workflow"
     sh "$IMAGE_SCRIPT"
+    exit 0
+    ;;
+  backup)
+    [ -f "$BACKUP_SCRIPT" ] || fail "backup script not found at $BACKUP_SCRIPT"
+    milestone "Running backup workflow"
+    sh "$BACKUP_SCRIPT"
     exit 0
     ;;
   add_tool)

@@ -235,7 +235,7 @@ Then it prints the exact computed image reference before running the build:
 ghcr.io/<github-user-or-org>/openclaw-agent-tools:<tag>
 ```
 
-If push is enabled, it also explains GHCR auth prerequisites (`docker login ghcr.io` with package write permissions) before attempting `docker push`.
+If push is enabled, it also explains GHCR auth prerequisites (`docker login ghcr.io` with package write permissions) before attempting a push.
 
 Advanced/non-interactive usage remains available via direct environment variables:
 
@@ -243,6 +243,8 @@ Advanced/non-interactive usage remains available via direct environment variable
 CUSTOM_OPENCLAW_IMAGE=ghcr.io/<org>/openclaw-agent-tools:<tag> \
 sh ./scripts/build_custom_image.sh
 ```
+
+`scripts/build_custom_image.sh` requires `docker` to be available on the host. If Docker is missing, the script attempts automatic installation on Debian/Ubuntu; on other hosts, install Docker Engine manually before running the image workflow.
 
 Tip: for production builds, pin your base OpenClaw image tag/digest instead of relying on `:latest` (set `CUSTOM_OPENCLAW_BASE_IMAGE=...`).
 

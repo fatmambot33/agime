@@ -56,6 +56,10 @@ CUSTOM_OPENCLAW_PUSH=1 \
 sh ./scripts/build_custom_image.sh
 ```
 
+`scripts/build_custom_image.sh` requires `docker` in `PATH`.
+
+If Docker is missing, the script attempts auto-install on Debian/Ubuntu hosts (`apt-get update && apt-get install -y docker.io docker-compose-v2`). On other distributions, install Docker manually before running the workflow.
+
 ## Tunables
 
 - `CUSTOM_OPENCLAW_IMAGE` (required): output image tag.

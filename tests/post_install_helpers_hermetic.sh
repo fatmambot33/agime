@@ -19,12 +19,20 @@ printf 'signal=%s github=%s himalaya=%s coding_agent=%s\n' \
   "${OPENCLAW_ENABLE_GITHUB_SKILL:-0}" \
   "${OPENCLAW_ENABLE_HIMALAYA_SKILL:-0}" \
   "${OPENCLAW_ENABLE_CODING_AGENT_SKILL:-0}"
+printf 'openclaw_image=%s skip_build=%s\n' \
+  "${OPENCLAW_IMAGE:-unset}" \
+  "${SKIP_OPENCLAW_IMAGE_BUILD:-unset}"
 EOS
 chmod +x "$TMP_DIR/build.sh"
 
 mkdir -p "$TMP_DIR/openclaw"
 cat > "$TMP_DIR/openclaw/.env" << 'EOS'
 OVH_ENDPOINT_API_KEY=from-env-file
+EOS
+
+cat > "$TMP_DIR/.sync-build.env" << 'EOS'
+OPENCLAW_IMAGE=ghcr.io/example/openclaw-agent:20260326
+SKIP_OPENCLAW_IMAGE_BUILD=1
 EOS
 
 UPDATE_OUT="$TMP_DIR/update.out"
@@ -35,7 +43,9 @@ UPDATE_OUT="$TMP_DIR/update.out"
 
 grep -q 'Skipping repository update (no .git checkout found; GIT_PULL=auto)' "$UPDATE_OUT"
 grep -q 'Loaded OVH_ENDPOINT_API_KEY from .*openclaw/.env' "$UPDATE_OUT"
+grep -q 'Loaded deployment defaults from .*/.sync-build.env' "$UPDATE_OUT"
 grep -q 'build called' "$UPDATE_OUT"
+grep -q 'openclaw_image=ghcr.io/example/openclaw-agent:20260326 skip_build=1' "$UPDATE_OUT"
 
 ADD_TOOL_OUT="$TMP_DIR/add_tool.out"
 (

@@ -92,11 +92,17 @@ sh ./backup.sh
 # update toolkit + rerun deploy (git pull is auto-detected)
 sh ./update.sh
 
+# update.sh auto-loads ./.sync-build.env by default, preserving
+# image-first values such as OPENCLAW_IMAGE and SKIP_OPENCLAW_IMAGE_BUILD=1.
+
 # enable one optional tool post-install
 TOOL=github sh ./add_tool.sh
 
 # force update pull only when this directory is a git checkout
 GIT_PULL=1 sh ./update.sh
+
+# skip loading deployment defaults file for one run
+LOAD_DEPLOY_ENV=0 sh ./update.sh
 ```
 
 ```sh

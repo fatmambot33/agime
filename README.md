@@ -383,11 +383,14 @@ Update this toolkit checkout and rerun deployment (works in both a git clone and
 sh ./update.sh
 ```
 
+`update.sh` now auto-loads `./.sync-build.env` (when present) before rerunning `build.sh`, so image-first settings like `OPENCLAW_IMAGE` and `SKIP_OPENCLAW_IMAGE_BUILD=1` carry forward by default.
+
 Control pull behavior explicitly when needed:
 
 ```bash
 GIT_PULL=1 sh ./update.sh      # require git checkout and pull
 GIT_PULL=0 sh ./update.sh      # skip pull and only rerun build
+LOAD_DEPLOY_ENV=0 sh ./update.sh  # ignore .sync-build.env for this run
 ```
 
 Enable one optional tool after initial install (example: GitHub CLI runtime support):

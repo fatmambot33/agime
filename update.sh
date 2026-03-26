@@ -8,6 +8,8 @@ BUILD_SCRIPT="$SCRIPT_DIR/build.sh"
 GIT_PULL=${GIT_PULL:-auto}
 RUN_BUILD=${RUN_BUILD:-1}
 DRY_RUN=${DRY_RUN:-0}
+LOAD_DEPLOY_ENV=${LOAD_DEPLOY_ENV:-auto}
+OPENCLAW_AUTO_ENV_FILE=${OPENCLAW_AUTO_ENV_FILE:-"$SCRIPT_DIR/.sync-build.env"}
 
 log() {
   printf '%s\n' "$*"
@@ -41,6 +43,32 @@ load_ovh_api_key_from_env_file() {
   log "Loaded OVH_ENDPOINT_API_KEY from $env_file"
 }
 
+load_deploy_env_file() {
+  case "$LOAD_DEPLOY_ENV" in
+    auto)
+      if [ -f "$OPENCLAW_AUTO_ENV_FILE" ]; then
+        # shellcheck disable=SC1090
+        set -a && . "$OPENCLAW_AUTO_ENV_FILE" && set +a
+        log "Loaded deployment defaults from $OPENCLAW_AUTO_ENV_FILE"
+      else
+        log "Skipping deployment-default load (missing $OPENCLAW_AUTO_ENV_FILE; LOAD_DEPLOY_ENV=auto)"
+      fi
+      ;;
+    1)
+      [ -f "$OPENCLAW_AUTO_ENV_FILE" ] || fail "deployment env file not found at $OPENCLAW_AUTO_ENV_FILE (LOAD_DEPLOY_ENV=1)"
+      # shellcheck disable=SC1090
+      set -a && . "$OPENCLAW_AUTO_ENV_FILE" && set +a
+      log "Loaded deployment defaults from $OPENCLAW_AUTO_ENV_FILE"
+      ;;
+    0)
+      log "Skipping deployment-default load (LOAD_DEPLOY_ENV=0)"
+      ;;
+    *)
+      fail "unsupported LOAD_DEPLOY_ENV='$LOAD_DEPLOY_ENV' (expected: auto, 1, 0)"
+      ;;
+  esac
+}
+
 usage() {
   cat << 'EOF2'
 Usage:
@@ -57,8 +85,15 @@ Environment variables:
              - 0: skip git pull.
   RUN_BUILD  Default: 1. Run build.sh after optional pull.
   DRY_RUN    Default: 0. Set to 1 to print actions only.
+  LOAD_DEPLOY_ENV Default: auto. One of:
+             - auto: source OPENCLAW_AUTO_ENV_FILE when it exists.
+             - 1: require and source OPENCLAW_AUTO_ENV_FILE.
+             - 0: skip sourcing deployment defaults file.
+  OPENCLAW_AUTO_ENV_FILE Default: ./.sync-build.env relative to this script.
 
 Notes:
+  - Deployment defaults (including OPENCLAW_IMAGE / SKIP_OPENCLAW_IMAGE_BUILD)
+    can be sourced from OPENCLAW_AUTO_ENV_FILE before running build.sh.
   - If OVH_ENDPOINT_API_KEY is unset, this script attempts to load it from
     ${OPENCLAW_DIR:-$HOME/openclaw}/.env (when present).
   - Extra arguments after `--` are passed to build.sh.
@@ -100,6 +135,7 @@ case "$GIT_PULL" in
     ;;
 esac
 
+load_deploy_env_file
 load_ovh_api_key_from_env_file
 
 if [ "$RUN_BUILD" = "1" ]; then

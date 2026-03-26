@@ -62,6 +62,8 @@ sh ./scripts/build_custom_image.sh
 
 If Docker is missing, the script attempts auto-install on Debian/Ubuntu hosts (`apt-get update && apt-get install -y docker.io docker-compose-v2`). On other distributions, install Docker manually before running the workflow.
 
+The workflow also fails early if `docker` exists but the daemon/API is unreachable. On macOS/Windows, start Docker Desktop; on Linux, start the Docker service before retrying.
+
 ## Tunables
 
 - `CUSTOM_OPENCLAW_IMAGE` (required): output image tag.

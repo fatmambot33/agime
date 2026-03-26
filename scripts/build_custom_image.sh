@@ -90,6 +90,14 @@ ensure_docker_available() {
   require_command docker
 }
 
+ensure_docker_daemon_available() {
+  if daemon_error=$(docker info 2>&1 > /dev/null); then
+    return 0
+  fi
+
+  fail "docker is installed but the Docker daemon/API is unreachable. Start Docker Desktop (macOS/Windows) or start the Docker service (Linux), then rerun. docker info error: $daemon_error"
+}
+
 escape_sed_replacement() {
   # Escape characters significant in sed replacement strings.
   printf '%s' "$1" | sed 's/[\/&]/\\&/g'
@@ -99,6 +107,7 @@ escape_sed_replacement() {
 [ -f "$CUSTOM_OPENCLAW_DOCKERFILE_TEMPLATE" ] || fail "Dockerfile template not found: $CUSTOM_OPENCLAW_DOCKERFILE_TEMPLATE"
 validate_custom_image_reference "$CUSTOM_OPENCLAW_IMAGE"
 ensure_docker_available
+ensure_docker_daemon_available
 
 if [ "$CUSTOM_OPENCLAW_BASE_IMAGE" = "ghcr.io/openclaw/openclaw:latest" ]; then
   log "Warning: using floating base tag '$CUSTOM_OPENCLAW_BASE_IMAGE'. Prefer a pinned tag/digest for production."

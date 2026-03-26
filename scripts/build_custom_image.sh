@@ -24,7 +24,7 @@ fail() {
 require_command() {
   command_name=$1
   if ! command -v "$command_name" > /dev/null 2>&1; then
-    fail "Required command not found: $command_name. Install Docker Engine + docker compose plugin, then rerun."
+    fail "Required command not found: $command_name. This workflow does not install Docker automatically; install Docker Engine + docker compose plugin, then rerun."
   fi
 }
 

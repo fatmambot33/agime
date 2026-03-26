@@ -56,7 +56,7 @@ CUSTOM_OPENCLAW_PUSH=1 \
 sh ./scripts/build_custom_image.sh
 ```
 
-`scripts/build_custom_image.sh` requires `docker` to be installed and available in `PATH`.
+`scripts/build_custom_image.sh` requires `docker` to be installed and available in `PATH`. Docker is not auto-installed by this workflow.
 
 ## Tunables
 

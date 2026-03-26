@@ -25,6 +25,8 @@ The workflow prompts for:
 - tag
 - push preference
 
+`configure.sh` normalizes owner and image name to lowercase so the computed GHCR reference is valid for Docker image tags.
+
 Then it computes and displays:
 
 ```text
@@ -63,6 +65,8 @@ If Docker is missing, the script attempts auto-install on Debian/Ubuntu hosts (`
 ## Tunables
 
 - `CUSTOM_OPENCLAW_IMAGE` (required): output image tag.
+  - Must follow `ghcr.io/<owner>/<image-name>:<tag>`.
+  - GHCR owner and image-name components must be lowercase.
 - `CUSTOM_OPENCLAW_BASE_IMAGE` (default `ghcr.io/openclaw/openclaw:latest`): upstream/base OpenClaw image.
 - For production, prefer a pinned base tag/digest over `:latest`.
 - `CUSTOM_OPENCLAW_DOCKERFILE_TEMPLATE` (default `templates/openclaw-custom-image.Dockerfile.tmpl`).

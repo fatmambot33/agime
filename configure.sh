@@ -24,6 +24,15 @@ to_lower() {
   printf '%s' "$1" | tr 'A-Z' 'a-z'
 }
 
+normalize_ghcr_component() {
+  value=$1
+  normalized_value=$(to_lower "$value")
+  if [ "$value" != "$normalized_value" ]; then
+    printf '%s\n' "Note: normalized GHCR component '$value' to lowercase '$normalized_value'." >&2
+  fi
+  printf '%s' "$normalized_value"
+}
+
 ask_yes_no() {
   prompt=$1
   default=$2
@@ -306,6 +315,8 @@ EOF2
     ask_required_with_default CUSTOM_OPENCLAW_IMAGE_OWNER "GitHub user or organization (becomes ghcr.io/<owner>/...)" "$default_image_owner"
     ask_required_with_default CUSTOM_OPENCLAW_IMAGE_NAME "Image name/repository (becomes ghcr.io/<owner>/<image-name>:...)" "$default_image_name"
     ask_required_with_default CUSTOM_OPENCLAW_IMAGE_TAG "Image tag (version label after ':')" "$default_image_tag"
+    CUSTOM_OPENCLAW_IMAGE_OWNER=$(normalize_ghcr_component "$CUSTOM_OPENCLAW_IMAGE_OWNER")
+    CUSTOM_OPENCLAW_IMAGE_NAME=$(normalize_ghcr_component "$CUSTOM_OPENCLAW_IMAGE_NAME")
 
     if ask_yes_no "Push to GHCR after build?" "$(env_or_default CUSTOM_OPENCLAW_PUSH_DEFAULT y)"; then
       CUSTOM_OPENCLAW_PUSH=1

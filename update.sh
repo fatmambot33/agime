@@ -83,6 +83,9 @@ run_pre_update_backup() {
       log "Creating pre-update backup at $BACKUP_OUTPUT"
       LAST_BACKUP_ARCHIVE=$BACKUP_OUTPUT
       run_cmd env BACKUP_OUTPUT="$BACKUP_OUTPUT" sh "$BACKUP_SCRIPT"
+      if [ "$DRY_RUN" != "1" ] && [ ! -f "$BACKUP_OUTPUT" ]; then
+        fail "backup script completed but archive was not created at $BACKUP_OUTPUT"
+      fi
       ;;
     0)
       log "Skipping pre-update backup (RUN_BACKUP=0)"
@@ -126,7 +129,13 @@ run_image_pull() {
 }
 
 restore_after_failed_build() {
-  [ "$RESTORE_ON_FAILURE" = "1" ] || return 0
+  case "$RESTORE_ON_FAILURE" in
+    1) ;;
+    0) return 0 ;;
+    *)
+      fail "unsupported RESTORE_ON_FAILURE='$RESTORE_ON_FAILURE' (expected: 1 or 0)"
+      ;;
+  esac
   [ -f "$RESTORE_SCRIPT" ] || fail "restore script not found at $RESTORE_SCRIPT"
 
   archive=${RESTORE_ARCHIVE:-$LAST_BACKUP_ARCHIVE}
@@ -183,6 +192,13 @@ EOF2
 }
 
 [ -f "$BUILD_SCRIPT" ] || fail "build script not found at $BUILD_SCRIPT"
+
+case "$RUN_BUILD" in
+  1 | 0) ;;
+  *)
+    fail "unsupported RUN_BUILD='$RUN_BUILD' (expected: 1 or 0)"
+    ;;
+esac
 
 build_args=
 if [ "${1-}" = "--" ]; then

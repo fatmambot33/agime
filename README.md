@@ -390,6 +390,8 @@ sh ./update.sh
 3) pull `OPENCLAW_IMAGE` when `SKIP_OPENCLAW_IMAGE_BUILD=1` (image-first mode),  
 4) run `build.sh` to deploy, validate optional tools, and apply changes.
 
+Safety guard: when backup is enabled, `update.sh` now verifies the backup archive file was actually created before continuing.
+
 Control pull behavior explicitly when needed:
 
 ```bash

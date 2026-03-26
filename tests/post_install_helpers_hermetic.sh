@@ -14,6 +14,7 @@ cat > "$TMP_DIR/backup.sh" << 'EOS'
 #!/usr/bin/env sh
 set -eu
 printf 'backup called output=%s\n' "${BACKUP_OUTPUT:-unset}"
+: > "${BACKUP_OUTPUT:?backup output path required}"
 EOS
 chmod +x "$TMP_DIR/backup.sh"
 

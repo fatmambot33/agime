@@ -94,6 +94,7 @@ sh ./update.sh
 
 # update.sh default flow: backup -> load ./.sync-build.env ->
 # optional docker pull for OPENCLAW_IMAGE (image-first mode) -> build/deploy.
+# backup step is validated: update fails early if backup archive is missing.
 
 # enable one optional tool post-install
 TOOL=github sh ./add_tool.sh

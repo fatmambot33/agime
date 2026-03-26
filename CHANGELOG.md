@@ -55,6 +55,7 @@ All notable changes to this repository are documented in this file.
 - Updated `configure.sh` prompts/exports to remove obsolete Signal auto-install settings and align Himalaya default config path with `$OPENCLAW_CONFIG_DIR/himalaya/config.toml`.
 - Updated `configure.sh` welcome menu/action flow to include direct `Image` workflow execution.
 - Updated sync payload defaults/tests/examples to include `image.sh` in runtime bundle uploads.
+- Added post-render JSON validation (`python3 -m json.tool`) for generated `openclaw.json` to fail fast on template/config errors.
 - Updated default `OPENCLAW_HIMALAYA_CONFIG_PATH` to `$OPENCLAW_CONFIG_DIR/himalaya/config.toml` and mounted `${OPENCLAW_CONFIG_DIR}/himalaya` into the container for runtime config access.
 - Refactored optional skill handling into per-tool scripts under `scripts/optional_tools/` for cleaner extension as new tools are added.
 - Updated `update.sh` to be git-checkout aware (`GIT_PULL=auto` by default) so it works in both cloned and synced toolkit directories.

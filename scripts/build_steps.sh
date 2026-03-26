@@ -330,6 +330,14 @@ write_openclaw_json_config() {
   run_cmd chmod 700 "$OPENCLAW_CONFIG_DIR"
   render_template "$OPENCLAW_JSON" "$OPENCLAW_JSON_TEMPLATE"
   run_cmd chmod 600 "$OPENCLAW_JSON"
+
+  if [ "$DRY_RUN" = "1" ]; then
+    log "[DRY_RUN] validate rendered OpenClaw JSON: $OPENCLAW_JSON"
+    return 0
+  fi
+
+  require_command python3
+  python3 -m json.tool "$OPENCLAW_JSON" > /dev/null || fail "Rendered OpenClaw JSON is invalid: $OPENCLAW_JSON"
 }
 
 ensure_openclaw_image() {

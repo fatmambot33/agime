@@ -92,8 +92,8 @@ sh ./backup.sh
 # update toolkit + rerun deploy (git pull is auto-detected)
 sh ./update.sh
 
-# update.sh auto-loads ./.sync-build.env by default, preserving
-# image-first values such as OPENCLAW_IMAGE and SKIP_OPENCLAW_IMAGE_BUILD=1.
+# update.sh default flow: backup -> load ./.sync-build.env ->
+# optional docker pull for OPENCLAW_IMAGE (image-first mode) -> build/deploy.
 
 # enable one optional tool post-install
 TOOL=github sh ./add_tool.sh
@@ -103,6 +103,12 @@ GIT_PULL=1 sh ./update.sh
 
 # skip loading deployment defaults file for one run
 LOAD_DEPLOY_ENV=0 sh ./update.sh
+
+# skip automatic backup or image pull for a one-off run
+RUN_BACKUP=0 RUN_IMAGE_PULL=0 sh ./update.sh
+
+# attempt automatic rollback from update backup when build fails
+RESTORE_ON_FAILURE=1 sh ./update.sh
 ```
 
 ```sh

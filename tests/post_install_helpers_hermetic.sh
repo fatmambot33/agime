@@ -10,6 +10,21 @@ cp "$REPO_DIR/update.sh" "$TMP_DIR/update.sh"
 cp "$REPO_DIR/add_tool.sh" "$TMP_DIR/add_tool.sh"
 chmod +x "$TMP_DIR/update.sh" "$TMP_DIR/add_tool.sh"
 
+cat > "$TMP_DIR/backup.sh" << 'EOS'
+#!/usr/bin/env sh
+set -eu
+printf 'backup called output=%s\n' "${BACKUP_OUTPUT:-unset}"
+EOS
+chmod +x "$TMP_DIR/backup.sh"
+
+mkdir -p "$TMP_DIR/bin"
+cat > "$TMP_DIR/bin/docker" << 'EOS'
+#!/usr/bin/env sh
+set -eu
+printf 'docker called: %s\n' "$*"
+EOS
+chmod +x "$TMP_DIR/bin/docker"
+
 cat > "$TMP_DIR/build.sh" << 'EOS'
 #!/usr/bin/env sh
 set -eu
@@ -38,12 +53,14 @@ EOS
 UPDATE_OUT="$TMP_DIR/update.out"
 (
   cd "$TMP_DIR"
-  OPENCLAW_DIR="$TMP_DIR/openclaw" GIT_PULL=auto RUN_BUILD=1 sh ./update.sh > "$UPDATE_OUT"
+  PATH="$TMP_DIR/bin:$PATH" OPENCLAW_DIR="$TMP_DIR/openclaw" GIT_PULL=auto RUN_BUILD=1 sh ./update.sh > "$UPDATE_OUT"
 )
 
 grep -q 'Skipping repository update (no .git checkout found; GIT_PULL=auto)' "$UPDATE_OUT"
 grep -q 'Loaded OVH_ENDPOINT_API_KEY from .*openclaw/.env' "$UPDATE_OUT"
 grep -q 'Loaded deployment defaults from .*/.sync-build.env' "$UPDATE_OUT"
+grep -q 'backup called output=.*/openclaw-update-backup-' "$UPDATE_OUT"
+grep -q 'docker called: pull ghcr.io/example/openclaw-agent:20260326' "$UPDATE_OUT"
 grep -q 'build called' "$UPDATE_OUT"
 grep -q 'openclaw_image=ghcr.io/example/openclaw-agent:20260326 skip_build=1' "$UPDATE_OUT"
 

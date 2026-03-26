@@ -58,7 +58,7 @@ sh ./scripts/build_custom_image.sh
 
 `scripts/build_custom_image.sh` requires `docker` in `PATH`.
 
-If Docker is missing, set `CUSTOM_OPENCLAW_AUTO_INSTALL_DOCKER=1` to auto-install on Debian/Ubuntu hosts (`apt-get update && apt-get install -y docker.io docker-compose-v2`). Leave unset (default `0`) to require manual install.
+If Docker is missing, the script attempts auto-install on Debian/Ubuntu hosts (`apt-get update && apt-get install -y docker.io docker-compose-v2`). On other distributions, install Docker manually before running the workflow.
 
 ## Tunables
 
@@ -68,7 +68,6 @@ If Docker is missing, set `CUSTOM_OPENCLAW_AUTO_INSTALL_DOCKER=1` to auto-instal
 - `CUSTOM_OPENCLAW_DOCKERFILE_TEMPLATE` (default `templates/openclaw-custom-image.Dockerfile.tmpl`).
 - `CUSTOM_OPENCLAW_BROWSER_DEPS` (default `0`): set to `1` to install extra browser runtime deps.
 - `CUSTOM_OPENCLAW_PUSH` (default `0`): set to `1` to push after successful build.
-- `CUSTOM_OPENCLAW_AUTO_INSTALL_DOCKER` (default `0`): set to `1` to auto-install Docker on Debian/Ubuntu when `docker` is missing.
 
 ## Deploy with the built image
 

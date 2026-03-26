@@ -11,7 +11,6 @@ CUSTOM_OPENCLAW_PUSH=${CUSTOM_OPENCLAW_PUSH:-"0"}
 CUSTOM_OPENCLAW_BROWSER_DEPS=${CUSTOM_OPENCLAW_BROWSER_DEPS:-"0"}
 SIGNAL_CLI_VERSION=${SIGNAL_CLI_VERSION:-"0.13.18"}
 OPENCODE_NPM_PACKAGE=${OPENCODE_NPM_PACKAGE:-"@opencode-ai/cli"}
-CUSTOM_OPENCLAW_AUTO_INSTALL_DOCKER=${CUSTOM_OPENCLAW_AUTO_INSTALL_DOCKER:-"0"}
 
 log() {
   printf '%s\n' "$*"
@@ -25,7 +24,7 @@ fail() {
 require_command() {
   command_name=$1
   if ! command -v "$command_name" > /dev/null 2>&1; then
-    fail "Required command not found: $command_name. This workflow does not install Docker automatically; install Docker Engine + docker compose plugin, then rerun."
+    fail "Required command not found: $command_name. Install Docker Engine + docker compose plugin, then rerun."
   fi
 }
 
@@ -55,14 +54,10 @@ docker_install_supported_platform() {
   esac
 }
 
-install_docker_if_enabled() {
-  if [ "$CUSTOM_OPENCLAW_AUTO_INSTALL_DOCKER" != "1" ]; then
-    fail "Required command not found: docker. Install Docker Engine + docker compose plugin, or set CUSTOM_OPENCLAW_AUTO_INSTALL_DOCKER=1 to auto-install on Debian/Ubuntu."
-  fi
+install_docker_or_fail() {
+  docker_install_supported_platform || fail "Automatic Docker install is currently supported on Debian/Ubuntu hosts only. Install Docker manually on this host and rerun."
 
-  docker_install_supported_platform || fail "CUSTOM_OPENCLAW_AUTO_INSTALL_DOCKER=1 is currently supported on Debian/Ubuntu hosts only."
-
-  log "docker not found; attempting automatic install (CUSTOM_OPENCLAW_AUTO_INSTALL_DOCKER=1)"
+  log "docker not found; attempting automatic install on Debian/Ubuntu"
   run_with_optional_sudo sh -c 'apt-get update && apt-get install -y docker.io docker-compose-v2'
 }
 
@@ -71,7 +66,7 @@ ensure_docker_available() {
     return 0
   fi
 
-  install_docker_if_enabled
+  install_docker_or_fail
   require_command docker
 }
 

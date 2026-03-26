@@ -294,6 +294,8 @@ You will be asked for:
   - image name (repository name inside GHCR)
   - tag (version label)
   - push preference after build
+Prerequisite:
+  - Docker Engine + docker compose plugin installed and available as 'docker'
 EOF2
 
     default_image_owner=$(env_or_default CUSTOM_OPENCLAW_IMAGE_OWNER "${GITHUB_USER:-}")

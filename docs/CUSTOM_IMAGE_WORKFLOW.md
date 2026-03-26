@@ -56,6 +56,8 @@ CUSTOM_OPENCLAW_PUSH=1 \
 sh ./scripts/build_custom_image.sh
 ```
 
+`scripts/build_custom_image.sh` requires `docker` to be installed and available in `PATH`.
+
 ## Tunables
 
 - `CUSTOM_OPENCLAW_IMAGE` (required): output image tag.

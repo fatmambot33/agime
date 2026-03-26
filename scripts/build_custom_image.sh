@@ -23,7 +23,9 @@ fail() {
 
 require_command() {
   command_name=$1
-  command -v "$command_name" > /dev/null 2>&1 || fail "Required command not found: $command_name"
+  if ! command -v "$command_name" > /dev/null 2>&1; then
+    fail "Required command not found: $command_name. Install Docker Engine + docker compose plugin, then rerun."
+  fi
 }
 
 escape_sed_replacement() {
@@ -59,6 +61,7 @@ sed "s/__CUSTOM_OPENCLAW_BASE_IMAGE__/${escaped_base_image}/g" "$CUSTOM_OPENCLAW
 log "Building custom image: $CUSTOM_OPENCLAW_IMAGE"
 log "Base image: $CUSTOM_OPENCLAW_BASE_IMAGE"
 log "Browser deps: $CUSTOM_OPENCLAW_BROWSER_DEPS"
+log "Container CLI: docker"
 
 docker build \
   -f "$rendered_dockerfile" \

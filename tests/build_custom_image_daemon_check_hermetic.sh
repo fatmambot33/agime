@@ -39,8 +39,8 @@ chmod +x "$BIN_DIR/docker"
 
 set +e
 PATH="$BIN_DIR:$PATH" \
-CUSTOM_OPENCLAW_IMAGE='ghcr.io/acme-org/openclaw-agent-tools:2026-03-26' \
-sh "$REPO_DIR/scripts/build_custom_image.sh" > "$OUTPUT_FILE" 2> "$ERROR_FILE"
+  CUSTOM_OPENCLAW_IMAGE='ghcr.io/acme-org/openclaw-agent-tools:2026-03-26' \
+  sh "$REPO_DIR/scripts/build_custom_image.sh" > "$OUTPUT_FILE" 2> "$ERROR_FILE"
 exit_code=$?
 set -e
 

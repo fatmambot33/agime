@@ -523,6 +523,7 @@ Supported backends (`OPENCLAW_CODING_AGENT_BACKEND`):
 Behavior when enabled:
 
 - Validates the selected backend binary inside the running `openclaw` container runtime after restart.
+- For `OPENCLAW_CODING_AGENT_BACKEND=codex`, also validates `bwrap` (bubblewrap) inside the running container runtime because Codex sandboxing depends on it.
 - Assumes backend binaries are already baked into your custom `OPENCLAW_IMAGE`.
 - Validates `<backend> --version` inside the running `openclaw` container runtime after restart.
 

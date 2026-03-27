@@ -20,6 +20,9 @@ optional_tool_coding_agent_prepare() {
 optional_tool_coding_agent_validate_runtime() {
   [ "$OPENCLAW_ENABLE_CODING_AGENT_SKILL" = "1" ] || return 0
   validate_container_binary "coding-agent skill prerequisites" "$OPENCLAW_CODING_AGENT_BIN"
+  if [ "$OPENCLAW_CODING_AGENT_BACKEND" = "codex" ]; then
+    validate_container_binary "coding-agent skill prerequisites (codex sandbox runtime)" "bwrap"
+  fi
 
   run_container_validation_command \
     "coding-agent skill prerequisites" \

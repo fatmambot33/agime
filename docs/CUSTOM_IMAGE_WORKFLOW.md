@@ -6,6 +6,7 @@ This runbook provides a simple, repeatable process for building the custom image
 
 - Keep VPS hosts thin (Docker + Compose + SSH + networking + bind mounts).
 - Bake optional tools into the image (`gh`, `himalaya`, `codex`, `claude`, `opencode`, `pi`, `signal-cli`).
+- If you use the `codex` coding-agent backend, also include `bwrap` (bubblewrap) in the image so sandboxed runs can start.
 - Deploy with:
   - `OPENCLAW_IMAGE=<registry>/<name>:<tag>`
   - `SKIP_OPENCLAW_IMAGE_BUILD=1`

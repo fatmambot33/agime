@@ -64,6 +64,7 @@ grep -q "docker exec openclaw sh -lc 'gh auth login'" "$OUTPUT_SKILLS_FILE"
 grep -q '\[DRY_RUN\] validate Himalaya skill prerequisites runtime binary inside openclaw container: himalaya' "$OUTPUT_SKILLS_FILE"
 grep -q '\[DRY_RUN\] validate Himalaya skill prerequisites runtime command inside openclaw container: himalaya --version' "$OUTPUT_SKILLS_FILE"
 grep -q '\[DRY_RUN\] validate coding-agent skill prerequisites runtime binary inside openclaw container: codex' "$OUTPUT_SKILLS_FILE"
+grep -q '\[DRY_RUN\] validate coding-agent skill prerequisites (codex sandbox runtime) runtime binary inside openclaw container: bwrap' "$OUTPUT_SKILLS_FILE"
 grep -q '\[DRY_RUN\] validate coding-agent skill prerequisites runtime command inside openclaw container: codex --version' "$OUTPUT_SKILLS_FILE"
 grep -q 'OpenClaw deployment finished' "$OUTPUT_SKILLS_FILE"
 

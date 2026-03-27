@@ -73,7 +73,7 @@ The workflow also fails early if `docker` exists but the daemon/API is unreachab
 - `CUSTOM_OPENCLAW_BASE_IMAGE` (default `ghcr.io/openclaw/openclaw:latest`): upstream/base OpenClaw image.
 - For production, prefer a pinned base tag/digest over `:latest`.
 - `CUSTOM_OPENCLAW_DOCKERFILE_TEMPLATE` (default `templates/openclaw-custom-image.Dockerfile.tmpl`).
-  - The default template installs a Java runtime for `signal-cli`, preferring `openjdk-21-jre-headless` and automatically falling back to `openjdk-17-jre-headless` when Java 21 is not available in the base image distro repositories.
+  - The default template installs a Java runtime for `signal-cli`, preferring `openjdk-21-jre-headless` and automatically falling back to `openjdk-17-jre-headless` when Java 21 does not have an installable apt candidate in the base image distro repositories.
 - `CUSTOM_OPENCLAW_BROWSER_DEPS` (default `0`): set to `1` to install extra browser runtime deps.
 - `CUSTOM_OPENCLAW_PUSH` (default `0`): set to `1` to push after successful build.
 

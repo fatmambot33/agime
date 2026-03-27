@@ -8,6 +8,8 @@ ARG SIGNAL_CLI_VERSION=0.13.18
 ARG OPENCODE_NPM_PACKAGE=@opencode-ai/cli
 
 # System/runtime deps + gh + npm
+# Java runtime note: prefer OpenJDK 21; fall back to OpenJDK 17 when the
+# underlying distro repositories do not publish openjdk-21-jre-headless.
 RUN apt-get update \
   && apt-get install -y --no-install-recommends \
     ca-certificates \
@@ -17,7 +19,14 @@ RUN apt-get update \
     npm \
     gh \
     cargo \
-    openjdk-21-jre-headless \
+  && if apt-cache show openjdk-21-jre-headless >/dev/null 2>&1; then \
+       apt-get install -y --no-install-recommends openjdk-21-jre-headless; \
+     elif apt-cache show openjdk-17-jre-headless >/dev/null 2>&1; then \
+       apt-get install -y --no-install-recommends openjdk-17-jre-headless; \
+     else \
+       echo "No supported OpenJDK headless runtime package found (expected 21 or 17)." >&2; \
+       exit 1; \
+     fi \
   && rm -rf /var/lib/apt/lists/*
 
 # Himalaya CLI (Cargo path for portability)

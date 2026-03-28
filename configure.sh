@@ -309,7 +309,7 @@ Prerequisite:
 EOF2
 
     default_image_owner=$(env_or_default CUSTOM_OPENCLAW_IMAGE_OWNER "${GITHUB_USER:-}")
-    default_image_name=$(env_or_default CUSTOM_OPENCLAW_IMAGE_NAME openclaw-agent-tools)
+    default_image_name=$(env_or_default CUSTOM_OPENCLAW_IMAGE_NAME ovhclaw)
     default_image_tag=$(env_or_default CUSTOM_OPENCLAW_IMAGE_TAG "$(date +%Y-%m-%d)")
 
     ask_required_with_default CUSTOM_OPENCLAW_IMAGE_OWNER "GitHub user or organization (becomes ghcr.io/<owner>/...)" "$default_image_owner"

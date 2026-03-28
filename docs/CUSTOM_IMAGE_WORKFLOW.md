@@ -47,14 +47,14 @@ If push is enabled, it prints prerequisite authentication guidance before runnin
 From this repo root:
 
 ```sh
-CUSTOM_OPENCLAW_IMAGE=ghcr.io/<org>/openclaw-agent-tools:2026-03-26 \
+CUSTOM_OPENCLAW_IMAGE=ghcr.io/<org>/ovhclaw:2026-03-26 \
 sh ./scripts/build_custom_image.sh
 ```
 
 Optional push:
 
 ```sh
-CUSTOM_OPENCLAW_IMAGE=ghcr.io/<org>/openclaw-agent-tools:2026-03-26 \
+CUSTOM_OPENCLAW_IMAGE=ghcr.io/<org>/ovhclaw:2026-03-26 \
 CUSTOM_OPENCLAW_PUSH=1 \
 sh ./scripts/build_custom_image.sh
 ```
@@ -80,7 +80,7 @@ The workflow also fails early if `docker` exists but the daemon/API is unreachab
 ## Deploy with the built image
 
 ```sh
-OPENCLAW_IMAGE=ghcr.io/<org>/openclaw-agent-tools:2026-03-26 \
+OPENCLAW_IMAGE=ghcr.io/<org>/ovhclaw:2026-03-26 \
 SKIP_OPENCLAW_IMAGE_BUILD=1 \
 OPENCLAW_ACCESS_MODE=ssh-tunnel \
 OVH_ENDPOINT_API_KEY=... \
@@ -90,7 +90,7 @@ sh ./build.sh
 If you deploy through `sync.sh`, place the same values in `sync.conf`:
 
 ```sh
-OPENCLAW_IMAGE=ghcr.io/<org>/openclaw-agent-tools:2026-03-26
+OPENCLAW_IMAGE=ghcr.io/<org>/ovhclaw:2026-03-26
 SKIP_OPENCLAW_IMAGE_BUILD=1
 OPENCLAW_ACCESS_MODE=ssh-tunnel
 OVH_ENDPOINT_API_KEY=...

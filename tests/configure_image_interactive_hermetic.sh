@@ -36,17 +36,17 @@ chmod +x "$WORK_DIR/build.sh"
   HOME="$HOME_DIR" sh ./configure.sh > "$OUTPUT_FILE" << 'EOF_INPUT'
 1
 acme-org
-openclaw-agent-tools
+ovhclaw
 2026-03-26
 y
 y
 EOF_INPUT
 )
 
-grep -Fq 'CUSTOM_OPENCLAW_IMAGE=ghcr.io/acme-org/openclaw-agent-tools:2026-03-26' "$CALLS_FILE"
+grep -Fq 'CUSTOM_OPENCLAW_IMAGE=ghcr.io/acme-org/ovhclaw:2026-03-26' "$CALLS_FILE"
 grep -Fq 'CUSTOM_OPENCLAW_PUSH=1' "$CALLS_FILE"
 grep -Fq 'Computed image reference:' "$OUTPUT_FILE"
-grep -Fq 'ghcr.io/acme-org/openclaw-agent-tools:2026-03-26' "$OUTPUT_FILE"
+grep -Fq 'ghcr.io/acme-org/ovhclaw:2026-03-26' "$OUTPUT_FILE"
 grep -Fq 'docker login ghcr.io' "$OUTPUT_FILE"
 
 echo "configure image interactive hermetic test passed"

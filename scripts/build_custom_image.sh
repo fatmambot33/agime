@@ -103,7 +103,7 @@ escape_sed_replacement() {
   printf '%s' "$1" | sed 's/[\/&]/\\&/g'
 }
 
-[ -n "$CUSTOM_OPENCLAW_IMAGE" ] || fail "CUSTOM_OPENCLAW_IMAGE is required (example: ghcr.io/<org>/openclaw-agent-tools:2026-03-26)"
+[ -n "$CUSTOM_OPENCLAW_IMAGE" ] || fail "CUSTOM_OPENCLAW_IMAGE is required (example: ghcr.io/<org>/ovhclaw:2026-03-26)"
 [ -f "$CUSTOM_OPENCLAW_DOCKERFILE_TEMPLATE" ] || fail "Dockerfile template not found: $CUSTOM_OPENCLAW_DOCKERFILE_TEMPLATE"
 validate_custom_image_reference "$CUSTOM_OPENCLAW_IMAGE"
 ensure_docker_available

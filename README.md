@@ -234,7 +234,7 @@ Owner and image-name inputs are normalized to lowercase automatically so the gen
 Then it prints the exact computed image reference before running the build:
 
 ```text
-ghcr.io/<github-user-or-org>/openclaw-agent-tools:<tag>
+ghcr.io/<github-user-or-org>/ovhclaw:<tag>
 ```
 
 If push is enabled, it also explains GHCR auth prerequisites (`docker login ghcr.io` with package write permissions) before attempting a push.
@@ -242,7 +242,7 @@ If push is enabled, it also explains GHCR auth prerequisites (`docker login ghcr
 Advanced/non-interactive usage remains available via direct environment variables:
 
 ```bash
-CUSTOM_OPENCLAW_IMAGE=ghcr.io/<org>/openclaw-agent-tools:<tag> \
+CUSTOM_OPENCLAW_IMAGE=ghcr.io/<org>/ovhclaw:<tag> \
 sh ./scripts/build_custom_image.sh
 ```
 
@@ -254,7 +254,7 @@ Tip: for production builds, pin your base OpenClaw image tag/digest instead of r
 Push in the same step:
 
 ```bash
-CUSTOM_OPENCLAW_IMAGE=ghcr.io/<org>/openclaw-agent-tools:<tag> \
+CUSTOM_OPENCLAW_IMAGE=ghcr.io/<org>/ovhclaw:<tag> \
 CUSTOM_OPENCLAW_PUSH=1 \
 sh ./scripts/build_custom_image.sh
 ```
@@ -262,7 +262,7 @@ sh ./scripts/build_custom_image.sh
 Then deploy with:
 
 ```bash
-OPENCLAW_IMAGE=ghcr.io/<org>/openclaw-agent-tools:<tag> \
+OPENCLAW_IMAGE=ghcr.io/<org>/ovhclaw:<tag> \
 SKIP_OPENCLAW_IMAGE_BUILD=1 \
 OPENCLAW_ACCESS_MODE=ssh-tunnel \
 OVH_ENDPOINT_API_KEY=... \
@@ -274,7 +274,7 @@ Advanced options and tunables are documented in `docs/CUSTOM_IMAGE_WORKFLOW.md`.
 For `sync.sh` users, add this to `sync.conf`:
 
 ```bash
-OPENCLAW_IMAGE=ghcr.io/<org>/openclaw-agent-tools:<tag>
+OPENCLAW_IMAGE=ghcr.io/<org>/ovhclaw:<tag>
 SKIP_OPENCLAW_IMAGE_BUILD=1
 OPENCLAW_ACCESS_MODE=ssh-tunnel
 OVH_ENDPOINT_API_KEY=...

@@ -9,7 +9,7 @@ ARG OPENCODE_NPM_PACKAGE=@opencode-ai/cli
 
 # System/runtime deps + gh + npm
 # Java runtime note: prefer OpenJDK 21; fall back to OpenJDK 17 when the
-# underlying distro repositories do not publish openjdk-21-jre-headless.
+# preferred package has no installable apt candidate.
 RUN apt-get update \
   && apt-get install -y --no-install-recommends \
     ca-certificates \
@@ -19,10 +19,16 @@ RUN apt-get update \
     npm \
     gh \
     cargo \
-  && if apt-cache show openjdk-21-jre-headless >/dev/null 2>&1; then \
-       apt-get install -y --no-install-recommends openjdk-21-jre-headless; \
-     elif apt-cache show openjdk-17-jre-headless >/dev/null 2>&1; then \
-       apt-get install -y --no-install-recommends openjdk-17-jre-headless; \
+  && openjdk_pkg="" \
+  && for candidate in openjdk-21-jre-headless openjdk-17-jre-headless; do \
+       candidate_version="$(apt-cache policy "$candidate" | awk '/Candidate:/ {print $2; exit}')"; \
+       if [ -n "$candidate_version" ] && [ "$candidate_version" != "(none)" ]; then \
+         openjdk_pkg="$candidate"; \
+         break; \
+       fi; \
+     done \
+  && if [ -n "$openjdk_pkg" ]; then \
+       apt-get install -y --no-install-recommends "$openjdk_pkg"; \
      else \
        echo "No supported OpenJDK headless runtime package found (expected 21 or 17)." >&2; \
        exit 1; \

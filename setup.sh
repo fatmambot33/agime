@@ -4,6 +4,12 @@ set -eu
 
 SCRIPT_DIR=$(CDPATH= cd -- "$(dirname "$0")" && pwd)
 BUILD_SCRIPT="$SCRIPT_DIR/build.sh"
+OFFICIAL_SETUP_URL=${OFFICIAL_SETUP_URL:-"https://raw.githubusercontent.com/openclaw/openclaw/main/scripts/docker/setup.sh"}
+SETUP_IMPL=${SETUP_IMPL:-templates}
+if [ "${1:-}" = "--official" ]; then
+  SETUP_IMPL=official
+  shift
+fi
 
 prompt_with_default() {
   prompt=$1
@@ -42,8 +48,40 @@ prompt_required() {
   exit 1
 }
 
-echo "=== OpenClaw Setup ==="
-echo "This flow writes environment values and runs build.sh (template-based deployment)."
+if [ "$SETUP_IMPL" = "official" ]; then
+  echo "=== OpenClaw Setup (official script) ==="
+  echo "Source: $OFFICIAL_SETUP_URL"
+  echo ""
+  OPENCLAW_GATEWAY_TOKEN=$(prompt_optional "OpenClaw gateway token for official setup")
+  if [ -n "$OPENCLAW_GATEWAY_TOKEN" ]; then
+    export OPENCLAW_GATEWAY_TOKEN
+  fi
+
+  echo ""
+  echo "Optional OVH values (saved for later build.sh use; official script does not consume them directly)."
+  OPENCLAW_ACCESS_MODE=$(prompt_with_default "Access mode (ssh-tunnel/public)" "ssh-tunnel")
+  OVH_ENDPOINT_API_KEY=$(prompt_optional "OVH endpoint API key")
+  TRAEFIK_ACME_EMAIL=${TRAEFIK_ACME_EMAIL:-}
+  OPENCLAW_DOMAIN=${OPENCLAW_DOMAIN:-}
+  if [ "$OPENCLAW_ACCESS_MODE" = "public" ]; then
+    TRAEFIK_ACME_EMAIL=$(prompt_required "Traefik ACME email")
+    OPENCLAW_DOMAIN=$(prompt_required "OpenClaw public domain")
+  fi
+
+  cat > "$SCRIPT_DIR/.sync-build.env" <<EOF2
+OPENCLAW_ACCESS_MODE=$OPENCLAW_ACCESS_MODE
+OVH_ENDPOINT_API_KEY=$OVH_ENDPOINT_API_KEY
+TRAEFIK_ACME_EMAIL=$TRAEFIK_ACME_EMAIL
+OPENCLAW_DOMAIN=$OPENCLAW_DOMAIN
+EOF2
+  chmod 600 "$SCRIPT_DIR/.sync-build.env"
+  echo "Wrote OVH-ready values to $SCRIPT_DIR/.sync-build.env"
+  echo "Running official setup script..."
+  exec bash -c "$(curl -fsSL "$OFFICIAL_SETUP_URL")"
+fi
+
+echo "=== OpenClaw Setup (template-based) ==="
+echo "This flow writes environment values and runs build.sh."
 echo ""
 
 OPENCLAW_ACCESS_MODE=$(prompt_with_default "Access mode (ssh-tunnel/public)" "ssh-tunnel")

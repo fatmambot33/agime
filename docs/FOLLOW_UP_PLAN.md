@@ -26,6 +26,7 @@ Transform the repo into a maintainable, testable, and secure deployment toolkit 
 - Updated docs/runbook guidance to standardize on prebuilt custom `OPENCLAW_IMAGE` + `SKIP_OPENCLAW_IMAGE_BUILD=1` for agent-enabled VPS deployments.
 - Added a first-party custom image workflow (`docs/CUSTOM_IMAGE_WORKFLOW.md`) plus `scripts/build_custom_image.sh` and `templates/openclaw-custom-image.Dockerfile.tmpl` to streamline image creation.
 - Simplified `setup.sh` into a clean install-only bootstrap that captures minimal env inputs and executes template-based `build.sh`.
+- Added an official-setup option (`setup.sh --official`) that runs upstream OpenClaw Docker setup while capturing OVH-ready env values for toolkit-based follow-up runs.
 - Kept `add_tool` available as an optional helper while tightening defaults around image-baked tool onboarding for setup 2.0.
 
 ## Prioritized backlog (next 5 items)

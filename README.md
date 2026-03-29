@@ -53,6 +53,22 @@ The script asks for:
 
 Use `configure.sh` when you want the full multi-action menu (`Image`, `Install`, `Update`, `Add Tool`, `Backup`, `Restore`, `Security`).
 
+### Use the official OpenClaw Docker setup script (with OVH-ready values)
+
+To run OpenClaw’s official setup script via this repo:
+
+```bash
+sh ./setup.sh --official
+```
+
+This mode:
+
+- runs the upstream script at `scripts/docker/setup.sh` from the OpenClaw repo;
+- prompts for `OPENCLAW_GATEWAY_TOKEN` used by the official script;
+- also captures OVH/public-mode values and writes them to `./.sync-build.env` for later `build.sh`/OVH runs.
+
+Note: the official script does **not** consume `OVH_ENDPOINT_API_KEY` directly; that value is for this repo’s OVH deployment flow.
+
 ### Sync + remote deploy
 
 Run from your local machine:

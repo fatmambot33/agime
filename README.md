@@ -15,8 +15,9 @@ Automation scripts for deploying OpenClaw on a VPS with two explicit access mode
 - `backup.sh`: creates a tarball backup of OpenClaw runtime data (`$OPENCLAW_CONFIG_DIR`, `$OPENCLAW_DIR/.env`, optional Traefik state).
 - `update.sh`: post-install helper that can fast-forward pull this toolkit checkout (auto-detected) and rerun `build.sh`.
 - `image.sh`: top-level helper for custom image build/push workflow (wrapper around `scripts/build_custom_image.sh`).
-- `add_tool.sh`: post-install helper to enable one optional tool (`signal`, `github`, `himalaya`, `coding-agent`) and rerun `build.sh`.
+- `add_tool.sh`: post-install helper to enable one optional tool and rerun `build.sh`; setup 2.0 generally prefers baking tooling into the image.
 - `restore.sh`: restores a backup tarball into a chosen root path (requires explicit force flag for `/`).
+- `setup.sh`: simplest setup entrypoint; it forwards into the existing `configure.sh` Install flow (local) or `sync.sh` + remote Install flow (when `REMOTE_HOST` is set).
 - `scripts/build_lib.sh` + `scripts/build_steps.sh`: shared helpers and modular deployment steps used by `build.sh`.
 - `scripts/optional_tools/*.sh`: per-tool optional runtime handlers (GitHub, Himalaya, coding-agent) plus shared container validation helpers.
 - `scripts/build_custom_image.sh`: helper to build/push a prebuilt custom OpenClaw image with optional tooling baked in.
@@ -30,6 +31,27 @@ Automation scripts for deploying OpenClaw on a VPS with two explicit access mode
 - `docs/CUSTOM_IMAGE_WORKFLOW.md`: step-by-step custom image build/push/deploy workflow.
 
 ## Quick start
+
+### Default easy setup (`setup.sh`)
+
+`setup.sh` is now a clean install-only starter:
+
+- prompts for minimal deployment inputs;
+- exports environment values;
+- runs `build.sh`, which renders/uses repository templates for deployment.
+
+```bash
+sh ./setup.sh
+```
+
+The script asks for:
+
+- `OPENCLAW_ACCESS_MODE` (`ssh-tunnel` by default, or `public`)
+- `OVH_ENDPOINT_API_KEY` (required)
+- `OPENCLAW_TOKEN` (optional)
+- for `public` mode: `TRAEFIK_ACME_EMAIL` and `OPENCLAW_DOMAIN` (required)
+
+Use `configure.sh` when you want the full multi-action menu (`Image`, `Install`, `Update`, `Add Tool`, `Backup`, `Restore`, `Security`).
 
 ### Sync + remote deploy
 
@@ -100,7 +122,7 @@ With this, `configure.sh` can write updated values on the remote host and `sync.
 
 - **Local workstation:** run `configure.sh` to author/update config and run `sync.sh` to reconcile and upload files.
 - **Remote VPS:** run `build.sh` (or other selected entrypoint) to apply deployment changes.
-- Default upload payload is runtime-only: `build.sh backup.sh update.sh image.sh add_tool.sh restore.sh scripts templates docs README.md` (plus `sync.conf` when needed).
+- Default upload payload is runtime-only: `build.sh backup.sh update.sh image.sh restore.sh scripts templates docs README.md` (plus `sync.conf` when needed).
 - Local authoring helpers are intentionally excluded from default payload; override with `SYNC_ITEMS` only when you explicitly need a different bundle.
 
 ### Safer default (`ssh-tunnel`)
@@ -430,7 +452,7 @@ RUN_IMAGE_PULL=0 sh ./update.sh  # skip docker pull
 RESTORE_ON_FAILURE=1 sh ./update.sh  # auto-restore backup if build fails
 ```
 
-Enable one optional tool after initial install (example: GitHub CLI runtime support):
+Optional helper (setup 2.0 usually does not need this): enable one optional tool after initial install (example: GitHub CLI runtime support):
 
 ```bash
 TOOL=github sh ./add_tool.sh

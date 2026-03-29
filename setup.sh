@@ -1,117 +1,76 @@
-#!/bin/bash
+#!/bin/sh
 
-set -e
+set -eu
 
-echo "=== OpenClaw VPS Setup ==="
-echo ""
+SCRIPT_DIR=$(CDPATH= cd -- "$(dirname "$0")" && pwd)
+BUILD_SCRIPT="$SCRIPT_DIR/build.sh"
 
-# --- INPUTS ---
-read -p "Domain (e.g. ai.example.com): " DOMAIN
-read -p "Email (Let's Encrypt): " EMAIL
-read -p "OpenClaw token: " TOKEN
+prompt_with_default() {
+  prompt=$1
+  default=$2
+  printf "%s [%s]: " "$prompt" "$default"
+  IFS= read -r value
+  if [ -n "$value" ]; then
+    printf '%s' "$value"
+  else
+    printf '%s' "$default"
+  fi
+}
 
-if [[ -z "$DOMAIN" || -z "$EMAIL" || -z "$TOKEN" ]]; then
-  echo "❌ All fields are required."
+prompt_optional() {
+  prompt=$1
+  printf "%s (leave blank to skip): " "$prompt"
+  IFS= read -r value
+  printf '%s' "$value"
+}
+
+prompt_required() {
+  prompt=$1
+  while :; do
+    printf "%s: " "$prompt"
+    IFS= read -r value
+    if [ -n "$value" ]; then
+      printf '%s' "$value"
+      return 0
+    fi
+    echo "This field is required."
+  done
+}
+
+[ -f "$BUILD_SCRIPT" ] || {
+  echo "build.sh not found at $BUILD_SCRIPT" >&2
   exit 1
+}
+
+echo "=== OpenClaw Setup ==="
+echo "This flow writes environment values and runs build.sh (template-based deployment)."
+echo ""
+
+OPENCLAW_ACCESS_MODE=$(prompt_with_default "Access mode (ssh-tunnel/public)" "ssh-tunnel")
+case "$OPENCLAW_ACCESS_MODE" in
+  ssh-tunnel | public) ;;
+  *)
+    echo "Unsupported access mode: $OPENCLAW_ACCESS_MODE" >&2
+    exit 1
+    ;;
+esac
+
+OVH_ENDPOINT_API_KEY=$(prompt_required "OVH endpoint API key")
+OPENCLAW_TOKEN=$(prompt_optional "OpenClaw gateway token")
+
+TRAEFIK_ACME_EMAIL=${TRAEFIK_ACME_EMAIL:-}
+OPENCLAW_DOMAIN=${OPENCLAW_DOMAIN:-}
+if [ "$OPENCLAW_ACCESS_MODE" = "public" ]; then
+  TRAEFIK_ACME_EMAIL=$(prompt_required "Traefik ACME email")
+  OPENCLAW_DOMAIN=$(prompt_required "OpenClaw public domain")
 fi
-
-# --- INSTALL DOCKER IF NEEDED ---
-if ! command -v docker &> /dev/null; then
-  echo "📦 Installing Docker..."
-  sudo apt update
-  sudo apt install -y docker.io docker-compose-plugin
-  sudo systemctl enable docker
-  sudo systemctl start docker
-fi
-
-# --- CREATE APP DIR ---
-APP_DIR="$HOME/openclaw"
-mkdir -p "$APP_DIR"
-cd "$APP_DIR"
-
-# --- GENERATE DOCKER COMPOSE ---
-cat > docker-compose.yml <<EOF
-version: "3.8"
-
-services:
-  traefik:
-    image: traefik:v3.0
-    container_name: traefik
-    restart: unless-stopped
-    command:
-      - "--providers.docker=true"
-      - "--providers.docker.exposedbydefault=false"
-      - "--entrypoints.web.address=:80"
-      - "--entrypoints.websecure.address=:443"
-      - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
-      - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
-      - "--certificatesresolvers.le.acme.tlschallenge=true"
-      - "--certificatesresolvers.le.acme.email=${EMAIL}"
-      - "--certificatesresolvers.le.acme.storage=/letsencrypt/acme.json"
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - "/var/run/docker.sock:/var/run/docker.sock:ro"
-      - "traefik_data:/letsencrypt"
-    networks:
-      - web
-
-  openclaw:
-    image: ghcr.io/openclaw/openclaw:latest
-    container_name: openclaw
-    restart: unless-stopped
-    environment:
-      HOME: /home/node
-      TERM: xterm-256color
-      OPENCLAW_GATEWAY_TOKEN: "${TOKEN}"
-    command:
-      [
-        "node",
-        "dist/index.js",
-        "gateway",
-        "--bind",
-        "lan",
-        "--port",
-        "18789"
-      ]
-    volumes:
-      - openclaw_data:/home/node/.openclaw
-    labels:
-      - "traefik.enable=true"
-      - "traefik.docker.network=web"
-      - "traefik.http.routers.openclaw.rule=Host(\`${DOMAIN}\`)"
-      - "traefik.http.routers.openclaw.entrypoints=websecure"
-      - "traefik.http.routers.openclaw.tls.certresolver=le"
-      - "traefik.http.services.openclaw.loadbalancer.server.port=18789"
-    networks:
-      - web
-
-volumes:
-  traefik_data:
-  openclaw_data:
-
-networks:
-  web:
-EOF
-
-echo "✅ docker-compose.yml created"
-
-# --- FIREWALL (optional but recommended) ---
-if command -v ufw &> /dev/null; then
-  echo "🔥 Configuring firewall..."
-  sudo ufw allow 22
-  sudo ufw allow 80
-  sudo ufw allow 443
-  sudo ufw --force enable
-fi
-
-# --- START STACK ---
-echo "🚀 Starting OpenClaw..."
-docker compose up -d
 
 echo ""
-echo "✅ Done!"
-echo "🌐 Access your app at: https://${DOMAIN}"
-echo ""
-echo "⚠️ Make sure your DNS points to this VPS!"
+echo "Running build.sh..."
+
+export OPENCLAW_ACCESS_MODE OVH_ENDPOINT_API_KEY OPENCLAW_TOKEN
+if [ "$OPENCLAW_ACCESS_MODE" = "public" ]; then
+  export TRAEFIK_ACME_EMAIL OPENCLAW_DOMAIN
+fi
+
+exec sh "$BUILD_SCRIPT"

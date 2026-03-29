@@ -41,6 +41,13 @@ This toolkit writes `openclaw.json` in `models.mode=merge`, so your selected OVH
 - Execute deployment changes with `build.sh` (normally triggered by `sync.sh`).
 - Persist runtime data under configured bind mounts (`OPENCLAW_CONFIG_DIR`, workspace, optional Traefik state).
 
+## OpenClaw factory bootstrap (native)
+
+Supported first-time installs should use the native OpenClaw factory bootstrap flow. In this toolkit that means leaving `SKIP_OPENCLAW_WIZARD=0` (default), so `build.sh` runs the upstream OpenClaw setup wizard when `.env` does not already exist.
+
+- First install: keep wizard enabled to complete native bootstrap.
+- Later automation/redeploy: set `SKIP_OPENCLAW_WIZARD=1` only after bootstrap is already complete and `.env` is managed.
+
 ## End-to-end flow
 
 1. **Prepare VPS host**
@@ -70,7 +77,7 @@ This toolkit writes `openclaw.json` in `models.mode=merge`, so your selected OVH
    sh ./sync.sh
    ```
 
-   By default, `sync.sh` uploads the runtime bundle and executes remote `build.sh`.
+   By default, `sync.sh` uploads the runtime bundle and executes remote `build.sh`, which keeps native factory bootstrap behavior on first install.
 
 5. **Validate post-deploy behavior**
    - `ssh-tunnel`: verify local tunnel + `http://127.0.0.1:18789`.

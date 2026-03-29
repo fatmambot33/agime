@@ -244,6 +244,8 @@ OVH_ENDPOINT_API_KEY=... \
 
 `OVH_ENDPOINT_API_KEY` is mandatory for supported deployments.
 
+Use native OpenClaw factory bootstrap on first install (default `SKIP_OPENCLAW_WIZARD=0`), then switch to `SKIP_OPENCLAW_WIZARD=1` only for post-bootstrap automation.
+
 If `OVH_ENDPOINT_MODEL` is not set, the deployment uses the toolkit default model (`gpt-oss-120b`).
 
 Host responsibilities are intentionally limited to Docker Engine, Docker Compose v2, SSH access, firewall/networking, and persistent bind mounts. Optional tools (`gh`, `himalaya`, `codex`, `claude`, `opencode`, `pi`, `signal-cli`) must be present in the selected `OPENCLAW_IMAGE`.

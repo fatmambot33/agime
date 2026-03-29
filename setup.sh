@@ -4,8 +4,6 @@ set -eu
 
 SCRIPT_DIR=$(CDPATH= cd -- "$(dirname "$0")" && pwd)
 BUILD_SCRIPT="$SCRIPT_DIR/build.sh"
-SECURITY_AUDIT_SCRIPT="$SCRIPT_DIR/scripts/run_security_audit.sh"
-SECURITY_CRON_SCRIPT="$SCRIPT_DIR/scripts/install_security_audit_cron.sh"
 
 prompt_default() {
   prompt=$1
@@ -39,31 +37,13 @@ prompt_required() {
   done
 }
 
-report_runtime_status() {
-  if ! command -v docker >/dev/null 2>&1; then
-    echo "docker not found; skipping runtime status checks."
-    return 0
-  fi
-
-  if [ "$OPENCLAW_ACCESS_MODE" = "public" ]; then
-    if docker ps --format '{{.Names}}' | grep -Eq '^traefik$'; then
-      echo "✅ Public mode active: Traefik container is running."
-    else
-      echo "⚠️ Public mode selected, but Traefik container was not detected."
-      echo "   Check: docker ps -a | grep traefik"
-    fi
-  else
-    echo "✅ ssh-tunnel mode active: Traefik is not required/running by default."
-  fi
-}
-
 [ -f "$BUILD_SCRIPT" ] || {
   echo "Missing build script: $BUILD_SCRIPT" >&2
   exit 1
 }
 
 echo "=== OpenClaw OVH Setup ==="
-echo "Secure defaults: ssh-tunnel mode + post-deploy security audit."
+echo "Secure default: ssh-tunnel mode."
 echo ""
 
 OPENCLAW_ACCESS_MODE=$(prompt_default "Access mode (ssh-tunnel/public)" "ssh-tunnel")
@@ -85,9 +65,6 @@ if [ "$OPENCLAW_ACCESS_MODE" = "public" ]; then
   OPENCLAW_DOMAIN=$(prompt_required "OpenClaw public domain")
 fi
 
-RUN_SECURITY_AUDIT=$(prompt_default "Run security audit after deploy? (1=yes,0=no)" "1")
-INSTALL_SECURITY_CRON=$(prompt_default "Install daily security audit cron? (1=yes,0=no)" "1")
-
 echo ""
 echo "Deploying with build.sh..."
 
@@ -97,20 +74,5 @@ if [ "$OPENCLAW_ACCESS_MODE" = "public" ]; then
 fi
 
 sh "$BUILD_SCRIPT"
-
-if [ "$RUN_SECURITY_AUDIT" = "1" ] && [ -f "$SECURITY_AUDIT_SCRIPT" ]; then
-  echo ""
-  echo "Running security audit..."
-  sh "$SECURITY_AUDIT_SCRIPT"
-fi
-
-if [ "$INSTALL_SECURITY_CRON" = "1" ] && [ -f "$SECURITY_CRON_SCRIPT" ]; then
-  echo ""
-  echo "Installing security audit cron..."
-  sh "$SECURITY_CRON_SCRIPT"
-fi
-
-echo ""
-report_runtime_status
 echo ""
 echo "Setup complete."

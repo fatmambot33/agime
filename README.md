@@ -37,14 +37,12 @@ Automation scripts for deploying OpenClaw on a VPS with two explicit access mode
 `setup.sh` is now a streamlined OVH-oriented installer:
 
 - prompts for required OVH + access-mode values;
-- runs template-based `build.sh`;
-- runs security audit after deploy by default;
-- installs daily security-audit cron by default.
+- runs template-based `build.sh`.
 
 Mode behavior:
 
-- choose `ssh-tunnel` to keep OpenClaw private (Traefik not required);
-- choose `public` to enable Traefik + HTTPS routing (setup checks whether `traefik` is running after deploy).
+- choose `ssh-tunnel` to keep OpenClaw private (default);
+- choose `public` to enable Traefik + HTTPS routing.
 
 Run:
 

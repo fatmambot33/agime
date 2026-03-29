@@ -126,7 +126,7 @@ sh ./backup.sh
 ```
 
 Interactive deploy note: `sh ./configure.sh` now starts with a welcome menu (`Image`, `Install`, `Update`, `Add Tool`, `Backup`, `Restore`, `Security`) and defaults to `Install` when pressing Enter. The `Install` path still offers a pre-deploy backup step before running `build.sh`.
-For an OVH-focused bootstrap, run `sh ./setup.sh`; it collects required deploy inputs, runs `build.sh`, then executes security audit + optional daily audit cron setup.
+For an OVH-focused bootstrap, run `sh ./setup.sh`; it collects required deploy inputs and runs `build.sh`.
 
 Restore safely to a sandbox path first:
 

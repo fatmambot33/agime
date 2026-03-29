@@ -34,23 +34,17 @@ Automation scripts for deploying OpenClaw on a VPS with two explicit access mode
 
 ### Default easy setup (`setup.sh`)
 
-`setup.sh` is now a streamlined OVH-oriented installer:
+`setup.sh` is now a streamlined OVH-oriented **remote** installer:
 
 - prompts for required OVH + access-mode values;
-- runs template-based `build.sh`.
+- runs remote `build.sh` over SSH via `sync.sh`.
 
 Mode behavior:
 
 - choose `ssh-tunnel` to keep OpenClaw private (default);
 - choose `public` to enable Traefik + HTTPS routing.
 
-Run:
-
-```bash
-sh ./setup.sh
-```
-
-Remote deploy from your workstation:
+Run from your workstation:
 
 ```bash
 REMOTE_HOST=<user>@<vps-ip-or-hostname> \
@@ -58,7 +52,7 @@ REMOTE_DIR=~/agime \
 sh ./setup.sh
 ```
 
-When `REMOTE_HOST` is set, `setup.sh` collects the same inputs locally and then runs `sync.sh` to upload and execute remote `build.sh` over SSH.
+`REMOTE_HOST` is required. `setup.sh` collects inputs locally and runs `sync.sh` to upload and execute remote `build.sh` over SSH.
 
 Use `configure.sh` when you want the full toolkit menu (`Image`, `Install`, `Update`, `Add Tool`, `Backup`, `Restore`, `Security`).
 

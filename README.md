@@ -215,9 +215,15 @@ Operational note: pairing by itself is not a network exposure boundary; prefer `
 
 ## Standard Docker-on-VPS deployment guide
 
-For a formal, end-to-end operator guide that standardizes the recommended production model (machine boundaries, access mode choices, Traefik behavior by mode, image-first contract, model selection including premium OVH models, validation, backup/restore/update), see:
+Use the pure operator flow documented in:
 
 - [`docs/DEPLOY_OPENCLAW_DOCKER_VPS.md`](docs/DEPLOY_OPENCLAW_DOCKER_VPS.md)
+
+Key deployment constraints:
+
+- `OVH_ENDPOINT_API_KEY` is mandatory.
+- `OVH_ENDPOINT_MODEL` defaults to `gpt-oss-120b` if unset.
+- First install should keep native bootstrap enabled (`SKIP_OPENCLAW_WIZARD=0`).
 
 ## Image-first deployment model (recommended)
 

@@ -68,7 +68,7 @@ EOF
 grep -Fq "sync.sh preflight warning:" "$TMP_DIR/default.stdout"
 grep -Fq "requires OVH_ENDPOINT_API_KEY" "$TMP_DIR/default.stdout"
 grep -Eq "ssh .*test-host mkdir -p '/tmp/test-agime'" "$CALLS_FILE"
-grep -Eq "scp .* -r build.sh backup.sh update.sh image.sh add_tool.sh restore.sh scripts templates docs README.md $TMP_DIR/auto-sync\\.conf test-host:/tmp/test-agime/" "$CALLS_FILE"
+grep -Eq "scp .* -r build.sh backup.sh update.sh image.sh restore.sh scripts templates docs README.md $TMP_DIR/auto-sync\\.conf test-host:/tmp/test-agime/" "$CALLS_FILE"
 if grep -Eq "scp .* $TMP_DIR/auto-sync\\.conf test-host:/tmp/test-agime/auto-sync\\.conf" "$CALLS_FILE"; then
   echo "expected single upload path for auto-sync.conf, but found duplicate explicit env upload" >&2
   exit 1
@@ -203,6 +203,6 @@ grep -Fq "OPENCLAW_CONFIG_DIR=~/.openclaw" "$PORTABLE_DIR/sync.conf"
 grep -Fq "OPENCLAW_WORKSPACE_DIR=~/.openclaw/workspace" "$PORTABLE_DIR/sync.conf"
 grep -Fq "TRAEFIK_DIR=~/docker/traefik" "$PORTABLE_DIR/sync.conf"
 grep -Fq "OPENCLAW_JSON_BACKUP_DIR=~/openclaw-backups" "$PORTABLE_DIR/sync.conf"
-grep -Eq "scp .* -r build.sh backup.sh update.sh image.sh add_tool.sh restore.sh scripts templates docs README.md $PORTABLE_DIR/sync\\.conf portable-host:/tmp/portable-agime/" "$CALLS_FILE"
+grep -Eq "scp .* -r build.sh backup.sh update.sh image.sh restore.sh scripts templates docs README.md $PORTABLE_DIR/sync\\.conf portable-host:/tmp/portable-agime/" "$CALLS_FILE"
 
 echo "sync.sh hermetic test passed"

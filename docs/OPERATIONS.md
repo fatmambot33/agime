@@ -96,7 +96,7 @@ sh ./update.sh
 # optional docker pull for OPENCLAW_IMAGE (image-first mode) -> build/deploy.
 # backup step is validated: update fails early if backup archive is missing.
 
-# enable one optional tool post-install
+# optional: enable one optional tool post-install (setup 2.0 prefers image-baked tools)
 TOOL=github sh ./add_tool.sh
 
 # force update pull only when this directory is a git checkout
@@ -126,6 +126,7 @@ sh ./backup.sh
 ```
 
 Interactive deploy note: `sh ./configure.sh` now starts with a welcome menu (`Image`, `Install`, `Update`, `Add Tool`, `Backup`, `Restore`, `Security`) and defaults to `Install` when pressing Enter. The `Install` path still offers a pre-deploy backup step before running `build.sh`.
+For a focused bootstrap, run `sh ./setup.sh`; it runs upstream OpenClaw Docker setup and can optionally save OVH-ready values to `./.sync-build.env` for later toolkit runs.
 
 Restore safely to a sandbox path first:
 

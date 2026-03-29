@@ -98,7 +98,7 @@ OPENCLAW_ACTION=${OPENCLAW_ACTION:-}
 SYNC_REMOTE_ENTRYPOINT=${SYNC_REMOTE_ENTRYPOINT:-build.sh}
 SYNC_MIRROR_ENV_FILE=${SYNC_MIRROR_ENV_FILE:-0}
 SYNC_PRINT_CONFIG=${SYNC_PRINT_CONFIG:-0}
-SYNC_ITEMS=${SYNC_ITEMS:-"build.sh backup.sh update.sh image.sh add_tool.sh restore.sh scripts templates docs README.md"}
+SYNC_ITEMS=${SYNC_ITEMS:-"build.sh backup.sh update.sh image.sh restore.sh scripts templates docs README.md"}
 
 ssh_exec() {
   # Keep sync orchestration local: only the wrapped command runs remotely.

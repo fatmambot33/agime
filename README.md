@@ -90,7 +90,7 @@ sh ./sync.sh
 
 `sync.sh` auto-loads `./sync.conf` when present.
 It then prioritizes an existing remote env file (`SYNC_REMOTE_ENV_FILE`, default `sync.conf`): when found, that remote file is downloaded locally and used as the source of truth for the run.
-If the remote file is missing, `sync.sh` uses local config; and when local is also missing, it runs local `configure.sh` in config-generation mode to create one, then appends `REMOTE_HOST`/`REMOTE_DIR` if absent.
+If the remote file is missing, `sync.sh` uses local config; and when local is also missing, it bootstraps from `sync.conf.example`, then appends `REMOTE_HOST`/`REMOTE_DIR` if absent.
 When `sync.sh` creates/downloads that shared config, it normalizes `OPENCLAW_*`/`TRAEFIK_DIR` home paths to `~/...` form so `sync.conf` stays portable across workstation + VPS homes.
 By default, the same `sync.conf` is sourced remotely before execution (`SYNC_REMOTE_ENV_FILE=sync.conf`) under `set -a`, so plain `KEY=value` assignments are auto-exported for the selected remote entrypoint.
 When `SYNC_REMOTE_ENV_FILE` points to the same file already included in `SYNC_ITEMS` (default: `sync.conf`), `sync.sh` uploads it once to avoid duplicate transfer lines.

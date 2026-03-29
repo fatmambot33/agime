@@ -94,7 +94,6 @@ If the remote file is missing, `sync.sh` uses local config; and when local is al
 When `sync.sh` creates/downloads that shared config, it normalizes `OPENCLAW_*`/`TRAEFIK_DIR` home paths to `~/...` form so `sync.conf` stays portable across workstation + VPS homes.
 By default, the same `sync.conf` is sourced remotely before execution (`SYNC_REMOTE_ENV_FILE=sync.conf`) under `set -a`, so plain `KEY=value` assignments are auto-exported for the selected remote entrypoint.
 When `SYNC_REMOTE_ENV_FILE` points to the same file already included in `SYNC_ITEMS` (default: `sync.conf`), `sync.sh` uploads it once to avoid duplicate transfer lines.
-When a prompt-driven workflow is used, values already present in `sync.conf` can be reused as defaults (for example `OPENCLAW_ACCESS_MODE` and directory paths).
 Set `SYNC_PRINT_CONFIG=1` to print the effective config before execution.
 `sync.conf` is intentionally gitignored (it may contain secrets), while `sync.conf.example` remains the safe template.
 

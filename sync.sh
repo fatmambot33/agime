@@ -67,12 +67,7 @@ try_download_remote_config() {
 }
 
 bootstrap_local_config() {
-  if [ -f "$SCRIPT_DIR/configure.sh" ]; then
-    OPENCLAW_FORCE_INTERACTIVE=1 \
-      OPENCLAW_GENERATE_ENV_ONLY=1 \
-      OPENCLAW_EXPORT_ENV_FILE="$SYNC_LOCAL_ENV_FILE" \
-      sh "$SCRIPT_DIR/configure.sh"
-  elif [ -f "$SCRIPT_DIR/sync.conf.example" ]; then
+  if [ -f "$SCRIPT_DIR/sync.conf.example" ]; then
     mkdir -p "$(dirname "$SYNC_LOCAL_ENV_FILE")"
     cp "$SCRIPT_DIR/sync.conf.example" "$SYNC_LOCAL_ENV_FILE"
     printf 'sync.sh: created %s from sync.conf.example; review and edit required values.\n' "$SYNC_LOCAL_ENV_FILE"
@@ -80,7 +75,7 @@ bootstrap_local_config() {
     cat >&2 << EOF
 sync.sh error:
   could not bootstrap local config.
-  missing both $SCRIPT_DIR/configure.sh and $SCRIPT_DIR/sync.conf.example
+  missing $SCRIPT_DIR/sync.conf.example
 EOF
     exit 1
   fi

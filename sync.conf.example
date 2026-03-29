@@ -10,9 +10,6 @@ REMOTE_DIR=/tmp/agime
 # Remote entrypoint (default non-interactive deploy)
 SYNC_REMOTE_ENTRYPOINT=build.sh
 
-# Optional action hint (used only by custom entrypoints that read OPENCLAW_ACTION).
-# OPENCLAW_ACTION=install
-
 # Optional: source this file remotely before entrypoint execution.
 # Local file is auto-uploaded when present.
 # SYNC_REMOTE_ENV_FILE=.sync-build.env

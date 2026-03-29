@@ -37,16 +37,13 @@ Automation scripts for deploying OpenClaw on a VPS with two explicit access mode
 `setup.sh` is now a streamlined wrapper around the official OpenClaw Docker setup script:
 
 - runs upstream `scripts/docker/setup.sh` from OpenClaw;
-- optional prompt for `OPENCLAW_GATEWAY_TOKEN`;
-- optional prompt to save OVH/public values into `./.sync-build.env` for later toolkit (`build.sh`) runs.
+- optional prompt for `OPENCLAW_GATEWAY_TOKEN` (or provide it via environment).
 
 Run:
 
 ```bash
 sh ./setup.sh
 ```
-
-Note: the official script does **not** consume `OVH_ENDPOINT_API_KEY` directly; saved OVH values are for this repo’s deployment flow.
 
 Use `configure.sh` when you want the full toolkit menu (`Image`, `Install`, `Update`, `Add Tool`, `Backup`, `Restore`, `Security`).
 

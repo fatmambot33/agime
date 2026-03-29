@@ -126,7 +126,7 @@ sh ./backup.sh
 ```
 
 Interactive deploy note: `sh ./configure.sh` now starts with a welcome menu (`Image`, `Install`, `Update`, `Add Tool`, `Backup`, `Restore`, `Security`) and defaults to `Install` when pressing Enter. The `Install` path still offers a pre-deploy backup step before running `build.sh`.
-For a focused bootstrap, run `sh ./setup.sh`; it runs upstream OpenClaw Docker setup and can optionally save OVH-ready values to `./.sync-build.env` for later toolkit runs.
+For a focused bootstrap, run `sh ./setup.sh`; it runs upstream OpenClaw Docker setup directly.
 
 Restore safely to a sandbox path first:
 

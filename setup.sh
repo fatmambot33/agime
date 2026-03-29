@@ -4,6 +4,7 @@ set -eu
 
 SCRIPT_DIR=$(CDPATH= cd -- "$(dirname "$0")" && pwd)
 BUILD_SCRIPT="$SCRIPT_DIR/build.sh"
+SYNC_SCRIPT="$SCRIPT_DIR/sync.sh"
 
 prompt_default() {
   prompt=$1
@@ -71,6 +72,36 @@ echo "Deploying with build.sh..."
 export OPENCLAW_ACCESS_MODE OVH_ENDPOINT_API_KEY OPENCLAW_TOKEN
 if [ "$OPENCLAW_ACCESS_MODE" = "public" ]; then
   export TRAEFIK_ACME_EMAIL OPENCLAW_DOMAIN
+fi
+
+if [ -n "${REMOTE_HOST:-}" ]; then
+  [ -f "$SYNC_SCRIPT" ] || {
+    echo "Missing sync script: $SYNC_SCRIPT" >&2
+    exit 1
+  }
+
+  REMOTE_DIR=${REMOTE_DIR:-"~/agime"}
+  TMP_SYNC_CONFIG=$(mktemp)
+  trap 'rm -f "$TMP_SYNC_CONFIG"' EXIT INT TERM
+
+  cat > "$TMP_SYNC_CONFIG" <<EOF2
+REMOTE_HOST=$REMOTE_HOST
+REMOTE_DIR=$REMOTE_DIR
+SYNC_REMOTE_ENTRYPOINT=build.sh
+OPENCLAW_ACCESS_MODE=$OPENCLAW_ACCESS_MODE
+OVH_ENDPOINT_API_KEY=$OVH_ENDPOINT_API_KEY
+OPENCLAW_TOKEN=$OPENCLAW_TOKEN
+TRAEFIK_ACME_EMAIL=$TRAEFIK_ACME_EMAIL
+OPENCLAW_DOMAIN=$OPENCLAW_DOMAIN
+EOF2
+
+  chmod 600 "$TMP_SYNC_CONFIG"
+  echo ""
+  echo "Deploying remotely to $REMOTE_HOST:$REMOTE_DIR via sync.sh..."
+  SYNC_CONFIG_FILE="$TMP_SYNC_CONFIG" sh "$SYNC_SCRIPT"
+  echo ""
+  echo "Remote setup complete."
+  exit 0
 fi
 
 sh "$BUILD_SCRIPT"

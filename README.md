@@ -50,6 +50,16 @@ Run:
 sh ./setup.sh
 ```
 
+Remote deploy from your workstation:
+
+```bash
+REMOTE_HOST=<user>@<vps-ip-or-hostname> \
+REMOTE_DIR=~/agime \
+sh ./setup.sh
+```
+
+When `REMOTE_HOST` is set, `setup.sh` collects the same inputs locally and then runs `sync.sh` to upload and execute remote `build.sh` over SSH.
+
 Use `configure.sh` when you want the full toolkit menu (`Image`, `Install`, `Update`, `Add Tool`, `Backup`, `Restore`, `Security`).
 
 ### Sync + remote deploy

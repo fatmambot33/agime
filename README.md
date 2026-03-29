@@ -213,6 +213,12 @@ Operational note: pairing by itself is not a network exposure boundary; prefer `
 - Post-build validation probes `https://$OPENCLAW_DOMAIN`.
 - Validation accepts successful TLS/connectivity even if root returns `404`.
 
+## Standard Docker-on-VPS deployment guide
+
+For a formal, end-to-end operator guide that standardizes the recommended production model (machine boundaries, access mode choices, image-first contract, validation, backup/restore/update), see:
+
+- [`docs/DEPLOY_OPENCLAW_DOCKER_VPS.md`](docs/DEPLOY_OPENCLAW_DOCKER_VPS.md)
+
 ## Image-first deployment model (recommended)
 
 Use a prebuilt custom image that already contains optional tools used by your agent workflows.

@@ -215,7 +215,7 @@ Operational note: pairing by itself is not a network exposure boundary; prefer `
 
 ## Standard Docker-on-VPS deployment guide
 
-For a formal, end-to-end operator guide that standardizes the recommended production model (machine boundaries, access mode choices, image-first contract, validation, backup/restore/update), see:
+For a formal, end-to-end operator guide that standardizes the recommended production model (machine boundaries, access mode choices, Traefik behavior by mode, image-first contract, model selection including premium OVH models, validation, backup/restore/update), see:
 
 - [`docs/DEPLOY_OPENCLAW_DOCKER_VPS.md`](docs/DEPLOY_OPENCLAW_DOCKER_VPS.md)
 

@@ -11,6 +11,20 @@ This repository composes upstream OpenClaw Docker setup into an opinionated VPS 
 - Docker is the required runtime boundary on the VPS host.
 - Optional agent tooling is expected inside your selected `OPENCLAW_IMAGE`, not installed ad hoc on the VPS.
 
+### Native mode behavior (easy path)
+
+- In `ssh-tunnel` mode, the stack runs without Traefik and stays private behind SSH forwarding.
+- In `public` mode, Traefik is added automatically by the toolkit templates/scripts for HTTPS ingress.
+- Keep mode selection explicit in `sync.conf` with `OPENCLAW_ACCESS_MODE=ssh-tunnel|public`.
+
+### Model selection (including premium models)
+
+This toolkit writes `openclaw.json` in `models.mode=merge`, so your selected OVH model is appended into provider/agent defaults during setup.
+
+- Set `OVH_ENDPOINT_MODEL=<model-id>` in `sync.conf` (or env) before deploy.
+- You can choose premium OVH models here when your endpoint/account allows them.
+- During factory/setup flow, keep the same model id so runtime config and defaults stay aligned.
+
 ## Machine boundaries
 
 ### Local workstation responsibilities

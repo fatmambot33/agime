@@ -16,6 +16,18 @@
 - After bootstrap is complete, automation can use:
   - `SKIP_OPENCLAW_WIZARD=1`.
 
+## Interactive deployment path (recommended)
+
+Use the interactive entrypoint to follow the native flow with prompts:
+
+```sh
+REMOTE_HOST=<user>@<vps-host> \
+REMOTE_DIR=~/agime \
+sh ./setup.sh
+```
+
+Interactive flow asks for required values (including OVH key, access mode, and domain/email when `public`) and then runs remote deployment through `sync.sh` + `build.sh`.
+
 ## Minimal deployment steps
 
 1. Prepare VPS
@@ -34,7 +46,7 @@
    SKIP_OPENCLAW_IMAGE_BUILD=1
    ```
 
-3. Deploy
+3. Deploy (non-interactive alternative)
 
    ```sh
    REMOTE_HOST=<user>@<vps-host> \

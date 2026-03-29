@@ -224,6 +224,7 @@ Key deployment constraints:
 - `OVH_ENDPOINT_API_KEY` is mandatory.
 - `OVH_ENDPOINT_MODEL` defaults to `gpt-oss-120b` if unset.
 - First install should keep native bootstrap enabled (`SKIP_OPENCLAW_WIZARD=0`).
+- Recommended interactive entrypoint: `REMOTE_HOST=<user>@<vps-host> sh ./setup.sh`.
 
 ## Image-first deployment model (recommended)
 

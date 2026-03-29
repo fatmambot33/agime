@@ -22,6 +22,7 @@ This repository composes upstream OpenClaw Docker setup into an opinionated VPS 
 This toolkit writes `openclaw.json` in `models.mode=merge`, so your selected OVH model is appended into provider/agent defaults during setup.
 
 - Set `OVH_ENDPOINT_MODEL=<model-id>` in `sync.conf` (or env) before deploy.
+- If you do not set `OVH_ENDPOINT_MODEL`, the toolkit uses its current OVH default (`gpt-oss-120b`) as the baseline model.
 - You can choose premium OVH models here when your endpoint/account allows them.
 - During factory/setup flow, keep the same model id so runtime config and defaults stay aligned.
 

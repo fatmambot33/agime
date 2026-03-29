@@ -242,6 +242,8 @@ OVH_ENDPOINT_API_KEY=... \
 ./build.sh
 ```
 
+If `OVH_ENDPOINT_MODEL` is not set, the deployment uses the toolkit default model (`gpt-oss-120b`).
+
 Host responsibilities are intentionally limited to Docker Engine, Docker Compose v2, SSH access, firewall/networking, and persistent bind mounts. Optional tools (`gh`, `himalaya`, `codex`, `claude`, `opencode`, `pi`, `signal-cli`) must be present in the selected `OPENCLAW_IMAGE`.
 
 ## Build your custom image (easy path)

@@ -34,10 +34,12 @@ Automation scripts for deploying OpenClaw on a VPS with two explicit access mode
 
 ### Default easy setup (`setup.sh`)
 
-`setup.sh` is now a streamlined wrapper around the official OpenClaw Docker setup script:
+`setup.sh` is now a streamlined OVH-oriented installer:
 
-- runs upstream `scripts/docker/setup.sh` from OpenClaw;
-- optional prompt for `OPENCLAW_GATEWAY_TOKEN` (or provide it via environment).
+- prompts for required OVH + access-mode values;
+- runs template-based `build.sh`;
+- runs security audit after deploy by default;
+- installs daily security-audit cron by default.
 
 Run:
 

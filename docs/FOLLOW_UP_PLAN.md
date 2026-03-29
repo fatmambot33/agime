@@ -25,7 +25,7 @@ Transform the repo into a maintainable, testable, and secure deployment toolkit 
 - Shifted optional-tool handling to image-first runtime validation (GitHub, Himalaya, coding-agent, Signal) and removed runtime installers from the supported path.
 - Updated docs/runbook guidance to standardize on prebuilt custom `OPENCLAW_IMAGE` + `SKIP_OPENCLAW_IMAGE_BUILD=1` for agent-enabled VPS deployments.
 - Added a first-party custom image workflow (`docs/CUSTOM_IMAGE_WORKFLOW.md`) plus `scripts/build_custom_image.sh` and `templates/openclaw-custom-image.Dockerfile.tmpl` to streamline image creation.
-- Simplified `setup.sh` into a streamlined default wrapper around upstream OpenClaw Docker setup.
+- Simplified `setup.sh` into a streamlined OVH-focused installer that runs template-based deploy plus post-deploy security audit defaults.
 - Kept `add_tool` available as an optional helper while tightening defaults around image-baked tool onboarding for setup 2.0.
 
 ## Prioritized backlog (next 5 items)

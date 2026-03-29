@@ -9,6 +9,7 @@ This repository composes upstream OpenClaw Docker setup into an opinionated VPS 
 - `ssh-tunnel` is the default and recommended access mode (private-by-default).
 - `public` mode is explicitly supported through Traefik + Let's Encrypt.
 - Docker is the required runtime boundary on the VPS host.
+- OVH endpoint configuration is mandatory for supported deployments (`OVH_ENDPOINT_API_KEY` required; optional overrides like `OVH_ENDPOINT_BASE_URL`/`OVH_ENDPOINT_MODEL`).
 - Optional agent tooling is expected inside your selected `OPENCLAW_IMAGE`, not installed ad hoc on the VPS.
 
 ### Native mode behavior (easy path)
@@ -49,7 +50,7 @@ This toolkit writes `openclaw.json` in `models.mode=merge`, so your selected OVH
 
 2. **Author deployment config locally**
    - Copy `sync.conf.example` to `sync.conf` and set required values.
-   - Required for OVH-backed endpoint provisioning: `OVH_ENDPOINT_API_KEY`.
+   - Required for OVH endpoint provisioning: `OVH_ENDPOINT_API_KEY` (mandatory).
    - Decide `OPENCLAW_ACCESS_MODE` (`ssh-tunnel` recommended; `public` explicit opt-in).
 
 3. **Use image-first deployment settings**

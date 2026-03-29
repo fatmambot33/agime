@@ -39,6 +39,24 @@ prompt_required() {
   done
 }
 
+report_runtime_status() {
+  if ! command -v docker >/dev/null 2>&1; then
+    echo "docker not found; skipping runtime status checks."
+    return 0
+  fi
+
+  if [ "$OPENCLAW_ACCESS_MODE" = "public" ]; then
+    if docker ps --format '{{.Names}}' | grep -Eq '^traefik$'; then
+      echo "✅ Public mode active: Traefik container is running."
+    else
+      echo "⚠️ Public mode selected, but Traefik container was not detected."
+      echo "   Check: docker ps -a | grep traefik"
+    fi
+  else
+    echo "✅ ssh-tunnel mode active: Traefik is not required/running by default."
+  fi
+}
+
 [ -f "$BUILD_SCRIPT" ] || {
   echo "Missing build script: $BUILD_SCRIPT" >&2
   exit 1
@@ -92,5 +110,7 @@ if [ "$INSTALL_SECURITY_CRON" = "1" ] && [ -f "$SECURITY_CRON_SCRIPT" ]; then
   sh "$SECURITY_CRON_SCRIPT"
 fi
 
+echo ""
+report_runtime_status
 echo ""
 echo "Setup complete."

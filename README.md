@@ -41,6 +41,11 @@ Automation scripts for deploying OpenClaw on a VPS with two explicit access mode
 - runs security audit after deploy by default;
 - installs daily security-audit cron by default.
 
+Mode behavior:
+
+- choose `ssh-tunnel` to keep OpenClaw private (Traefik not required);
+- choose `public` to enable Traefik + HTTPS routing (setup checks whether `traefik` is running after deploy).
+
 Run:
 
 ```bash

@@ -42,19 +42,6 @@ initialize_defaults() {
   POST_BUILD_TEST_CONNECT_TIMEOUT_SECONDS=${POST_BUILD_TEST_CONNECT_TIMEOUT_SECONDS:-"5"}
   POST_BUILD_TEST_MAX_TIME_SECONDS=${POST_BUILD_TEST_MAX_TIME_SECONDS:-"15"}
   DRY_RUN=${DRY_RUN:-"0"}
-  OPENCLAW_ENABLE_SIGNAL=${OPENCLAW_ENABLE_SIGNAL:-"0"}
-  OPENCLAW_SIGNAL_ACCOUNT=${OPENCLAW_SIGNAL_ACCOUNT:-""}
-  OPENCLAW_SIGNAL_ALLOW_FROM=${OPENCLAW_SIGNAL_ALLOW_FROM:-""}
-  OPENCLAW_SIGNAL_CLI_PATH=${OPENCLAW_SIGNAL_CLI_PATH:-"signal-cli"}
-  OPENCLAW_ENABLE_GITHUB_SKILL=${OPENCLAW_ENABLE_GITHUB_SKILL:-"0"}
-  OPENCLAW_GH_CLI_PATH=${OPENCLAW_GH_CLI_PATH:-"gh"}
-  OPENCLAW_ENABLE_HIMALAYA_SKILL=${OPENCLAW_ENABLE_HIMALAYA_SKILL:-"0"}
-  OPENCLAW_HIMALAYA_CLI_PATH=${OPENCLAW_HIMALAYA_CLI_PATH:-"himalaya"}
-  OPENCLAW_HIMALAYA_REQUIRE_CONFIG=${OPENCLAW_HIMALAYA_REQUIRE_CONFIG:-"1"}
-  OPENCLAW_HIMALAYA_CONFIG_PATH=${OPENCLAW_HIMALAYA_CONFIG_PATH:-"$OPENCLAW_CONFIG_DIR/himalaya/config.toml"}
-  OPENCLAW_HIMALAYA_CONFIG_TOML_BASE64=${OPENCLAW_HIMALAYA_CONFIG_TOML_BASE64:-""}
-  OPENCLAW_ENABLE_CODING_AGENT_SKILL=${OPENCLAW_ENABLE_CODING_AGENT_SKILL:-"0"}
-  OPENCLAW_CODING_AGENT_BACKEND=${OPENCLAW_CODING_AGENT_BACKEND:-"codex"}
 }
 
 validate_access_mode() {
@@ -73,63 +60,6 @@ validate_access_mode() {
       ;;
   esac
 
-  case "$OPENCLAW_ENABLE_SIGNAL" in
-    0 | 1) ;;
-    *)
-      fail "OPENCLAW_ENABLE_SIGNAL must be either '0' or '1'"
-      ;;
-  esac
-
-  if [ "$OPENCLAW_ENABLE_SIGNAL" = "1" ]; then
-    require_env OPENCLAW_SIGNAL_ACCOUNT
-  fi
-
-  case "$OPENCLAW_ENABLE_GITHUB_SKILL" in
-    0 | 1) ;;
-    *)
-      fail "OPENCLAW_ENABLE_GITHUB_SKILL must be either '0' or '1'"
-      ;;
-  esac
-
-  case "$OPENCLAW_ENABLE_HIMALAYA_SKILL" in
-    0 | 1) ;;
-    *)
-      fail "OPENCLAW_ENABLE_HIMALAYA_SKILL must be either '0' or '1'"
-      ;;
-  esac
-
-  case "$OPENCLAW_HIMALAYA_REQUIRE_CONFIG" in
-    0 | 1) ;;
-    *)
-      fail "OPENCLAW_HIMALAYA_REQUIRE_CONFIG must be either '0' or '1'"
-      ;;
-  esac
-
-  case "$OPENCLAW_ENABLE_CODING_AGENT_SKILL" in
-    0 | 1) ;;
-    *)
-      fail "OPENCLAW_ENABLE_CODING_AGENT_SKILL must be either '0' or '1'"
-      ;;
-  esac
-
-  case "$OPENCLAW_CODING_AGENT_BACKEND" in
-    claude | codex | opencode | pi) ;;
-    *)
-      fail "OPENCLAW_CODING_AGENT_BACKEND must be one of: claude, codex, opencode, pi"
-      ;;
-  esac
-
-  if [ "$OPENCLAW_ENABLE_SIGNAL" = "1" ]; then
-    OPENCLAW_SIGNAL_ENABLED_JSON=true
-    if [ -n "$OPENCLAW_SIGNAL_ALLOW_FROM" ]; then
-      OPENCLAW_SIGNAL_ALLOW_FROM_ENTRY="\"$OPENCLAW_SIGNAL_ALLOW_FROM\""
-    else
-      OPENCLAW_SIGNAL_ALLOW_FROM_ENTRY=""
-    fi
-  else
-    OPENCLAW_SIGNAL_ENABLED_JSON=false
-    OPENCLAW_SIGNAL_ALLOW_FROM_ENTRY=""
-  fi
 }
 
 require_public_env_if_needed() {
@@ -299,19 +229,6 @@ ensure_openclaw_env_overrides() {
   if ! grep -q '^OPENCLAW_HIMALAYA_CONFIG_PATH=' "$OPENCLAW_DIR/.env"; then
     printf 'OPENCLAW_HIMALAYA_CONFIG_PATH=%s\n' "$OPENCLAW_HIMALAYA_CONFIG_PATH" >> "$OPENCLAW_DIR/.env"
   fi
-}
-
-validate_optional_skill_container_runtime() {
-  if [ "$OPENCLAW_ENABLE_SIGNAL" = "1" ]; then
-    validate_container_binary "Signal channel prerequisites" "$OPENCLAW_SIGNAL_CLI_PATH"
-    run_container_validation_command \
-      "Signal channel prerequisites" \
-      "$OPENCLAW_SIGNAL_CLI_PATH --version" \
-      sh -c '"$1" --version > /dev/null 2>&1' sh "$OPENCLAW_SIGNAL_CLI_PATH"
-  fi
-  optional_tool_github_validate_runtime
-  optional_tool_himalaya_validate_runtime
-  optional_tool_coding_agent_validate_runtime
 }
 
 write_openclaw_json_config() {

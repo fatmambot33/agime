@@ -64,11 +64,7 @@ render_template() {
     -e "s/__OPENCLAW_IMAGE__/$(escape_sed_replacement "$OPENCLAW_IMAGE")/g" \
     -e "s/__OPENCLAW_GATEWAY_BIND__/$(escape_sed_replacement "$OPENCLAW_GATEWAY_BIND")/g" \
     -e "s/__OPENCLAW_DOMAIN__/$(escape_sed_replacement "$OPENCLAW_DOMAIN")/g" \
-    -e "s/__OPENCLAW_ALLOWED_ORIGIN__/$(escape_sed_replacement "$OPENCLAW_ALLOWED_ORIGIN")/g" \
-    -e "s/__OPENCLAW_SIGNAL_ENABLED__/$(escape_sed_replacement "$OPENCLAW_SIGNAL_ENABLED_JSON")/g" \
-    -e "s/__OPENCLAW_SIGNAL_ACCOUNT__/$(escape_sed_replacement "$OPENCLAW_SIGNAL_ACCOUNT")/g" \
-    -e "s/__OPENCLAW_SIGNAL_ALLOW_FROM_ENTRY__/$(escape_sed_replacement "$OPENCLAW_SIGNAL_ALLOW_FROM_ENTRY")/g" \
-    -e "s/__OPENCLAW_SIGNAL_CLI_PATH__/$(escape_sed_replacement "$OPENCLAW_SIGNAL_CLI_PATH")/g" \
+    -e "s/__OPENCLAW_ALLOWED_ORIGIN__/$(escape_sed_replacement "$OPENCLAW_ALLOWED_ORIGIN")/g" \s
     -e "s/__OPENCLAW_TOKEN__/$(escape_sed_replacement "$OPENCLAW_TOKEN")/g" \
     -e "s/__OVH_ENDPOINT_BASE_URL__/$(escape_sed_replacement "$OVH_ENDPOINT_BASE_URL")/g" \
     -e "s/__OVH_ENDPOINT_API_KEY__/$(escape_sed_replacement "$OVH_ENDPOINT_API_KEY")/g" \

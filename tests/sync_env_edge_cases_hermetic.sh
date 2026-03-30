@@ -34,6 +34,25 @@ set -e
 [ "$status" -ne 0 ]
 grep -q 'OVH_ENDPOINT_API_KEY is required for build.sh remote runs' "$TMP_DIR/no-key.out"
 
+# build.sh entrypoint with empty OVH key should also fail.
+CONF_EMPTY_KEY="$TMP_DIR/empty-key.conf"
+cat > "$CONF_EMPTY_KEY" << EOF2
+REMOTE_HOST=test-vps
+REMOTE_DIR=~/agime
+SYNC_REMOTE_ENTRYPOINT=build.sh
+OVH_ENDPOINT_API_KEY=
+EOF2
+
+set +e
+(
+  cd "$REPO_DIR"
+  SYNC_CONFIG_FILE="$CONF_EMPTY_KEY" sh ./sync.sh > "$TMP_DIR/empty-key.out" 2>&1
+)
+status=$?
+set -e
+[ "$status" -ne 0 ]
+grep -q 'OVH_ENDPOINT_API_KEY is required for build.sh remote runs' "$TMP_DIR/empty-key.out"
+
 # Non-build entrypoints should work without OVH key.
 BIN_DIR="$TMP_DIR/bin"
 mkdir -p "$BIN_DIR"

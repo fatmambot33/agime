@@ -27,11 +27,28 @@ sync_validate_requirements() {
 
   if [ "$SYNC_REMOTE_ENTRYPOINT" = "build.sh" ]; then
     [ -n "${OVH_ENDPOINT_API_KEY:-}" ] && return 0
-    if [ -f "$SYNC_LOCAL_ENV_FILE" ] && grep -q '^[[:space:]]*OVH_ENDPOINT_API_KEY=' "$SYNC_LOCAL_ENV_FILE"; then
+    if sync_env_file_has_nonempty_ovh_key "$SYNC_LOCAL_ENV_FILE"; then
       return 0
     fi
     fail "OVH_ENDPOINT_API_KEY is required for build.sh remote runs"
   fi
+}
+
+sync_env_file_has_nonempty_ovh_key() {
+  env_file=${1-}
+  [ -n "$env_file" ] && [ -f "$env_file" ] || return 1
+
+  awk '
+    /^[[:space:]]*(export[[:space:]]+)?OVH_ENDPOINT_API_KEY=/ {
+      value = substr($0, index($0, "=") + 1)
+      gsub(/^[[:space:]]+/, "", value)
+      gsub(/[[:space:]]+$/, "", value)
+      if (value != "" && value != "\"\"" && value != "'"'"''"'"'") {
+        found = 1
+      }
+    }
+    END { exit(found ? 0 : 1) }
+  ' "$env_file"
 }
 
 sync_print_effective_config() {

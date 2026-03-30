@@ -38,11 +38,7 @@ sync_validate_requirements() {
 sync_set_default_items_if_unset() {
   [ -n "${SYNC_ITEMS:-}" ] && return 0
 
-  access_mode=${OPENCLAW_ACCESS_MODE:-ssh-tunnel}
-  case "$access_mode" in
-    ssh-tunnel | public) ;;
-    *) access_mode=ssh-tunnel ;;
-  esac
+  access_mode=$(sync_resolve_access_mode)
 
   case "$SYNC_REMOTE_ENTRYPOINT" in
     backup.sh)
@@ -68,6 +64,46 @@ sync_set_default_items_if_unset() {
       fi
       ;;
   esac
+}
+
+sync_resolve_access_mode() {
+  access_mode=${OPENCLAW_ACCESS_MODE:-}
+  case "$access_mode" in
+    ssh-tunnel | public)
+      printf '%s' "$access_mode"
+      return 0
+      ;;
+  esac
+
+  access_mode=$(sync_extract_access_mode_from_env_file "$SYNC_LOCAL_ENV_FILE" || true)
+  case "$access_mode" in
+    ssh-tunnel | public)
+      printf '%s' "$access_mode"
+      return 0
+      ;;
+  esac
+
+  printf 'ssh-tunnel'
+}
+
+sync_extract_access_mode_from_env_file() {
+  env_file=${1-}
+  [ -n "$env_file" ] && [ -f "$env_file" ] || return 1
+
+  awk '
+    /^[[:space:]]*(export[[:space:]]+)?OPENCLAW_ACCESS_MODE=/ {
+      value = substr($0, index($0, "=") + 1)
+      gsub(/^[[:space:]]+/, "", value)
+      gsub(/[[:space:]]+$/, "", value)
+      gsub(/^["'"'"']/, "", value)
+      gsub(/["'"'"']$/, "", value)
+      if (value == "ssh-tunnel" || value == "public") {
+        print value
+        exit 0
+      }
+    }
+    END { exit 1 }
+  ' "$env_file"
 }
 
 sync_env_file_has_nonempty_ovh_key() {

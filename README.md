@@ -71,6 +71,7 @@ make check-strict
   - `update.sh`: update/backup/build scripts + mode-specific templates
   - `backup.sh`: `backup.sh` only
   - `restore.sh`: `restore.sh` only
+- mode-specific template selection honors `OPENCLAW_ACCESS_MODE` from shell env or `SYNC_LOCAL_ENV_FILE`.
 - Override with `SYNC_ITEMS` to force a custom transfer set.
 
 ## First-run OpenClaw setup behavior

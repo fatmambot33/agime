@@ -27,3 +27,6 @@ Keep the toolkit minimal, auditable, and private-by-default while improving test
 ## Why this phased approach
 
 The previous one-shot rewrite was too abrupt. This plan keeps the simplified architecture but introduces it incrementally with stronger guardrails and test-backed milestones.
+
+
+See also: `docs/REFACTOR_PLAN.md` for detailed keep/merge/rewrite/remove analysis and phased execution checklist.

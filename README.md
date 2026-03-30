@@ -36,6 +36,12 @@ OPENCLAW_ACCESS_MODE=ssh-tunnel \
 sh ./setup.sh
 ```
 
+Before first deploy on a fresh OVH VPS:
+- install Docker + Docker Compose on the host,
+- collect `OVH_ENDPOINT_API_KEY` and select `OPENCLAW_ACCESS_MODE`,
+- for public mode, also set `OPENCLAW_DOMAIN` and `TRAEFIK_ACME_EMAIL`,
+- optionally override `OPENCLAW_IMAGE` if you prefer a prebuilt image over `openclaw:local`.
+
 `REMOTE_DIR` should point to a path under the remote user home (default `~/agime`). The scripts normalize host-expanded values (for example `/Users/alice/agime`) back to `~/...` for remote-safe sync behavior.
 
 Public mode:

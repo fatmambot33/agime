@@ -35,6 +35,41 @@ sync_validate_requirements() {
   fi
 }
 
+sync_set_default_items_if_unset() {
+  [ -n "${SYNC_ITEMS:-}" ] && return 0
+
+  access_mode=${OPENCLAW_ACCESS_MODE:-ssh-tunnel}
+  case "$access_mode" in
+    ssh-tunnel | public) ;;
+    *) access_mode=ssh-tunnel ;;
+  esac
+
+  case "$SYNC_REMOTE_ENTRYPOINT" in
+    backup.sh)
+      SYNC_ITEMS="backup.sh"
+      ;;
+    restore.sh)
+      SYNC_ITEMS="restore.sh"
+      ;;
+    update.sh)
+      SYNC_ITEMS="update.sh backup.sh build.sh scripts templates/openclaw.json.tmpl"
+      if [ "$access_mode" = "public" ]; then
+        SYNC_ITEMS="$SYNC_ITEMS templates/openclaw-compose.public.yml.tmpl templates/traefik-compose.yml.tmpl"
+      else
+        SYNC_ITEMS="$SYNC_ITEMS templates/openclaw-compose.ssh-tunnel.yml.tmpl"
+      fi
+      ;;
+    build.sh)
+      SYNC_ITEMS="build.sh scripts templates/openclaw.json.tmpl"
+      if [ "$access_mode" = "public" ]; then
+        SYNC_ITEMS="$SYNC_ITEMS templates/openclaw-compose.public.yml.tmpl templates/traefik-compose.yml.tmpl"
+      else
+        SYNC_ITEMS="$SYNC_ITEMS templates/openclaw-compose.ssh-tunnel.yml.tmpl"
+      fi
+      ;;
+  esac
+}
+
 sync_env_file_has_nonempty_ovh_key() {
   env_file=${1-}
   [ -n "$env_file" ] && [ -f "$env_file" ] || return 1

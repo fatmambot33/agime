@@ -63,6 +63,15 @@ make check
 make check-strict
 ```
 
+## Sync payload defaults
+
+- `sync.sh` now sends a minimal payload based on `SYNC_REMOTE_ENTRYPOINT`:
+  - `build.sh`: build scripts + mode-specific templates
+  - `update.sh`: update/backup/build scripts + mode-specific templates
+  - `backup.sh`: `backup.sh` only
+  - `restore.sh`: `restore.sh` only
+- Override with `SYNC_ITEMS` to force a custom transfer set.
+
 ## First-run OpenClaw setup behavior
 
 - On first run, `build.sh` runs OpenClaw's `./docker-setup.sh` wizard when `OPENCLAW_DIR/.env` is missing.

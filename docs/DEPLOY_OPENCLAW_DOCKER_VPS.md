@@ -68,3 +68,5 @@ REMOTE_HOST=ubuntu@203.0.113.10 OVH_ENDPOINT_API_KEY=your-key sh ./sync.sh
 ```
 
 `sync.sh` keeps local authoring and remote apply clearly separated: local upload first, remote execution second.
+
+By default, `sync.sh` transfers only the minimal files needed for the selected remote entrypoint (`build.sh`, `update.sh`, `backup.sh`, or `restore.sh`). Set `SYNC_ITEMS` when you need a custom/full payload.

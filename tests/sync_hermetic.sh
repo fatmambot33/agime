@@ -36,7 +36,7 @@ EOF2
 )
 
 grep -Eq 'ssh .*test-vps mkdir -p ".*/agime"' "$CALLS"
-grep -Eq 'scp .* -r build.sh sync.sh setup.sh backup.sh restore.sh update.sh scripts templates docs README.md Makefile test-vps:.*/agime/' "$CALLS"
+grep -Eq 'scp .* -r build.sh scripts templates/openclaw.json.tmpl templates/openclaw-compose.ssh-tunnel.yml.tmpl test-vps:.*/agime/' "$CALLS"
 grep -Eq "scp .* $CONF test-vps:.*/agime/sync.conf" "$CALLS"
 grep -Eq 'ssh .*test-vps cd ".*/agime" && chmod \+x \./\*\.sh && set -a && \. '\''\./sync\.conf'\'' && set \+a && \./build\.sh' "$CALLS"
 

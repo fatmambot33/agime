@@ -148,10 +148,6 @@ prepare_openclaw_repo() {
 }
 
 run_openclaw_wizard_if_needed() {
-  if [ "${SKIP_OPENCLAW_WIZARD:-0}" = "1" ]; then
-    fail "SKIP_OPENCLAW_WIZARD=1 is not supported. First-run installs must complete ./docker-setup.sh."
-  fi
-
   if [ ! -f "$OPENCLAW_DIR/.env" ]; then
     log "Running OpenClaw's docker setup wizard"
     if [ "$DRY_RUN" = "1" ]; then

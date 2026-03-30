@@ -100,7 +100,7 @@ fi
   AUTO_CONFIG_FILE="$TMP_DIR/auto-sync.conf"
   PATH="$BIN_DIR:$PATH" \
     SYNC_CONFIG_FILE="$AUTO_CONFIG_FILE" \
-    OPENCLAW_ACTION=security \
+    OPENCLAW_ACTION=install \
     sh ./sync.sh
 )
 

@@ -47,15 +47,6 @@ Deployment model note: Docker is the required runtime boundary for supported VPS
 - Public validation retries temporary cert states while ACME settles.
 - Public validation accepts successful TLS/connectivity even if root returns HTTP `404`.
 
-## Security guidance
-
-- Preferred transport is private (`ssh-tunnel`, or private overlay like Tailscale).
-- Public mode must be an explicit decision (`OPENCLAW_ACCESS_MODE=public`).
-- Gateway auth should remain fail-closed (`token` mode).
-- Device pairing alone is not a network-exposure control.
-- OpenClaw gateway default port is `18789`.
-- Keep allowlists and mention-gating controls enabled for group/chat surfaces.
-
 ## Backup/restore/reinstall by mode
 
 - `ssh-tunnel` mode backup targets:

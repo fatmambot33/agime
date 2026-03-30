@@ -19,29 +19,22 @@ make check-strict
 - `syntax`
 - `smoke`
 - `idempotency`
-- `security`
 - `sync-test`
 - `backup-restore-test`
-- `interactive-backup-test`
 - `ownership-config-test`
 - `post-install-helpers-test`
-- `security-audit-scripts`
 
 `make check-strict` runs:
 
-- `sh -n build.sh sync.sh backup.sh update.sh image.sh restore.sh setup.sh scripts/build_lib.sh scripts/build_steps.sh scripts/build_custom_image.sh tests/smoke_dry_run.sh tests/idempotency_dry_run.sh tests/security_template_checks.sh tests/sync_hermetic.sh tests/security_audit_scripts_hermetic.sh tests/backup_restore_hermetic.sh tests/ownership_config_dir_hermetic.sh tests/post_install_helpers_hermetic.sh`
-- `shellcheck -S error -e SC1091,SC2034,SC2154 build.sh sync.sh backup.sh update.sh image.sh restore.sh setup.sh scripts/build_lib.sh scripts/build_steps.sh scripts/build_custom_image.sh tests/smoke_dry_run.sh tests/idempotency_dry_run.sh tests/security_template_checks.sh tests/sync_hermetic.sh tests/security_audit_scripts_hermetic.sh tests/backup_restore_hermetic.sh tests/ownership_config_dir_hermetic.sh tests/post_install_helpers_hermetic.sh`
-- `shfmt -i 2 -ci -sr -d build.sh sync.sh backup.sh update.sh image.sh restore.sh setup.sh scripts/build_lib.sh scripts/build_steps.sh scripts/build_custom_image.sh tests/smoke_dry_run.sh tests/idempotency_dry_run.sh tests/security_template_checks.sh tests/sync_hermetic.sh tests/security_audit_scripts_hermetic.sh tests/backup_restore_hermetic.sh tests/ownership_config_dir_hermetic.sh tests/post_install_helpers_hermetic.sh`
+- `sh -n build.sh sync.sh backup.sh update.sh image.sh restore.sh setup.sh scripts/build_lib.sh scripts/build_steps.sh scripts/build_custom_image.sh tests/smoke_dry_run.sh tests/idempotency_dry_run.sh tests/sync_hermetic.sh tests/backup_restore_hermetic.sh tests/ownership_config_dir_hermetic.sh tests/post_install_helpers_hermetic.sh`
+- `shellcheck -S error -e SC1091,SC2034,SC2154 build.sh sync.sh backup.sh update.sh image.sh restore.sh setup.sh scripts/build_lib.sh scripts/build_steps.sh scripts/build_custom_image.sh tests/smoke_dry_run.sh tests/idempotency_dry_run.sh tests/sync_hermetic.sh tests/backup_restore_hermetic.sh tests/ownership_config_dir_hermetic.sh tests/post_install_helpers_hermetic.sh`
+- `shfmt -i 2 -ci -sr -d build.sh sync.sh backup.sh update.sh image.sh restore.sh setup.sh scripts/build_lib.sh scripts/build_steps.sh scripts/build_custom_image.sh tests/smoke_dry_run.sh tests/idempotency_dry_run.sh tests/sync_hermetic.sh tests/backup_restore_hermetic.sh tests/ownership_config_dir_hermetic.sh tests/post_install_helpers_hermetic.sh`
 - `sh tests/smoke_dry_run.sh`
 - `sh tests/idempotency_dry_run.sh`
-- `sh tests/security_template_checks.sh`
 - `sh tests/sync_hermetic.sh`
 - `sh tests/backup_restore_hermetic.sh`
-- `sh tests/configure_backup_hermetic.sh`
-- `sh tests/configure_autoload_env_hermetic.sh`
 - `sh tests/ownership_config_dir_hermetic.sh`
 - `sh tests/post_install_helpers_hermetic.sh`
-- `sh tests/security_audit_scripts_hermetic.sh`
 
 If `shellcheck` or `shfmt` are unavailable, `make check-strict` will try to install them via `apt-get`.
 

@@ -302,16 +302,6 @@ Enabled by default (`POST_BUILD_TEST=1`). Tunables:
 
 Public-mode retry logic treats temporary default/self-signed cert states as transient while ACME issuance finishes.
 
-## Security checklist (validated defaults)
-
-- [x] Default access path is private (`OPENCLAW_ACCESS_MODE=ssh-tunnel`).
-- [x] Gateway auth mode is `token` in `templates/openclaw.json.tmpl`.
-- [x] `allowedOrigins` is explicit and templated (no wildcard).
-- [x] Gateway default port is `18789`.
-- [x] Traefik exposure is opt-in (`OPENCLAW_ACCESS_MODE=public`).
-- [x] Secret-bearing rendered files are `chmod 600`.
-- [x] OpenClaw config directory is `chmod 700`.
-
 ## Developer checks
 
 Primary validation target is Linux (OVH VPS runtime profile).
@@ -327,7 +317,7 @@ make check
 Or run the syntax checks directly:
 
 ```bash
-sh -n build.sh sync.sh backup.sh update.sh image.sh restore.sh setup.sh scripts/build_lib.sh scripts/build_steps.sh tests/smoke_dry_run.sh tests/idempotency_dry_run.sh tests/security_template_checks.sh tests/sync_hermetic.sh tests/security_audit_scripts_hermetic.sh tests/backup_restore_hermetic.sh tests/configure_backup_hermetic.sh tests/configure_autoload_env_hermetic.sh tests/ownership_config_dir_hermetic.sh tests/post_install_helpers_hermetic.sh
+sh -n build.sh sync.sh backup.sh update.sh image.sh restore.sh setup.sh scripts/build_lib.sh scripts/build_steps.sh tests/smoke_dry_run.sh tests/idempotency_dry_run.sh tests/sync_hermetic.sh tests/backup_restore_hermetic.sh tests/ownership_config_dir_hermetic.sh tests/post_install_helpers_hermetic.sh
 ```
 
 ## Backup and restore mechanic

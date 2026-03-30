@@ -67,18 +67,18 @@ try_download_remote_config() {
 }
 
 bootstrap_local_config() {
-  if [ -f "$SCRIPT_DIR/sync.conf.example" ]; then
-    mkdir -p "$(dirname "$SYNC_LOCAL_ENV_FILE")"
-    cp "$SCRIPT_DIR/sync.conf.example" "$SYNC_LOCAL_ENV_FILE"
-    printf 'sync.sh: created %s from sync.conf.example; review and edit required values.\n' "$SYNC_LOCAL_ENV_FILE"
-  else
+  example_file=$SCRIPT_DIR/sync.conf.example
+  if [ ! -f "$example_file" ]; then
     cat >&2 << EOF
 sync.sh error:
   could not bootstrap local config.
-  missing $SCRIPT_DIR/sync.conf.example
+  missing $example_file
 EOF
     exit 1
   fi
+
+  mkdir -p "$(dirname "$SYNC_LOCAL_ENV_FILE")"
+  cp "$example_file" "$SYNC_LOCAL_ENV_FILE"
 
   if ! grep -Eq '^REMOTE_HOST=' "$SYNC_LOCAL_ENV_FILE"; then
     printf '\nREMOTE_HOST=%s\n' "$REMOTE_HOST" >> "$SYNC_LOCAL_ENV_FILE"

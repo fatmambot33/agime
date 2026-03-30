@@ -176,7 +176,7 @@ chmod +x "$PORTABLE_DIR/sync.sh"
     sh ./sync.sh > "$TMP_DIR/portable.stdout" 2>&1
 )
 
-grep -Fq "sync.sh: created $PORTABLE_DIR/sync.conf from sync.conf.example; review and edit required values." "$TMP_DIR/portable.stdout"
+grep -Fq "sync.sh: local config ready at $PORTABLE_DIR/sync.conf" "$TMP_DIR/portable.stdout"
 grep -Fq "OPENCLAW_DIR=~/openclaw" "$PORTABLE_DIR/sync.conf"
 grep -Fq "OPENCLAW_CONFIG_DIR=~/.openclaw" "$PORTABLE_DIR/sync.conf"
 grep -Fq "OPENCLAW_WORKSPACE_DIR=~/.openclaw/workspace" "$PORTABLE_DIR/sync.conf"

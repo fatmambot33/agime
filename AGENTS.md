@@ -20,7 +20,8 @@ Maintain and evolve this repo as a reliable, auditable deployment toolkit for Op
    - Any behavior change in scripts must be reflected in `README.md` and relevant files under `docs/` in the same change.
 
 4. **Validation expectations**
-   - At minimum, run `sh -n build.sh build-interactive.sh` after editing shell scripts.
+   - At minimum, run `sh -n build.sh setup.sh sync.sh` after editing top-level shell entrypoints.
+   - Prefer `make check` for full syntax + hermetic validation before opening a PR.
    - Prefer adding small, deterministic validation checks over manual-only verification.
 
 5. **Roadmap discipline**

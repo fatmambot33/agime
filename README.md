@@ -59,3 +59,9 @@ make check-strict
 ## Compatibility notes
 
 See `docs/DEPRECATIONS.md` for active compatibility shims and migration guidance.
+
+
+## Release and compatibility
+
+- `docs/RELEASE_PROCESS.md`
+- `docs/COMPATIBILITY_POLICY.md`

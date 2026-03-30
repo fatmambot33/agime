@@ -94,10 +94,10 @@ The repository is now much smaller and easier to follow than before, but there i
 - Normalized shared validation/helper usage via `scripts/lib/common.sh` (`warn`, `require_access_mode`).
 - Added explicit deprecation notes and compatibility shim policy in `docs/DEPRECATIONS.md`.
 
-### Phase 4 (next)
+### Phase 4 (implemented in this cycle)
 
-- Release engineering hardening:
-  - lightweight versioning policy,
+- Added release engineering docs:
+  - semantic versioning policy,
   - release checklist,
   - compatibility/testing matrix policy.
 

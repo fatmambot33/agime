@@ -5,8 +5,7 @@ All notable changes to this repository are documented in this file.
 ## [Unreleased]
 
 ### Changed
-- Implemented refactor Phase 1 with modular orchestration libraries under `scripts/lib/`.
-- Refactored `sync.sh`, `setup.sh`, and `update.sh` to source shared library modules.
-- Added hermetic failure-path and template-security checks.
-- Updated CI to run `make check-strict` as the single gate.
-- Updated roadmap/docs to reflect phased delivery of the redesign.
+- Executed phase 4 release-engineering hardening.
+- Added release process documentation (`docs/RELEASE_PROCESS.md`).
+- Added compatibility/testing policy documentation (`docs/COMPATIBILITY_POLICY.md`).
+- Added hermetic release-doc policy checks (`tests/release_policy_docs_hermetic.sh`) and enforced via `make check-strict`.

@@ -22,11 +22,18 @@ Keep the toolkit minimal, auditable, and private-by-default while improving test
 ### Phase 3 (implemented in this cycle)
 
 - Added shared helper normalization and deprecation documentation for compatibility shims.
-- Next priority is release process docs (tagging, changelog cadence, compatibility policy).
+
+### Phase 4 (implemented in this cycle)
+
+- Added release process docs (tagging, changelog cadence, compatibility policy).
+- Added release-policy doc checks to `make check-strict`.
+
+## Next priority
+
+- Add troubleshooting runbooks and operational diagnostics.
 
 ## Why this phased approach
 
 The previous one-shot rewrite was too abrupt. This plan keeps the simplified architecture but introduces it incrementally with stronger guardrails and test-backed milestones.
-
 
 See also: `docs/REFACTOR_PLAN.md` for detailed keep/merge/rewrite/remove analysis and phased execution checklist.

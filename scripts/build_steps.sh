@@ -2,34 +2,6 @@
 # shellcheck shell=sh
 # shellcheck disable=SC2154
 
-source_optional_tool_script() {
-  script_path=$1
-  [ -f "$script_path" ] || return 0
-  # shellcheck disable=SC1090
-  . "$script_path"
-}
-
-source_optional_tool_script "$SCRIPT_DIR/scripts/optional_tools/common.sh"
-source_optional_tool_script "$SCRIPT_DIR/scripts/optional_tools/github.sh"
-source_optional_tool_script "$SCRIPT_DIR/scripts/optional_tools/himalaya.sh"
-source_optional_tool_script "$SCRIPT_DIR/scripts/optional_tools/coding_agent.sh"
-
-if ! command -v optional_tool_github_prepare > /dev/null 2>&1; then
-  optional_tool_github_prepare() { :; }
-fi
-if ! command -v optional_tool_himalaya_prepare > /dev/null 2>&1; then
-  optional_tool_himalaya_prepare() { :; }
-fi
-if ! command -v optional_tool_coding_agent_prepare > /dev/null 2>&1; then
-  optional_tool_coding_agent_prepare() { :; }
-fi
-if ! command -v optional_tool_github_print_post_build_reminder > /dev/null 2>&1; then
-  optional_tool_github_print_post_build_reminder() { :; }
-fi
-if ! command -v validate_optional_skill_container_runtime > /dev/null 2>&1; then
-  validate_optional_skill_container_runtime() { :; }
-fi
-
 initialize_defaults() {
   CURRENT_USER=$(id -un)
   HOME_DIR=${HOME:-"$(getent passwd "$CURRENT_USER" | cut -d : -f 6 2> /dev/null || printf '/home/%s' "$CURRENT_USER")"}
@@ -56,15 +28,6 @@ initialize_defaults() {
   OPENCLAW_SIGNAL_ACCOUNT=${OPENCLAW_SIGNAL_ACCOUNT:-""}
   OPENCLAW_SIGNAL_ALLOW_FROM=${OPENCLAW_SIGNAL_ALLOW_FROM:-""}
   OPENCLAW_SIGNAL_CLI_PATH=${OPENCLAW_SIGNAL_CLI_PATH:-"signal-cli"}
-  OPENCLAW_ENABLE_GITHUB_SKILL=${OPENCLAW_ENABLE_GITHUB_SKILL:-"0"}
-  OPENCLAW_GH_CLI_PATH=${OPENCLAW_GH_CLI_PATH:-"gh"}
-  OPENCLAW_ENABLE_HIMALAYA_SKILL=${OPENCLAW_ENABLE_HIMALAYA_SKILL:-"0"}
-  OPENCLAW_HIMALAYA_CLI_PATH=${OPENCLAW_HIMALAYA_CLI_PATH:-"himalaya"}
-  OPENCLAW_HIMALAYA_REQUIRE_CONFIG=${OPENCLAW_HIMALAYA_REQUIRE_CONFIG:-"1"}
-  OPENCLAW_HIMALAYA_CONFIG_PATH=${OPENCLAW_HIMALAYA_CONFIG_PATH:-"$OPENCLAW_CONFIG_DIR/himalaya/config.toml"}
-  OPENCLAW_HIMALAYA_CONFIG_TOML_BASE64=${OPENCLAW_HIMALAYA_CONFIG_TOML_BASE64:-""}
-  OPENCLAW_ENABLE_CODING_AGENT_SKILL=${OPENCLAW_ENABLE_CODING_AGENT_SKILL:-"0"}
-  OPENCLAW_CODING_AGENT_BACKEND=${OPENCLAW_CODING_AGENT_BACKEND:-"codex"}
   SKIP_DOCKER_GROUP_SETUP=${SKIP_DOCKER_GROUP_SETUP:-"0"}
   SKIP_OPENCLAW_WIZARD=${SKIP_OPENCLAW_WIZARD:-"0"}
   SKIP_OPENCLAW_IMAGE_BUILD=${SKIP_OPENCLAW_IMAGE_BUILD:-"0"}
@@ -132,18 +95,6 @@ setup_signal_channel_prerequisites() {
   fi
 
   log "Signal channel enabled; runtime dependency will be validated inside Docker container after restart"
-}
-
-setup_github_skill_prerequisites() {
-  optional_tool_github_prepare
-}
-
-setup_himalaya_skill_prerequisites() {
-  optional_tool_himalaya_prepare
-}
-
-setup_coding_agent_skill_prerequisites() {
-  optional_tool_coding_agent_prepare
 }
 
 setup_access_mode_prerequisites() {
@@ -248,7 +199,6 @@ ensure_openclaw_env_overrides() {
   if [ "$DRY_RUN" = "1" ]; then
     log "[DRY_RUN] append OPENCLAW_CONFIG_DIR to $OPENCLAW_DIR/.env when missing"
     log "[DRY_RUN] append OPENCLAW_WORKSPACE_DIR to $OPENCLAW_DIR/.env when missing"
-    log "[DRY_RUN] append OPENCLAW_HIMALAYA_CONFIG_PATH to $OPENCLAW_DIR/.env when missing"
     return 0
   fi
 
@@ -257,9 +207,6 @@ ensure_openclaw_env_overrides() {
   fi
   if ! grep -q '^OPENCLAW_WORKSPACE_DIR=' "$OPENCLAW_DIR/.env"; then
     printf 'OPENCLAW_WORKSPACE_DIR=%s\n' "$OPENCLAW_WORKSPACE_DIR" >> "$OPENCLAW_DIR/.env"
-  fi
-  if ! grep -q '^OPENCLAW_HIMALAYA_CONFIG_PATH=' "$OPENCLAW_DIR/.env"; then
-    printf 'OPENCLAW_HIMALAYA_CONFIG_PATH=%s\n' "$OPENCLAW_HIMALAYA_CONFIG_PATH" >> "$OPENCLAW_DIR/.env"
   fi
 }
 
@@ -461,5 +408,4 @@ print_summary() {
   log "Gateway token: <redacted>"
   log "Container logs: docker logs openclaw"
   log "Pending device approvals: docker exec -it openclaw node dist/index.js devices list"
-  optional_tool_github_print_post_build_reminder
 }

@@ -51,15 +51,6 @@ Optional environment variables:
  OPENCLAW_SIGNAL_ACCOUNT Required when OPENCLAW_ENABLE_SIGNAL=1. Signal account number in E.164 format.
  OPENCLAW_SIGNAL_ALLOW_FROM Optional DM allowlist sender (single E.164 or uuid:<id> entry).
  OPENCLAW_SIGNAL_CLI_PATH Default: signal-cli. Path/command used by OpenClaw for Signal.
- OPENCLAW_ENABLE_GITHUB_SKILL Default: 0. Set to 1 to validate GitHub CLI (gh) for GitHub skill usage.
- OPENCLAW_GH_CLI_PATH Default: gh. Path/command used to invoke GitHub CLI.
- OPENCLAW_ENABLE_HIMALAYA_SKILL Default: 0. Set to 1 to validate Himalaya CLI for Himalaya skill usage.
- OPENCLAW_HIMALAYA_CLI_PATH Default: himalaya. Path/command used to invoke Himalaya CLI.
- OPENCLAW_HIMALAYA_REQUIRE_CONFIG Default: 1. Set to 0 to skip config file validation.
- OPENCLAW_HIMALAYA_CONFIG_PATH Default: \$OPENCLAW_CONFIG_DIR/himalaya/config.toml
- OPENCLAW_HIMALAYA_CONFIG_TOML_BASE64 Optional base64-encoded Himalaya config.toml content to render at OPENCLAW_HIMALAYA_CONFIG_PATH.
- OPENCLAW_ENABLE_CODING_AGENT_SKILL Default: 0. Set to 1 to validate coding-agent backend CLI.
- OPENCLAW_CODING_AGENT_BACKEND Default: codex. One of: claude, codex, opencode, pi.
  SKIP_DOCKER_GROUP_SETUP Default: 0. Set to 1 to skip docker group changes.
  SKIP_OPENCLAW_WIZARD Default: 0. Set to 1 if .env already exists.
  SKIP_OPENCLAW_IMAGE_BUILD Default: 0. Set to 1 to skip rebuilding local OpenClaw image.
@@ -74,13 +65,6 @@ Notes:
  - This script automates the OVHcloud guide published on 2026-02-25:
  https://help.ovhcloud.com/csm/fr-vps-install-openclaw?id=kb_article_view&sysparm_article=KB0074788
  - Docker and Docker Compose must already be installed.
- - Optional tools should be preinstalled in your custom OPENCLAW_IMAGE.
- - If OPENCLAW_ENABLE_GITHUB_SKILL=1, this script validates runtime binary visibility in the container.
- - Authenticate manually in-container as needed for your workflow.
- - If OPENCLAW_ENABLE_HIMALAYA_SKILL=1, this script can write config from OPENCLAW_HIMALAYA_CONFIG_TOML_BASE64,
-   and by default requires config at \$OPENCLAW_CONFIG_DIR/himalaya/config.toml.
- - If OPENCLAW_ENABLE_CODING_AGENT_SKILL=1, this script validates runtime binary visibility in the container.
-   and validates <backend> --version inside the running container runtime.
  - If the OpenClaw setup wizard runs, it remains interactive.
 EOF2
 }
@@ -96,9 +80,6 @@ require_env OVH_ENDPOINT_API_KEY
 require_public_env_if_needed
 check_docker_access
 setup_signal_channel_prerequisites
-setup_github_skill_prerequisites
-setup_himalaya_skill_prerequisites
-setup_coding_agent_skill_prerequisites
 setup_access_mode_prerequisites
 prepare_openclaw_repo
 run_openclaw_wizard_if_needed
@@ -108,6 +89,5 @@ ensure_openclaw_env_overrides
 write_openclaw_json_config
 ensure_openclaw_image
 restart_openclaw
-validate_optional_skill_container_runtime
 post_build_connectivity_test
 print_summary

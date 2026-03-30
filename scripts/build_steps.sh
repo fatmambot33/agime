@@ -149,86 +149,24 @@ prepare_openclaw_repo() {
 }
 
 run_openclaw_wizard_if_needed() {
-  if [ -f "$OPENCLAW_DIR/.env" ]; then
-    log "Found existing OpenClaw .env in $OPENCLAW_DIR; skipping first-run bootstrap and wizard"
-    return 0
-  fi
-
-  log "OpenClaw .env not found in $OPENCLAW_DIR; attempting non-interactive bootstrap"
-  if bootstrap_openclaw_env; then
-    return 0
-  fi
-
-  if [ "$SKIP_OPENCLAW_WIZARD" = "1" ]; then
-    fail "Cannot create $OPENCLAW_DIR/.env automatically and SKIP_OPENCLAW_WIZARD=1. Run ./docker-setup.sh manually once, then rerun with SKIP_OPENCLAW_WIZARD=1."
-  fi
-
-  log "Falling back to OpenClaw's interactive docker setup wizard."
-  log "Why: automatic bootstrap requires OPENCLAW_TOKEN or a local token generator (openssl/python3)."
-  log "Next: complete ./docker-setup.sh once; after it writes $OPENCLAW_DIR/.env, reruns can use SKIP_OPENCLAW_WIZARD=1."
-  if [ "$DRY_RUN" = "1" ]; then
-    log "[DRY_RUN] (cd $OPENCLAW_DIR && ./docker-setup.sh)"
-  else
-    (
-      cd "$OPENCLAW_DIR"
-      ./docker-setup.sh
-    )
+  if [ ! -f "$OPENCLAW_DIR/.env" ]; then
+    if [ "$SKIP_OPENCLAW_WIZARD" = "1" ]; then
+      fail "OpenClaw .env not found in $OPENCLAW_DIR and SKIP_OPENCLAW_WIZARD=1. Run ./docker-setup.sh once, then rerun."
+    fi
+    log "Running OpenClaw's docker setup wizard"
+    if [ "$DRY_RUN" = "1" ]; then
+      log "[DRY_RUN] (cd $OPENCLAW_DIR && ./docker-setup.sh)"
+    else
+      (
+        cd "$OPENCLAW_DIR"
+        ./docker-setup.sh
+      )
+    fi
   fi
 
   if [ "$DRY_RUN" != "1" ]; then
     [ -f "$OPENCLAW_DIR/.env" ] || fail "OpenClaw .env not found in $OPENCLAW_DIR. Run ./docker-setup.sh first."
   fi
-}
-
-generate_bootstrap_gateway_token() {
-  if [ -n "${OPENCLAW_TOKEN:-}" ]; then
-    printf '%s' "$OPENCLAW_TOKEN"
-    return 0
-  fi
-
-  if command -v openssl > /dev/null 2>&1; then
-    openssl rand -hex 32
-    return 0
-  fi
-
-  if command -v python3 > /dev/null 2>&1; then
-    python3 - << 'EOF2'
-import secrets
-print(secrets.token_hex(32))
-EOF2
-    return 0
-  fi
-
-  return 1
-}
-
-bootstrap_openclaw_env() {
-  env_file="$OPENCLAW_DIR/.env"
-
-  if [ "$DRY_RUN" = "1" ]; then
-    if [ -n "${OPENCLAW_TOKEN:-}" ] || command -v openssl > /dev/null 2>&1 || command -v python3 > /dev/null 2>&1; then
-      log "[DRY_RUN] write bootstrap OpenClaw .env to $env_file"
-      return 0
-    fi
-    log "[DRY_RUN] cannot bootstrap OpenClaw .env: token generation unavailable without OPENCLAW_TOKEN"
-    return 1
-  fi
-
-  bootstrap_token=$(generate_bootstrap_gateway_token || true)
-  [ -n "$bootstrap_token" ] || return 1
-
-  run_cmd mkdir -p "$OPENCLAW_DIR"
-  run_cmd touch "$env_file"
-  cat > "$env_file" << EOF2
-OPENCLAW_CONFIG_DIR=$OPENCLAW_CONFIG_DIR
-OPENCLAW_WORKSPACE_DIR=$OPENCLAW_WORKSPACE_DIR
-OPENCLAW_GATEWAY_PORT=18789
-OPENCLAW_BRIDGE_PORT=18790
-OPENCLAW_GATEWAY_BIND=$OPENCLAW_GATEWAY_BIND
-OPENCLAW_GATEWAY_TOKEN=$bootstrap_token
-OPENCLAW_IMAGE=$OPENCLAW_IMAGE
-EOF2
-  log "Wrote non-interactive OpenClaw bootstrap .env with conservative defaults"
 }
 
 resolve_openclaw_token() {

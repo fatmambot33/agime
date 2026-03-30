@@ -18,7 +18,7 @@ SYNC_SCRIPT="$SCRIPT_DIR/sync.sh"
 ask_default() {
   prompt=$1
   default=$2
-  printf "%s [%s]: " "$prompt" "$default"
+  printf "%s [%s]: " "$prompt" "$default" >&2
   IFS= read -r val
   printf '%s' "${val:-$default}"
 }
@@ -26,13 +26,13 @@ ask_default() {
 ask_required() {
   prompt=$1
   while :; do
-    printf "%s: " "$prompt"
+    printf "%s: " "$prompt" >&2
     IFS= read -r val
     [ -n "$val" ] && {
       printf '%s' "$val"
       return 0
     }
-    echo "This field is required."
+    echo "This field is required." >&2
   done
 }
 
@@ -47,7 +47,7 @@ case "$OPENCLAW_ACCESS_MODE" in
 esac
 
 OVH_ENDPOINT_API_KEY=$(ask_required "OVH endpoint API key")
-printf "OpenClaw gateway token (leave blank to skip): "
+printf "OpenClaw gateway token (leave blank to skip): " >&2
 IFS= read -r OPENCLAW_TOKEN
 
 TRAEFIK_ACME_EMAIL=""

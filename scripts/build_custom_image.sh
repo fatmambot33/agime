@@ -148,6 +148,6 @@ if [ "$CUSTOM_OPENCLAW_PUSH" = "1" ]; then
   docker push "$CUSTOM_OPENCLAW_IMAGE"
 fi
 
-log "Done. Use this image in deploys with:"
-log "  OPENCLAW_IMAGE=$CUSTOM_OPENCLAW_IMAGE"
-log "  SKIP_OPENCLAW_IMAGE_BUILD=1"
+log "Done."
+log "Note: build.sh currently uses the official OpenClaw image only."
+log "This custom image can be used only in custom workflows outside the default agime deploy path."

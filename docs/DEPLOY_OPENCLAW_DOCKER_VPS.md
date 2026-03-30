@@ -13,6 +13,7 @@
    - `OPENCLAW_ACCESS_MODE` (`ssh-tunnel` or `public`)
    - `public` mode only: `OPENCLAW_DOMAIN` and `TRAEFIK_ACME_EMAIL`
 2. Ensure outbound network access from the VPS so agime can install Docker and `docker compose` automatically when missing.
+   - If the current user cannot access Docker yet, agime will continue the current run with `sudo docker` and add the user to the `docker` group for future sessions.
 3. Choose OpenClaw image policy:
    - fixed official image: `ghcr.io/openclaw/openclaw:latest`
 4. Keep Traefik only for `OPENCLAW_ACCESS_MODE=public` (ssh-tunnel mode skips Traefik).

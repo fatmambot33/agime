@@ -41,6 +41,7 @@ Before first deploy on a fresh OVH VPS:
 - collect `OVH_ENDPOINT_API_KEY` and select `OPENCLAW_ACCESS_MODE`,
 - for public mode, also set `OPENCLAW_DOMAIN` and `TRAEFIK_ACME_EMAIL`,
 - OpenClaw uses the official image `ghcr.io/openclaw/openclaw:latest`.
+- if Docker socket access is not yet available for the current user, agime now continues this run with `sudo docker` and still adds the user to the `docker` group for future logins.
 
 `REMOTE_DIR` should point to a path under the remote user home (default `~/agime`). The scripts normalize host-expanded values (for example `/Users/alice/agime`) back to `~/...` for remote-safe sync behavior.
 

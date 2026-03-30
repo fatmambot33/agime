@@ -30,6 +30,25 @@ initialize_defaults() {
   POST_BUILD_TEST_CONNECT_TIMEOUT_SECONDS=${POST_BUILD_TEST_CONNECT_TIMEOUT_SECONDS:-"5"}
   POST_BUILD_TEST_MAX_TIME_SECONDS=${POST_BUILD_TEST_MAX_TIME_SECONDS:-"15"}
   DRY_RUN=${DRY_RUN:-"0"}
+  DOCKER_USE_SUDO=${DOCKER_USE_SUDO:-"0"}
+}
+
+docker_probe() {
+  if [ "$DOCKER_USE_SUDO" = "1" ]; then
+    run_with_optional_sudo docker "$@"
+    return $?
+  fi
+
+  docker "$@"
+}
+
+docker_run() {
+  if [ "$DOCKER_USE_SUDO" = "1" ]; then
+    run_with_optional_sudo docker "$@"
+    return 0
+  fi
+
+  run_cmd docker "$@"
 }
 
 validate_access_mode() {
@@ -68,17 +87,31 @@ check_docker_access() {
   if [ "$POST_BUILD_TEST" != "0" ]; then
     require_command curl
   fi
-  docker compose version > /dev/null 2>&1 || fail "docker compose is required"
+  if ! docker compose version > /dev/null 2>&1; then
+    run_with_optional_sudo docker compose version > /dev/null 2>&1 || fail "docker compose is required"
+    DOCKER_USE_SUDO=1
+    log "Using sudo for Docker commands in this run"
+  fi
 
   log "Checking Docker access"
   if ! docker ps > /dev/null 2>&1; then
     if [ "$SKIP_DOCKER_GROUP_SETUP" = "1" ]; then
+      if run_with_optional_sudo docker ps > /dev/null 2>&1; then
+        DOCKER_USE_SUDO=1
+        log "docker ps failed without sudo; continuing with sudo (SKIP_DOCKER_GROUP_SETUP=1)"
+        return 0
+      fi
       fail "docker ps failed and SKIP_DOCKER_GROUP_SETUP=1"
     fi
 
     log "Adding $CURRENT_USER to the docker group"
-    sudo usermod -aG docker "$CURRENT_USER"
-    fail "Docker permissions updated. Reconnect or run 'newgrp docker', then rerun the script."
+    run_with_optional_sudo usermod -aG docker "$CURRENT_USER"
+    if run_with_optional_sudo docker ps > /dev/null 2>&1; then
+      DOCKER_USE_SUDO=1
+      log "Docker group updated; continuing this run with sudo. Reconnect later to use docker without sudo."
+      return 0
+    fi
+    fail "Docker permissions updated, but docker access still unavailable. Reconnect or run 'newgrp docker', then rerun the script."
   fi
 }
 
@@ -119,8 +152,8 @@ ensure_proxy_network() {
   if [ "$DRY_RUN" = "1" ]; then
     log "[DRY_RUN] docker network inspect proxy"
     log "[DRY_RUN] docker network create proxy"
-  elif ! docker network inspect proxy > /dev/null 2>&1; then
-    run_cmd docker network create proxy > /dev/null
+  elif ! docker_probe network inspect proxy > /dev/null 2>&1; then
+    docker_run network create proxy > /dev/null
   fi
 }
 
@@ -142,7 +175,7 @@ start_traefik() {
   (
     cd "$TRAEFIK_DIR"
     log "Starting Traefik"
-    run_cmd docker compose up -d
+    docker_run compose up -d
   )
 }
 
@@ -249,7 +282,7 @@ ensure_openclaw_image() {
     return 0
   fi
 
-  run_cmd docker pull "$OPENCLAW_IMAGE"
+  docker_run pull "$OPENCLAW_IMAGE"
 }
 
 restart_openclaw() {
@@ -261,8 +294,8 @@ restart_openclaw() {
   (
     cd "$OPENCLAW_DIR"
     log "Restarting OpenClaw"
-    run_cmd docker compose down
-    run_cmd docker compose up -d
+    docker_run compose down
+    docker_run compose up -d
   )
 }
 

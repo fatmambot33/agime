@@ -218,6 +218,10 @@ Use the pure operator flow documented in:
 
 - [`docs/DEPLOY_OPENCLAW_DOCKER_VPS.md`](docs/DEPLOY_OPENCLAW_DOCKER_VPS.md)
 
+Simple quick start:
+- Interactive: `REMOTE_HOST=<user>@<vps-host> REMOTE_DIR=~/agime sh ./setup.sh`
+- Non-interactive: `REMOTE_HOST=<user>@<vps-host> REMOTE_DIR=~/agime sh ./sync.sh`
+
 Key deployment constraints:
 
 - `OVH_ENDPOINT_API_KEY` is mandatory.

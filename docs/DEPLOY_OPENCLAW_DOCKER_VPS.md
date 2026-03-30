@@ -1,5 +1,23 @@
 # OpenClaw VPS Deployment (Docker, Pure Flow)
 
+## Quick start (simple)
+
+Interactive (recommended):
+
+```sh
+REMOTE_HOST=<user>@<vps-host> \
+REMOTE_DIR=~/agime \
+sh ./setup.sh
+```
+
+Non-interactive:
+
+```sh
+REMOTE_HOST=<user>@<vps-host> \
+REMOTE_DIR=~/agime \
+sh ./sync.sh
+```
+
 ## Required contract
 
 - VPS runtime: Docker Engine + Docker Compose v2.

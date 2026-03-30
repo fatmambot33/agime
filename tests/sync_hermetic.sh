@@ -247,4 +247,34 @@ chmod +x "$EXPANDED_BOOTSTRAP_DIR/sync.sh"
 grep -Fq "REMOTE_DIR=~/agime" "$EXPANDED_BOOTSTRAP_DIR/generated.conf"
 grep -Eq 'ssh .*runtime-expanded-host mkdir -p "\$HOME/agime"' "$CALLS_FILE"
 
+MAC_PATH_CONFIG="$TMP_DIR/mac-path.conf"
+cat > "$MAC_PATH_CONFIG" << EOF
+REMOTE_HOST=ubuntu@vps-host
+REMOTE_DIR=/Users/pfourcat/agime
+EOF
+
+set +e
+(
+  cd "$REPO_DIR"
+  PATH="$BIN_DIR:$PATH" \
+    SYNC_CONFIG_FILE="$MAC_PATH_CONFIG" \
+    sh ./sync.sh > "$TMP_DIR/mac-path.stdout" 2>&1
+)
+MAC_PATH_STATUS=$?
+set -e
+
+[ "$MAC_PATH_STATUS" -ne 0 ]
+grep -Fq "sync.sh preflight error:" "$TMP_DIR/mac-path.stdout"
+grep -Fq "REMOTE_DIR=/Users/pfourcat/agime looks like a local macOS home path." "$TMP_DIR/mac-path.stdout"
+
+(
+  cd "$REPO_DIR"
+  PATH="$BIN_DIR:$PATH" \
+    SYNC_ALLOW_ABSOLUTE_REMOTE_DIR=1 \
+    SYNC_CONFIG_FILE="$MAC_PATH_CONFIG" \
+    sh ./sync.sh > "$TMP_DIR/mac-path-allowed.stdout" 2>&1
+)
+
+grep -Eq "ssh .*ubuntu@vps-host mkdir -p \"/Users/pfourcat/agime\"" "$CALLS_FILE"
+
 echo "sync.sh hermetic test passed"

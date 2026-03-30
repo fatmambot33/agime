@@ -14,6 +14,7 @@ Deployment model note: Docker is the required runtime boundary for supported VPS
 - If `sync.conf` is missing, `sync.sh` first tries to download remote `sync.conf`; if not found remotely, it bootstraps local config from `sync.conf.example`.
 - Shared `sync.conf` is normalized to home-relative paths (for example `~/openclaw`, `~/.openclaw`) for `OPENCLAW_*` + `TRAEFIK_DIR`, which keeps one machine-agnostic config usable on both workstation and VPS.
 - `REMOTE_DIR` is normalized to `~/...` when it resolves under your workstation `$HOME`, so local shell expansion (for example `/Users/<you>/agime`) is converted back before generating SSH/SCP remote paths.
+- `sync.sh` now fails fast when `REMOTE_DIR` still points to `/Users/...` for a non-loopback remote host; this catches accidental local macOS paths before remote `mkdir` fails. Use `REMOTE_DIR=~/agime` or bypass intentionally with `SYNC_ALLOW_ABSOLUTE_REMOTE_DIR=1`.
 - Treat `sync.conf` as the local source-of-truth for authoring/updating deploy settings; `build.sh` remains the default remote entrypoint.
 - `SYNC_REMOTE_CONFIG_PRIORITY=1` by default: if remote `SYNC_REMOTE_ENV_FILE` already exists, `sync.sh` treats it as authoritative for the run and refreshes local `sync.conf` from it.
 - For non-interactive deploys, use `SYNC_REMOTE_ENTRYPOINT=build.sh` and keep required build variables in `sync.conf` (single source of truth).

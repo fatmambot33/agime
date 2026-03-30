@@ -12,6 +12,7 @@ SYNC_LOCAL_ENV_FILE=${SYNC_LOCAL_ENV_FILE:-"$SYNC_CONFIG_FILE"}
 SYNC_REMOTE_CONFIG_PRIORITY=${SYNC_REMOTE_CONFIG_PRIORITY:-1}
 SSH_CONTROL_PERSIST_SECONDS=${SSH_CONTROL_PERSIST_SECONDS:-600}
 SSH_CONTROL_PATH=${SSH_CONTROL_PATH:-"$HOME/.ssh/agime-sync-%r@%h:%p"}
+SYNC_ALLOW_ABSOLUTE_REMOTE_DIR=${SYNC_ALLOW_ABSOLUTE_REMOTE_DIR:-0}
 SSH_BASE_ARGS="-o ControlMaster=auto -o ControlPersist=${SSH_CONTROL_PERSIST_SECONDS} -o ControlPath=$SSH_CONTROL_PATH"
 
 canonicalize_home_path() {
@@ -251,7 +252,39 @@ sync.sh preflight warning:
 EOF
 }
 
+is_loopback_remote_host() {
+  case "$REMOTE_HOST" in
+    localhost | localhost:* | 127.0.0.1 | 127.0.0.1:* | ::1 | ::1:*)
+      return 0
+      ;;
+    *@localhost | *@localhost:* | *@127.0.0.1 | *@127.0.0.1:* | *@::1 | *@::1:*)
+      return 0
+      ;;
+    *)
+      return 1
+      ;;
+  esac
+}
+
+validate_remote_dir_path() {
+  case "$REMOTE_DIR" in
+    /Users/*)
+      if [ "$SYNC_ALLOW_ABSOLUTE_REMOTE_DIR" = "1" ] || is_loopback_remote_host; then
+        return
+      fi
+      cat >&2 << EOF
+sync.sh preflight error:
+  REMOTE_DIR=$REMOTE_DIR looks like a local macOS home path.
+  On Linux VPS hosts this usually fails with "mkdir: cannot create directory '/Users': Permission denied".
+  Use a VPS path such as REMOTE_DIR=~/agime (recommended) or set SYNC_ALLOW_ABSOLUTE_REMOTE_DIR=1 to bypass this guard.
+EOF
+      exit 1
+      ;;
+  esac
+}
+
 print_preflight_warnings
+validate_remote_dir_path
 
 SKIP_ENV_EXTRA_UPLOAD=0
 if [ -n "$ENV_UPLOAD_SOURCE" ] && [ -f "$SYNC_CONFIG_FILE" ]; then

@@ -5,11 +5,12 @@
 . "$SCRIPT_DIR/scripts/lib/common.sh"
 
 sync_load_config() {
-  [ -f "$SYNC_CONFIG_FILE" ] || return 0
-  set -a
-  # shellcheck disable=SC1090
-  . "$SYNC_CONFIG_FILE"
-  set +a
+  if [ -f "$SYNC_CONFIG_FILE" ]; then
+    set -a
+    # shellcheck disable=SC1090
+    . "$SYNC_CONFIG_FILE"
+    set +a
+  fi
 }
 
 sync_validate_remote_entrypoint() {
@@ -62,15 +63,16 @@ sync_print_effective_config() {
 }
 
 sync_upload_and_run() {
-  remote_dir_ssh=$(remote_home_path "$REMOTE_DIR")
+  remote_dir_scp=$(canonicalize_home_path "$REMOTE_DIR")
+  remote_dir_ssh=$(remote_home_path "$remote_dir_scp")
 
   ssh $SSH_BASE_ARGS "$REMOTE_HOST" "mkdir -p \"$remote_dir_ssh\""
   # shellcheck disable=SC2086
-  scp $SSH_BASE_ARGS -r $SYNC_ITEMS "$REMOTE_HOST:$REMOTE_DIR/"
+  scp $SSH_BASE_ARGS -r $SYNC_ITEMS "$REMOTE_HOST:$remote_dir_scp/"
 
   remote_env_setup=""
   if [ -n "$SYNC_REMOTE_ENV_FILE" ] && [ -f "$SYNC_LOCAL_ENV_FILE" ]; then
-    scp $SSH_BASE_ARGS "$SYNC_LOCAL_ENV_FILE" "$REMOTE_HOST:$REMOTE_DIR/$SYNC_REMOTE_ENV_FILE"
+    scp $SSH_BASE_ARGS "$SYNC_LOCAL_ENV_FILE" "$REMOTE_HOST:$remote_dir_scp/$SYNC_REMOTE_ENV_FILE"
     remote_env_setup="set -a && . './$SYNC_REMOTE_ENV_FILE' && set +a && "
   fi
 

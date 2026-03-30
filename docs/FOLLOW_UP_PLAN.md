@@ -14,10 +14,10 @@ Keep the toolkit minimal, auditable, and private-by-default while improving test
 - Keep `build.sh` as primary deploy engine with existing `scripts/build_*` modules.
 - Standardize deterministic checks in local `make` and CI.
 
-### Phase 2 (next)
+### Phase 2 (implemented in this cycle)
 
-- Add failure-injection coverage for public-mode deploy preflights and connectivity retries.
-- Add more granular tests for render helpers and config-file generation branches.
+- Added public-mode preflight and sync env edge-case coverage.
+- Added template render substitution tests and contributor architecture checklist.
 
 ### Phase 3 (next)
 

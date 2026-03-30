@@ -81,13 +81,13 @@ The repository is now much smaller and easier to follow than before, but there i
 - Introduce `scripts/lib/*` modules for orchestration reuse.
 - Add deterministic CI gate around `make check-strict`.
 
-### Phase 2 (next)
+### Phase 2 (implemented in this cycle)
 
-- Add branch-level tests for:
+- Added branch-level tests for:
   - public-mode preflight validation failures,
   - sync env-file edge cases,
   - template-render substitution correctness.
-- Add a contributor-facing architecture map and decision checklist.
+- Added contributor-facing architecture map and decision checklist.
 
 ### Phase 3 (next)
 

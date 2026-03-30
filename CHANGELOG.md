@@ -4,66 +4,12 @@ All notable changes to this repository are documented in this file.
 
 ## [Unreleased]
 
-### Added
-- Added `OPENCLAW_ACCESS_MODE` with supported values `ssh-tunnel` (default) and `public`.
-- Added split compose templates for each access mode:
-  - `templates/openclaw-compose.ssh-tunnel.yml.tmpl`
-  - `templates/openclaw-compose.public.yml.tmpl`
-- Added change-aware local image rebuild logic with revision stamp tracking at `$OPENCLAW_CONFIG_DIR/openclaw-image-revision.txt`.
-- Added optional Signal bootstrap controls:
-  - `OPENCLAW_ENABLE_SIGNAL`
-  - `OPENCLAW_SIGNAL_ACCOUNT`
-  - `OPENCLAW_SIGNAL_ALLOW_FROM`
-  - `OPENCLAW_SIGNAL_CLI_PATH`
-- Added `backup.sh` and `restore.sh` mechanics for reproducible backup/restore of deployment data with explicit restore safety guard (`RESTORE_FORCE=1` for `/`).
-- Added `tests/ownership_config_dir_hermetic.sh` to cover ownership handling for root/non-root execution and custom `OPENCLAW_CONFIG_DIR` preparation flows.
-- Added post-install helpers:
-  - `update.sh` to rerun maintenance deploys with optional git update behavior.
-  - `add_tool.sh` to enable optional tools (`signal`, `github`, `himalaya`, `coding-agent`) and rerun deploy.
-- Added `tests/post_install_helpers_hermetic.sh` to validate helper behavior without Docker/network dependencies.
-- Added `scripts/build_custom_image.sh` helper to build/push a custom prebuilt OpenClaw image for image-first VPS deployments.
-- Added `image.sh` top-level helper wrapper for custom image build/push workflow parity with other maintenance entrypoints.
-- Added `templates/openclaw-custom-image.Dockerfile.tmpl` and `docs/CUSTOM_IMAGE_WORKFLOW.md` for a documented custom-image build workflow.
-- Added image-first `sync.conf` preset guidance (`OPENCLAW_IMAGE` + `SKIP_OPENCLAW_IMAGE_BUILD=1`) in `sync.conf.example` and README.
-- Hardened `scripts/build_custom_image.sh` template rendering by escaping base-image replacement values and requiring Docker availability before build.
-
 ### Changed
-- Changed default deployment posture to private mode (`ssh-tunnel`) with loopback-only binding on `127.0.0.1:18789`.
-- Kept Traefik/HTTPS flow available only in explicit `public` mode.
-- Fixed public Traefik router label rendering for host rule syntax.
-- Increased default post-build retry budget and made validation mode-aware.
-- Treated temporary self-signed/default TLS cert state as retryable during ACME issuance.
-- Accepted successful TLS/connectivity even when app root returns HTTP `404`.
-- Updated interactive setup prompts and completion output to reflect selected mode.
-- Updated README, operations runbook, and follow-up plan to reflect private-first guidance.
-- Updated OpenClaw JSON template defaults to include a `channels.signal` section with explicit `enabled`, `account`, `cliPath`, and DM pairing-oriented defaults.
-- Updated README and operations runbook with backup/restore usage and safe restore workflow.
-- Expanded backup coverage/options to include `docker-compose.yml` by default plus opt-in full repo capture (`INCLUDE_OPENCLAW_REPO=1`) and arbitrary extra paths (`EXTRA_BACKUP_PATHS`).
-- Fixed `backup.sh` handling for relative `BACKUP_OUTPUT` so archives are written relative to caller working directory (not staging temp dir).
-- Hardened `restore.sh` root safety check by normalizing `RESTORE_ROOT` path variants (for example `//`) before enforcing `RESTORE_FORCE=1`.
-- Hardened `restore.sh` archive safety by rejecting path-traversal entries (absolute paths / `..` segments) before extraction.
-- Integrated pre-deploy backup flow into `configure.sh` with explicit operator prompts and backup option passthrough.
-- Fixed backup staging path merge behavior so `INCLUDE_OPENCLAW_REPO=1` no longer nests restore paths as `<OPENCLAW_DIR>/openclaw/...`.
-- Removed legacy compatibility exports from `configure.sh` so `build.sh` owns all default resolution directly.
-- Fixed backup staging for relative source paths so archives include relative `OPENCLAW_DIR`, `OPENCLAW_CONFIG_DIR`, and `EXTRA_BACKUP_PATHS` entries correctly.
-- Fixed ownership correction in `prepare_openclaw_repo` to support both root and non-root execution contexts by using `sudo` only when required.
-- Fixed custom `OPENCLAW_CONFIG_DIR` brittleness by preparing the config path before ownership safety checks.
-- Updated `README.md` and `docs/CONTRIBUTING.md` validation guidance to match current `make check` and `make check-strict` behavior.
-- Simplified optional-tool runtime flow by removing dead no-op installer hooks and running validation-only checks directly.
-- Updated optional skill prerequisite flow to validate runtime binaries (`gh`, `himalaya`, coding-agent backend) inside the running `openclaw` container.
-- Updated Signal prerequisite flow to validate `signal-cli` inside the running `openclaw` container (no host-side installer path).
-- Updated `configure.sh` prompts/exports to remove obsolete Signal auto-install settings and align Himalaya default config path with `$OPENCLAW_CONFIG_DIR/himalaya/config.toml`.
-- Updated `configure.sh` welcome menu/action flow to include direct `Image` workflow execution.
-- Updated sync payload defaults/tests/examples to include `image.sh` in runtime bundle uploads.
-- Added post-render JSON validation (`python3 -m json.tool`) for generated `openclaw.json` to fail fast on template/config errors.
-- Updated default `OPENCLAW_HIMALAYA_CONFIG_PATH` to `$OPENCLAW_CONFIG_DIR/himalaya/config.toml` and mounted `${OPENCLAW_CONFIG_DIR}/himalaya` into the container for runtime config access.
-- Refactored optional skill handling into per-tool scripts under `scripts/optional_tools/` for cleaner extension as new tools are added.
-- Updated `update.sh` to be git-checkout aware (`GIT_PULL=auto` by default) so it works in both cloned and synced toolkit directories.
-- Updated post-install helpers to auto-load `OVH_ENDPOINT_API_KEY` from `$OPENCLAW_DIR/.env` when not already exported.
-- Removed backward-compatibility toggles `OPENCLAW_GH_REQUIRE_AUTH` and `OPENCLAW_CODING_AGENT_REQUIRE_VERSION_CHECK`; runtime prerequisite checks are now always enforced when corresponding optional skills are enabled.
-- Updated `sync.sh` env-file handling to upload `SYNC_LOCAL_ENV_FILE` (fallback `SYNC_REMOTE_ENV_FILE`) to the configured remote env path before remote execution.
-- Expanded backup coverage for workspace, skills, hooks, and paired-device state paths (with override env vars for non-default locations).
-- Changed OpenClaw JSON backup behavior to write timestamped `.bak` files under `OPENCLAW_JSON_BACKUP_DIR` (default `$HOME/openclaw-backups`) instead of `.openclaw`.
-- Renamed the interactive setup entrypoint from `build-interactive.sh` to `configure.sh` to make config-authoring responsibilities explicit.
-- Removed `build-interactive.sh`; `configure.sh` is now the only supported interactive/configuration entrypoint.
-- Updated sync defaults/docs so remote `sync.conf` is explicit source of truth, deployment execution remains remote (`build.sh`), and default `SYNC_ITEMS` is limited to runtime deployment files.
+- Refactored repository into a minimal six-entrypoint layout: `build.sh`, `sync.sh`, `setup.sh`, `backup.sh`, `restore.sh`, `update.sh`.
+- Simplified `sync.sh` to a clearer local-sync + remote-apply workflow.
+- Simplified `setup.sh` into a non-interactive env-driven deploy wrapper.
+- Simplified `update.sh` into explicit optional `git pull` + backup + build stages.
+- Removed legacy top-level wrappers and stale docs that duplicated behavior.
+- Rewrote docs for deployment, operations, contribution workflow, and roadmap alignment.
+- Replaced sprawling test set with deterministic smoke/idempotency/hermetic coverage.
+- Added GitHub Actions CI (`.github/workflows/ci.yml`) to enforce syntax, lint/format, and core test checks.

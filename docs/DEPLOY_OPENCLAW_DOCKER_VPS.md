@@ -1,45 +1,47 @@
-# Standard VPS Deployment (Docker)
+# Deploy OpenClaw on a VPS (agime)
 
-Use this standard flow to deploy OpenClaw on a VPS.
+## Prerequisites
 
-## 1) Quick start
+- Linux VPS with Docker + Docker Compose installed.
+- SSH access from your workstation.
+- OVH endpoint API key.
 
-Interactive (recommended):
-
-```sh
-REMOTE_HOST=<user>@<vps-host> REMOTE_DIR=~/agime sh ./setup.sh
-```
-
-Non-interactive:
+## Recommended private deployment (`ssh-tunnel`)
 
 ```sh
-REMOTE_HOST=<user>@<vps-host> REMOTE_DIR=~/agime sh ./sync.sh
+REMOTE_HOST=ubuntu@203.0.113.10 \
+REMOTE_DIR=~/agime \
+OVH_ENDPOINT_API_KEY=your-key \
+OPENCLAW_ACCESS_MODE=ssh-tunnel \
+sh ./setup.sh
 ```
 
-## 2) Required settings
-
-- `OVH_ENDPOINT_API_KEY` is required.
-- `OPENCLAW_ACCESS_MODE` is `ssh-tunnel` (default) or `public`.
-- `OVH_ENDPOINT_MODEL` is optional (default: `gpt-oss-120b`).
-
-## 3) Optional image setting
-
-A custom image is optional.
+Then tunnel locally:
 
 ```sh
-OPENCLAW_IMAGE=<registry>/<name>:<tag>
-SKIP_OPENCLAW_IMAGE_BUILD=1
+ssh -N -L 18789:127.0.0.1:18789 ubuntu@203.0.113.10
 ```
 
-If unset, the default local image flow (`openclaw:local`) is used.
+Open: `http://127.0.0.1:18789`
 
-## 4) Validation
+## Public deployment (`public`, explicit opt-in)
 
-- `ssh-tunnel`: check `http://127.0.0.1:18789/healthz`
-- `public`: check `https://<OPENCLAW_DOMAIN>` and `docker logs traefik`
+```sh
+REMOTE_HOST=ubuntu@203.0.113.10 \
+REMOTE_DIR=~/agime \
+OVH_ENDPOINT_API_KEY=your-key \
+OPENCLAW_ACCESS_MODE=public \
+TRAEFIK_ACME_EMAIL=admin@example.com \
+OPENCLAW_DOMAIN=openclaw.example.com \
+sh ./setup.sh
+```
 
-## 5) Safe operations
+Open: `https://openclaw.example.com`
 
-- Backup: `sh ./backup.sh`
-- Update: `sh ./update.sh`
-- Restore: `sh ./restore.sh`
+## Ongoing deployment sync
+
+```sh
+REMOTE_HOST=ubuntu@203.0.113.10 OVH_ENDPOINT_API_KEY=your-key sh ./sync.sh
+```
+
+`sync.sh` keeps local authoring and remote apply clearly separated: local upload first, remote execution second.

@@ -67,20 +67,33 @@ try_download_remote_config() {
 }
 
 bootstrap_local_config() {
-  OPENCLAW_FORCE_INTERACTIVE=1 \
-    OPENCLAW_GENERATE_ENV_ONLY=1 \
-    OPENCLAW_EXPORT_ENV_FILE="$SYNC_LOCAL_ENV_FILE" \
-    sh "$SCRIPT_DIR/configure.sh"
+  example_file=$SCRIPT_DIR/sync.conf.example
+  if [ ! -f "$example_file" ]; then
+    cat >&2 << EOF
+sync.sh error:
+  could not bootstrap local config.
+  missing $example_file
+EOF
+    exit 1
+  fi
 
-  if ! grep -Eq '^REMOTE_HOST=' "$SYNC_LOCAL_ENV_FILE"; then
-    printf '\nREMOTE_HOST=%s\n' "$REMOTE_HOST" >> "$SYNC_LOCAL_ENV_FILE"
-  fi
-  if ! grep -Eq '^REMOTE_DIR=' "$SYNC_LOCAL_ENV_FILE"; then
-    printf 'REMOTE_DIR=%s\n' "$REMOTE_DIR" >> "$SYNC_LOCAL_ENV_FILE"
-  fi
+  mkdir -p "$(dirname "$SYNC_LOCAL_ENV_FILE")"
+  cp "$example_file" "$SYNC_LOCAL_ENV_FILE"
+
+  upsert_env_key "REMOTE_HOST" "$REMOTE_HOST"
+  upsert_env_key "REMOTE_DIR" "$REMOTE_DIR"
   normalize_shared_home_paths "$SYNC_LOCAL_ENV_FILE"
   chmod 600 "$SYNC_LOCAL_ENV_FILE"
-  printf 'sync.sh: created %s via local configure wizard\n' "$SYNC_LOCAL_ENV_FILE"
+  printf 'sync.sh: local config ready at %s\n' "$SYNC_LOCAL_ENV_FILE"
+}
+
+upsert_env_key() {
+  key=$1
+  value=$2
+  tmp_file=$(mktemp)
+  awk -F= -v k="$key" '$1 != k { print }' "$SYNC_LOCAL_ENV_FILE" > "$tmp_file"
+  printf '%s=%s\n' "$key" "$value" >> "$tmp_file"
+  mv "$tmp_file" "$SYNC_LOCAL_ENV_FILE"
 }
 
 if [ ! -f "$SYNC_LOCAL_ENV_FILE" ]; then

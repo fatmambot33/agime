@@ -5,7 +5,7 @@ This runbook provides a simple, repeatable process for building the custom image
 ## Goals
 
 - Keep VPS hosts thin (Docker + Compose + SSH + networking + bind mounts).
-- Bake optional tools into the image (`gh`, `himalaya`, `codex`, `claude`, `opencode`, `pi`, `signal-cli`).
+- Bake optional tools into the image (`gh`, `himalaya`, `codex`, `claude`, `opencode`, `pi`).
 - If you use the `codex` coding-agent backend, also include `bwrap` (bubblewrap) in the image so sandboxed runs can start.
 - Deploy with:
   - `OPENCLAW_IMAGE=<registry>/<name>:<tag>`
@@ -13,10 +13,10 @@ This runbook provides a simple, repeatable process for building the custom image
 
 ## Quick start (interactive first-time publish)
 
-Use the guided entrypoint and select `Image`:
+Use the image entrypoint:
 
 ```sh
-sh ./configure.sh
+sh ./image.sh
 ```
 
 The workflow prompts for:
@@ -26,7 +26,7 @@ The workflow prompts for:
 - tag
 - push preference
 
-`configure.sh` normalizes owner and image name to lowercase so the computed GHCR reference is valid for Docker image tags.
+`image.sh`/`scripts/build_custom_image.sh` normalize owner and image name to lowercase so the computed GHCR reference is valid for Docker image tags.
 
 Then it computes and displays:
 
@@ -73,7 +73,6 @@ The workflow also fails early if `docker` exists but the daemon/API is unreachab
 - `CUSTOM_OPENCLAW_BASE_IMAGE` (default `ghcr.io/openclaw/openclaw:latest`): upstream/base OpenClaw image.
 - For production, prefer a pinned base tag/digest over `:latest`.
 - `CUSTOM_OPENCLAW_DOCKERFILE_TEMPLATE` (default `templates/openclaw-custom-image.Dockerfile.tmpl`).
-  - The default template installs a Java runtime for `signal-cli`, preferring `openjdk-21-jre-headless` and automatically falling back to `openjdk-17-jre-headless` when Java 21 does not have an installable apt candidate in the base image distro repositories.
 - `CUSTOM_OPENCLAW_BROWSER_DEPS` (default `0`): set to `1` to install extra browser runtime deps.
 - `CUSTOM_OPENCLAW_PUSH` (default `0`): set to `1` to push after successful build.
 

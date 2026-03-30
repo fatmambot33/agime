@@ -2,15 +2,6 @@
 # shellcheck shell=sh
 # shellcheck disable=SC2154
 
-# shellcheck source=scripts/optional_tools/common.sh
-. "$SCRIPT_DIR/scripts/optional_tools/common.sh"
-# shellcheck source=scripts/optional_tools/github.sh
-. "$SCRIPT_DIR/scripts/optional_tools/github.sh"
-# shellcheck source=scripts/optional_tools/himalaya.sh
-. "$SCRIPT_DIR/scripts/optional_tools/himalaya.sh"
-# shellcheck source=scripts/optional_tools/coding_agent.sh
-. "$SCRIPT_DIR/scripts/optional_tools/coding_agent.sh"
-
 initialize_defaults() {
   CURRENT_USER=$(id -un)
   HOME_DIR=${HOME:-"$(getent passwd "$CURRENT_USER" | cut -d : -f 6 2> /dev/null || printf '/home/%s' "$CURRENT_USER")"}
@@ -92,26 +83,6 @@ check_docker_access() {
     sudo usermod -aG docker "$CURRENT_USER"
     fail "Docker permissions updated. Reconnect or run 'newgrp docker', then rerun the script."
   fi
-}
-
-setup_signal_channel_prerequisites() {
-  if [ "$OPENCLAW_ENABLE_SIGNAL" != "1" ]; then
-    return 0
-  fi
-
-  log "Signal channel enabled; runtime dependency will be validated inside Docker container after restart"
-}
-
-setup_github_skill_prerequisites() {
-  optional_tool_github_prepare
-}
-
-setup_himalaya_skill_prerequisites() {
-  optional_tool_himalaya_prepare
-}
-
-setup_coding_agent_skill_prerequisites() {
-  optional_tool_coding_agent_prepare
 }
 
 setup_access_mode_prerequisites() {
@@ -216,7 +187,6 @@ ensure_openclaw_env_overrides() {
   if [ "$DRY_RUN" = "1" ]; then
     log "[DRY_RUN] append OPENCLAW_CONFIG_DIR to $OPENCLAW_DIR/.env when missing"
     log "[DRY_RUN] append OPENCLAW_WORKSPACE_DIR to $OPENCLAW_DIR/.env when missing"
-    log "[DRY_RUN] append OPENCLAW_HIMALAYA_CONFIG_PATH to $OPENCLAW_DIR/.env when missing"
     return 0
   fi
 
@@ -225,9 +195,6 @@ ensure_openclaw_env_overrides() {
   fi
   if ! grep -q '^OPENCLAW_WORKSPACE_DIR=' "$OPENCLAW_DIR/.env"; then
     printf 'OPENCLAW_WORKSPACE_DIR=%s\n' "$OPENCLAW_WORKSPACE_DIR" >> "$OPENCLAW_DIR/.env"
-  fi
-  if ! grep -q '^OPENCLAW_HIMALAYA_CONFIG_PATH=' "$OPENCLAW_DIR/.env"; then
-    printf 'OPENCLAW_HIMALAYA_CONFIG_PATH=%s\n' "$OPENCLAW_HIMALAYA_CONFIG_PATH" >> "$OPENCLAW_DIR/.env"
   fi
 }
 
@@ -429,5 +396,4 @@ print_summary() {
   log "Gateway token: <redacted>"
   log "Container logs: docker logs openclaw"
   log "Pending device approvals: docker exec -it openclaw node dist/index.js devices list"
-  optional_tool_github_print_post_build_reminder
 }

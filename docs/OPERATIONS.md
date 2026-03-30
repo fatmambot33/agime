@@ -2,7 +2,7 @@
 
 ## Mode-first troubleshooting
 
-Deployment model note: Docker is the required runtime boundary for supported VPS deployments. Optional tooling (`gh`, `himalaya`, coding-agent backends, `signal-cli`) is expected inside the selected `OPENCLAW_IMAGE`, not installed on the host at deploy time.
+Deployment model note: Docker is the required runtime boundary for supported VPS deployments.
 
 ### 0) `sync.sh` asks for SSH password multiple times
 - `sync.sh` runs from your local machine and performs three remote operations (`ssh mkdir`, `scp`, then remote entrypoint execution; default is `build.sh`).
@@ -11,16 +11,15 @@ Deployment model note: Docker is the required runtime boundary for supported VPS
   - `SSH_CONTROL_PERSIST_SECONDS=1200`
   - `SSH_CONTROL_PATH="$HOME/.ssh/agime-sync-%r@%h:%p"`
 - Prefer keeping sync + build options in `sync.conf` (copy from `sync.conf.example`) and enable `SYNC_PRINT_CONFIG=1` so current effective values are shown before each run.
-- If `sync.conf` is missing, `sync.sh` first tries to download remote `sync.conf`; if not found remotely, it runs local `configure.sh` in config-generation mode and writes it locally.
+- If `sync.conf` is missing, `sync.sh` first tries to download remote `sync.conf`; if not found remotely, it bootstraps local config from `sync.conf.example`.
 - Shared `sync.conf` is normalized to home-relative paths (for example `~/openclaw`, `~/.openclaw`) for `OPENCLAW_*` + `TRAEFIK_DIR`, which keeps one machine-agnostic config usable on both workstation and VPS.
-- Treat `configure.sh` as a local config wizard (author/update), not the default deployment entrypoint.
+- Treat `sync.conf` as the local source-of-truth for authoring/updating deploy settings; `build.sh` remains the default remote entrypoint.
 - `SYNC_REMOTE_CONFIG_PRIORITY=1` by default: if remote `SYNC_REMOTE_ENV_FILE` already exists, `sync.sh` treats it as authoritative for the run and refreshes local `sync.conf` from it.
 - For non-interactive deploys, use `SYNC_REMOTE_ENTRYPOINT=build.sh` and keep required build variables in `sync.conf` (single source of truth).
 - `sync.sh` prints a preflight warning when `SYNC_REMOTE_ENTRYPOINT=build.sh` and `OVH_ENDPOINT_API_KEY` is empty in loaded config/environment.
 - By default, `sync.sh` sources `SYNC_REMOTE_ENV_FILE=sync.conf` remotely under `set -a` (plain `KEY=value` lines auto-export). It uploads local `sync.conf` only when remote priority is disabled or when the remote env file does not already exist.
 - If those two paths are the same file (default), `sync.sh` now uploads it once (no duplicate `scp` line for `sync.conf`).
 - Set `SYNC_MIRROR_ENV_FILE=1` when you want generated env values copied back locally after the run.
-- `configure.sh` auto-runs non-interactive mode when `.sync-build.env` exists on host; set `OPENCLAW_FORCE_INTERACTIVE=1` to override.
 
 ### 1) ssh-tunnel mode is unreachable locally
 - Symptom: browser cannot load `http://127.0.0.1:18789` after tunnel setup.
@@ -41,33 +40,12 @@ Deployment model note: Docker is the required runtime boundary for supported VPS
      - `POST_BUILD_TEST_ATTEMPTS=60`
      - `POST_BUILD_TEST_DELAY_SECONDS=5`
 
-### 3) Signal channel is enabled but not receiving messages
-- Symptom: deploy succeeds, but Signal DMs do not produce replies.
-- Fix:
-  1. Confirm `signal-cli` exists inside the running OpenClaw container:
-     `docker exec openclaw sh -lc 'signal-cli --version'`.
-  2. Confirm `openclaw.json` has a valid E.164 Signal account under `channels.signal.account`.
-  3. Complete Signal link/register flow, then restart gateway:
-     restart your OpenClaw container/service.
-  4. Check pairing queue and approve pending codes:
-     `openclaw pairing list signal`
-     `openclaw pairing approve signal <CODE>`
-
 ## Connectivity validation behavior
 
 - `ssh-tunnel`: validates `http://127.0.0.1:18789/healthz`.
 - `public`: validates `https://$OPENCLAW_DOMAIN`.
 - Public validation retries temporary cert states while ACME settles.
 - Public validation accepts successful TLS/connectivity even if root returns HTTP `404`.
-
-## Security guidance
-
-- Preferred transport is private (`ssh-tunnel`, or private overlay like Tailscale).
-- Public mode must be an explicit decision (`OPENCLAW_ACCESS_MODE=public`).
-- Gateway auth should remain fail-closed (`token` mode).
-- Device pairing alone is not a network-exposure control.
-- OpenClaw gateway default port is `18789`.
-- Keep allowlists and mention-gating controls enabled for group/chat surfaces.
 
 ## Backup/restore/reinstall by mode
 
@@ -96,9 +74,6 @@ sh ./update.sh
 # optional docker pull for OPENCLAW_IMAGE (image-first mode) -> build/deploy.
 # backup step is validated: update fails early if backup archive is missing.
 
-# optional: enable one optional tool post-install (setup 2.0 prefers image-baked tools)
-TOOL=github sh ./add_tool.sh
-
 # force update pull only when this directory is a git checkout
 GIT_PULL=1 sh ./update.sh
 
@@ -125,7 +100,6 @@ EXTRA_BACKUP_PATHS="$HOME/notes/IDENTITY.md" \
 sh ./backup.sh
 ```
 
-Interactive deploy note: `sh ./configure.sh` now starts with a welcome menu (`Image`, `Install`, `Update`, `Add Tool`, `Backup`, `Restore`, `Security`) and defaults to `Install` when pressing Enter. The `Install` path still offers a pre-deploy backup step before running `build.sh`.
 For an OVH-focused bootstrap, run `REMOTE_HOST=<user>@<host> sh ./setup.sh`; it collects required deploy inputs locally and deploys remotely via `sync.sh` over SSH.
 
 Restore safely to a sandbox path first:

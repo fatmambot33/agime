@@ -19,21 +19,10 @@ exit 0
 EOF2
 chmod +x "$TMP_DIR/bin/git"
 
-# Missing docker without install opt-in should fail.
+# Missing docker should auto-install and then pass checks.
 DRY_RUN=0
 POST_BUILD_TEST=0
-INSTALL_DOCKER_ON_HOST=0
 SKIP_DOCKER_GROUP_SETUP=1
-set +e
-(
-  check_docker_access
-) > "$TMP_DIR/missing.out" 2>&1
-status=$?
-set -e
-[ "$status" -ne 0 ]
-grep -q 'Missing required command: docker' "$TMP_DIR/missing.out"
-
-# Install opt-in should run the install command and then pass checks.
 TEST_DOCKER_STUB="$TMP_DIR/docker-stub"
 cat > "$TEST_DOCKER_STUB" << 'EOF2'
 #!/usr/bin/env sh
@@ -47,11 +36,17 @@ exit 0
 EOF2
 chmod +x "$TEST_DOCKER_STUB"
 
-INSTALL_DOCKER_ON_HOST=1
-DOCKER_INSTALL_COMMAND='ln -sf "$TEST_DOCKER_STUB" "$TMP_DIR/bin/docker"'
-export TEST_DOCKER_STUB TMP_DIR
-check_docker_access > "$TMP_DIR/install.out" 2>&1
-grep -q 'installing Docker and docker compose on host' "$TMP_DIR/install.out"
+cat > "$TMP_DIR/bin/curl" << EOF2
+#!/usr/bin/env sh
+cat << 'INSTALL_SCRIPT'
+#!/usr/bin/env sh
+ln -sf "$TEST_DOCKER_STUB" "$TMP_DIR/bin/docker"
+INSTALL_SCRIPT
+EOF2
+chmod +x "$TMP_DIR/bin/curl"
+
+check_docker_access > "$TMP_DIR/check.out" 2>&1
+grep -q 'installing Docker and docker compose on host' "$TMP_DIR/check.out"
 [ -x "$TMP_DIR/bin/docker" ]
 
 echo 'docker_install_flow_hermetic: ok'

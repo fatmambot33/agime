@@ -12,9 +12,7 @@
    - `OVH_ENDPOINT_API_KEY`
    - `OPENCLAW_ACCESS_MODE` (`ssh-tunnel` or `public`)
    - `public` mode only: `OPENCLAW_DOMAIN` and `TRAEFIK_ACME_EMAIL`
-2. Ensure Docker and `docker compose` are installed on the VPS before running agime.
-   - Optional automation: set `INSTALL_DOCKER_ON_HOST=1` to let `build.sh` run a host install command when Docker is missing.
-   - Default install command: `curl -fsSL https://get.docker.com | sh` (override with `DOCKER_INSTALL_COMMAND` if needed).
+2. Ensure outbound network access from the VPS so agime can install Docker and `docker compose` automatically when missing.
 3. Choose OpenClaw image policy:
    - default: local build (`OPENCLAW_IMAGE=openclaw:local`)
    - optional: override `OPENCLAW_IMAGE` with an upstream/prebuilt image

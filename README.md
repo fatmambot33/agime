@@ -37,7 +37,7 @@ sh ./setup.sh
 ```
 
 Before first deploy on a fresh OVH VPS:
-- install Docker + Docker Compose on the host,
+- install Docker + Docker Compose on the host (or set `INSTALL_DOCKER_ON_HOST=1`),
 - collect `OVH_ENDPOINT_API_KEY` and select `OPENCLAW_ACCESS_MODE`,
 - for public mode, also set `OPENCLAW_DOMAIN` and `TRAEFIK_ACME_EMAIL`,
 - optionally override `OPENCLAW_IMAGE` if you prefer a prebuilt image over `openclaw:local`.

@@ -48,6 +48,8 @@ Optional environment variables:
    - public: \$SCRIPT_DIR/templates/openclaw-compose.public.yml.tmpl
  OPENCLAW_JSON_TEMPLATE Optional template path. Default: \$SCRIPT_DIR/templates/openclaw.json.tmpl
  SKIP_DOCKER_GROUP_SETUP Default: 0. Set to 1 to skip docker group changes.
+ INSTALL_DOCKER_ON_HOST Default: 0. Set to 1 to install Docker on host when missing.
+ DOCKER_INSTALL_COMMAND Default: "curl -fsSL https://get.docker.com | sh". Override with caution.
  SKIP_OPENCLAW_IMAGE_BUILD Default: 0. Set to 1 to skip rebuilding local OpenClaw image.
  POST_BUILD_TEST Default: 1. Set to 0 to skip post-build connectivity validation.
  POST_BUILD_TEST_ATTEMPTS Default: 40. Number of validation attempts.
@@ -57,9 +59,9 @@ Optional environment variables:
  DRY_RUN Default: 0. Set to 1 to print planned actions without applying changes.
 
 Notes:
- - This script automates the OVHcloud guide published on 2026-02-25:
+- This script automates the OVHcloud guide published on 2026-02-25:
  https://help.ovhcloud.com/csm/fr-vps-install-openclaw?id=kb_article_view&sysparm_article=KB0074788
-- Docker and Docker Compose must already be installed.
+- Docker and Docker Compose must be installed, either manually or with INSTALL_DOCKER_ON_HOST=1.
 - First-run installs must run OpenClaw's interactive docker setup wizard.
 EOF2
 }

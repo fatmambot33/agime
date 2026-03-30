@@ -25,6 +25,8 @@ initialize_defaults() {
   OPENCLAW_COMPOSE_TEMPLATE_SSH_TUNNEL=${OPENCLAW_COMPOSE_TEMPLATE_SSH_TUNNEL:-"$SCRIPT_DIR/templates/openclaw-compose.ssh-tunnel.yml.tmpl"}
   OPENCLAW_JSON_TEMPLATE=${OPENCLAW_JSON_TEMPLATE:-"$SCRIPT_DIR/templates/openclaw.json.tmpl"}
   SKIP_DOCKER_GROUP_SETUP=${SKIP_DOCKER_GROUP_SETUP:-"0"}
+  INSTALL_DOCKER_ON_HOST=${INSTALL_DOCKER_ON_HOST:-"0"}
+  DOCKER_INSTALL_COMMAND=${DOCKER_INSTALL_COMMAND:-"curl -fsSL https://get.docker.com | sh"}
   SKIP_OPENCLAW_IMAGE_BUILD=${SKIP_OPENCLAW_IMAGE_BUILD:-"0"}
   POST_BUILD_TEST=${POST_BUILD_TEST:-"1"}
   POST_BUILD_TEST_ATTEMPTS=${POST_BUILD_TEST_ATTEMPTS:-"40"}
@@ -65,8 +67,8 @@ check_docker_access() {
     return 0
   fi
 
-  require_command docker
   require_command git
+  ensure_docker_available
   if [ "$POST_BUILD_TEST" != "0" ]; then
     require_command curl
   fi
@@ -82,6 +84,30 @@ check_docker_access() {
     sudo usermod -aG docker "$CURRENT_USER"
     fail "Docker permissions updated. Reconnect or run 'newgrp docker', then rerun the script."
   fi
+}
+
+ensure_docker_available() {
+  if command -v docker > /dev/null 2>&1; then
+    return 0
+  fi
+
+  if [ "$INSTALL_DOCKER_ON_HOST" != "1" ]; then
+    fail "Missing required command: docker. Install Docker + docker compose first, or set INSTALL_DOCKER_ON_HOST=1."
+  fi
+
+  install_docker_on_host
+  require_command docker
+}
+
+install_docker_on_host() {
+  log "Docker is missing; installing Docker and docker compose on host"
+  if [ "$DRY_RUN" = "1" ]; then
+    log "[DRY_RUN] sudo sh -c \"$DOCKER_INSTALL_COMMAND\""
+    return 0
+  fi
+
+  require_command sh
+  run_with_optional_sudo sh -c "$DOCKER_INSTALL_COMMAND"
 }
 
 setup_access_mode_prerequisites() {

@@ -1,39 +1,19 @@
-# Follow-up Evolution Plan
+# Follow-up Plan
 
 Date: 2026-03-30
 
-## Goal
-Keep the toolkit minimal, auditable, and private-by-default while improving test depth in small phases.
+## Current state
 
-## Refactor phases
+The refactor is complete: the repository now follows the six-entrypoint architecture with modular script internals, deterministic tests, and CI validation.
 
-### Phase 1 (implemented)
+## Next work (post-refactor)
 
-- Lock top-level contract to six entrypoints.
-- Extract orchestration concerns into `scripts/lib/` modules (`common`, `sync`, `setup`, `update`).
-- Keep `build.sh` as primary deploy engine with existing `scripts/build_*` modules.
-- Standardize deterministic checks in local `make` and CI.
+1. Add troubleshooting runbooks for common deployment failures.
+2. Add operator diagnostics cheatsheet (`docker logs`, health probes, TLS checks).
+3. Add release examples and tagging automation snippets.
 
-### Phase 2 (implemented in this cycle)
+## Guardrails to keep
 
-- Added public-mode preflight and sync env edge-case coverage.
-- Added template render substitution tests and contributor architecture checklist.
-
-### Phase 3 (implemented in this cycle)
-
-- Added shared helper normalization and deprecation documentation for compatibility shims.
-
-### Phase 4 (implemented in this cycle)
-
-- Added release process docs (tagging, changelog cadence, compatibility policy).
-- Added release-policy doc checks to `make check-strict`.
-
-## Next priority
-
-- Add troubleshooting runbooks and operational diagnostics.
-
-## Why this phased approach
-
-The previous one-shot rewrite was too abrupt. This plan keeps the simplified architecture but introduces it incrementally with stronger guardrails and test-backed milestones.
-
-See also: `docs/REFACTOR_PLAN.md` for detailed keep/merge/rewrite/remove analysis and phased execution checklist.
+- Keep exactly two access modes: `ssh-tunnel` (default) and `public`.
+- Keep top-level entrypoints limited to `build.sh`, `sync.sh`, `setup.sh`, `backup.sh`, `restore.sh`, `update.sh`.
+- Keep behavior changes coupled with docs + hermetic test updates in the same PR.

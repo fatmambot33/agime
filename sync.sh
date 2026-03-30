@@ -19,7 +19,6 @@ SYNC_ITEMS=${SYNC_ITEMS:-"build.sh sync.sh setup.sh backup.sh restore.sh update.
 SSH_BASE_ARGS="-o ControlMaster=auto -o ControlPersist=${SSH_CONTROL_PERSIST_SECONDS} -o ControlPath=$SSH_CONTROL_PATH"
 
 sync_load_config
-sync_apply_compat_shims
 sync_validate_requirements
 
 [ "$SYNC_PRINT_CONFIG" = "1" ] && sync_print_effective_config

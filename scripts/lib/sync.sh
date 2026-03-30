@@ -12,23 +12,6 @@ sync_load_config() {
   set +a
 }
 
-sync_apply_compat_shims() {
-  case "$SYNC_REMOTE_ENTRYPOINT" in
-    configure.sh | build-interactive.sh)
-      warn "SYNC_REMOTE_ENTRYPOINT=$SYNC_REMOTE_ENTRYPOINT is deprecated; using build.sh"
-      SYNC_REMOTE_ENTRYPOINT=build.sh
-      ;;
-  esac
-
-  if [ -n "${OPENCLAW_ACTION:-}" ]; then
-    warn "OPENCLAW_ACTION is deprecated and ignored"
-  fi
-
-  if [ -n "${SYNC_REMOTE_CONFIG_PRIORITY:-}" ]; then
-    warn "SYNC_REMOTE_CONFIG_PRIORITY is deprecated and ignored"
-  fi
-}
-
 sync_validate_remote_entrypoint() {
   case "$SYNC_REMOTE_ENTRYPOINT" in
     build.sh | update.sh | backup.sh | restore.sh) ;;

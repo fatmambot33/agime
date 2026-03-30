@@ -5,7 +5,7 @@ All notable changes to this repository are documented in this file.
 ## [Unreleased]
 
 ### Changed
-- Executed phase 4 release-engineering hardening.
-- Added release process documentation (`docs/RELEASE_PROCESS.md`).
-- Added compatibility/testing policy documentation (`docs/COMPATIBILITY_POLICY.md`).
-- Added hermetic release-doc policy checks (`tests/release_policy_docs_hermetic.sh`) and enforced via `make check-strict`.
+- Completed refactor cleanup to a stable “brand-new” baseline structure.
+- Removed transitional refactor/deprecation artifacts.
+- Simplified sync behavior by removing temporary compatibility-shim pathways.
+- Kept strict deterministic validation via `make check-strict`.

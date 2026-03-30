@@ -1,29 +1,30 @@
 # agime
 
-Minimal deployment toolkit for OpenClaw on VPS hosts.
+Clean deployment toolkit for OpenClaw on VPS hosts.
 
-## Design principles
+## What this repo does
 
-- Private-by-default (`OPENCLAW_ACCESS_MODE=ssh-tunnel` unless explicitly `public`).
-- Non-interactive, environment-variable-driven operations first.
-- Small set of clear entrypoints with modular shell logic in `scripts/lib/`.
-- Deterministic local and CI validation.
+- Deploy OpenClaw with a private-by-default posture.
+- Support exactly two access modes:
+  - `ssh-tunnel` (default)
+  - `public` (explicit opt-in via Traefik + Let's Encrypt)
+- Provide first-class operations for backup, restore, and update.
 
 ## Entrypoints
 
-- `build.sh` — deploy OpenClaw on a VPS host.
-- `sync.sh` — local-to-remote sync and remote execution.
-- `setup.sh` — first deploy wrapper around `sync.sh`.
-- `backup.sh` — archive runtime state.
-- `restore.sh` — restore runtime state with root safety guard.
+- `build.sh` — deploy/apply on a VPS host.
+- `sync.sh` — local sync + remote execution.
+- `setup.sh` — first-deploy wrapper around `sync.sh`.
+- `backup.sh` — create backup archive.
+- `restore.sh` — restore backup archive (with root safety guard).
 - `update.sh` — optional pull + backup + deploy workflow.
 
-## Repository layout
+## Repository structure
 
-- `scripts/` — shared shell modules.
-- `templates/` — rendered config assets only.
-- `tests/` — hermetic smoke/idempotency/failure-path checks.
-- `docs/` — operator and contributor docs.
+- `scripts/` — modular shell logic.
+- `templates/` — render-only configuration assets.
+- `tests/` — deterministic hermetic checks.
+- `docs/` — operator/contributor/release docs.
 
 ## Quick start
 
@@ -35,7 +36,7 @@ OPENCLAW_ACCESS_MODE=ssh-tunnel \
 sh ./setup.sh
 ```
 
-Public mode (explicit opt-in):
+Public mode:
 
 ```sh
 REMOTE_HOST=ubuntu@203.0.113.10 \
@@ -50,16 +51,9 @@ sh ./setup.sh
 ## Validation
 
 ```sh
-sh -n build.sh setup.sh sync.sh
 make check
 make check-strict
 ```
-
-
-## Compatibility notes
-
-See `docs/DEPRECATIONS.md` for active compatibility shims and migration guidance.
-
 
 ## Release and compatibility
 

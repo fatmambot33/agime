@@ -214,21 +214,18 @@ Operational note: pairing by itself is not a network exposure boundary; prefer `
 
 ## Standard Docker-on-VPS deployment guide
 
-Use the pure operator flow documented in:
+See the standard guide:
 
 - [`docs/DEPLOY_OPENCLAW_DOCKER_VPS.md`](docs/DEPLOY_OPENCLAW_DOCKER_VPS.md)
 
-Simple quick start:
+Quick commands:
 - Interactive: `REMOTE_HOST=<user>@<vps-host> REMOTE_DIR=~/agime sh ./setup.sh`
 - Non-interactive: `REMOTE_HOST=<user>@<vps-host> REMOTE_DIR=~/agime sh ./sync.sh`
 
-Key deployment constraints:
-
-- `OVH_ENDPOINT_API_KEY` is mandatory.
-- `OVH_ENDPOINT_MODEL` defaults to `gpt-oss-120b` if unset.
-- First install should keep native bootstrap enabled (`SKIP_OPENCLAW_WIZARD=0`).
-- `OPENCLAW_IMAGE` is optional; leave it unset for the default local image flow (`openclaw:local`).
-- Recommended interactive entrypoint: `REMOTE_HOST=<user>@<vps-host> sh ./setup.sh`.
+Core settings:
+- `OVH_ENDPOINT_API_KEY` (required)
+- `OPENCLAW_ACCESS_MODE=ssh-tunnel|public`
+- `OVH_ENDPOINT_MODEL` optional (default `gpt-oss-120b`)
 
 ## Image-first deployment model (recommended)
 

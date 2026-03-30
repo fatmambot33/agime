@@ -4,26 +4,26 @@
 
 - Keep top-level entrypoints limited to:
   `build.sh`, `sync.sh`, `setup.sh`, `backup.sh`, `restore.sh`, `update.sh`.
-- Keep shared implementation details in `scripts/`.
+- Keep shared orchestration logic in `scripts/lib/`.
+- Keep deploy-step implementation in `scripts/build_lib.sh` and `scripts/build_steps.sh`.
 - Keep rendered assets in `templates/` only.
-- Prefer POSIX `sh` and deterministic behavior.
+- Use POSIX `sh`.
 
-## Required local validation
-
-Run before opening a PR:
+## Required checks
 
 ```sh
 sh -n build.sh setup.sh sync.sh
 make check
 ```
 
-Prefer strict checks when available:
+Prefer strict checks before opening a PR:
 
 ```sh
 make check-strict
 ```
 
-## Testing policy
+## Test expectations
 
-- Add or update hermetic tests in `tests/` for behavior changes.
-- Prefer dry-run, mock-driven, and idempotency-oriented checks over manual-only validation.
+- Add deterministic hermetic coverage for behavior changes.
+- Include failure-path checks for new safety rails.
+- Keep template security checks in `tests/security_template_checks.sh` updated when templates change.

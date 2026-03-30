@@ -3,25 +3,27 @@
 Date: 2026-03-30
 
 ## Goal
-Keep the refactored toolkit small, auditable, and private-by-default while expanding deterministic coverage.
+Keep the toolkit minimal, auditable, and private-by-default while improving test depth in small phases.
 
-## Completed in this refactor
+## Refactor phases
 
-- Reduced top-level operational surface to six explicit entrypoints.
-- Removed legacy wrappers/flows that duplicated responsibilities.
-- Simplified sync/setup to a clear local-sync then remote-apply model.
-- Re-aligned docs to match the refactored runtime paths.
-- Replaced sprawling test matrix with deterministic smoke/idempotency/hermetic checks.
-- Added CI workflow for syntax, lint/format, smoke, and idempotency enforcement.
+### Phase 1 (implemented)
 
-## Next priorities
+- Lock top-level contract to six entrypoints.
+- Extract orchestration concerns into `scripts/lib/` modules (`common`, `sync`, `setup`, `update`).
+- Keep `build.sh` as primary deploy engine with existing `scripts/build_*` modules.
+- Standardize deterministic checks in local `make` and CI.
 
-1. Add hermetic failure tests for `build.sh` public-mode preflight validation.
-2. Add finer-grained unit-like checks for template rendering in `scripts/build_lib.sh`.
-3. Add release tagging checklist and changelog policy.
-4. Add shell performance guardrails for large sync payloads.
-5. Expand docs with operator troubleshooting decision trees.
+### Phase 2 (next)
 
-## Why priorities changed
+- Add failure-injection coverage for public-mode deploy preflights and connectivity retries.
+- Add more granular tests for render helpers and config-file generation branches.
 
-The repository was intentionally redesigned around fewer scripts and fewer modes. Priorities now focus on proving correctness and operability of the simpler model rather than extending legacy pathways.
+### Phase 3 (next)
+
+- Add release process docs (tagging, changelog cadence, compatibility policy).
+- Add troubleshooting runbooks for common operator failures.
+
+## Why this phased approach
+
+The previous one-shot rewrite was too abrupt. This plan keeps the simplified architecture but introduces it incrementally with stronger guardrails and test-backed milestones.

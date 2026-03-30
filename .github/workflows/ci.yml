@@ -11,9 +11,5 @@ jobs:
       - uses: actions/checkout@v4
       - name: Install shell tools
         run: sudo apt-get update && sudo apt-get install -y shellcheck shfmt
-      - name: Syntax
-        run: make syntax
-      - name: Lint and format
-        run: make lint fmt-check
-      - name: Smoke + idempotency + hermetic
-        run: make smoke idempotency sync-test backup-restore-test
+      - name: Run strict checks
+        run: make check-strict

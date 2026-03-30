@@ -3,8 +3,10 @@
 set -eu
 
 SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
-SYNC_SCRIPT="$SCRIPT_DIR/sync.sh"
+# shellcheck source=scripts/lib/setup.sh
+. "$SCRIPT_DIR/scripts/lib/setup.sh"
 
+SYNC_SCRIPT="$SCRIPT_DIR/sync.sh"
 REMOTE_HOST=${REMOTE_HOST:-}
 REMOTE_DIR=${REMOTE_DIR:-~/agime}
 OPENCLAW_ACCESS_MODE=${OPENCLAW_ACCESS_MODE:-ssh-tunnel}
@@ -13,37 +15,7 @@ TRAEFIK_ACME_EMAIL=${TRAEFIK_ACME_EMAIL:-}
 OPENCLAW_DOMAIN=${OPENCLAW_DOMAIN:-}
 OPENCLAW_TOKEN=${OPENCLAW_TOKEN:-}
 
-fail() {
-  printf 'setup.sh error: %s\n' "$*" >&2
-  exit 1
-}
-
-[ -x "$SYNC_SCRIPT" ] || fail "sync.sh not found at $SYNC_SCRIPT"
-[ -n "$REMOTE_HOST" ] || fail "REMOTE_HOST is required"
-[ -n "$OVH_ENDPOINT_API_KEY" ] || fail "OVH_ENDPOINT_API_KEY is required"
-
-case "$OPENCLAW_ACCESS_MODE" in
-  ssh-tunnel | public) ;;
-  *) fail "OPENCLAW_ACCESS_MODE must be ssh-tunnel or public" ;;
-esac
-
-if [ "$OPENCLAW_ACCESS_MODE" = "public" ]; then
-  [ -n "$TRAEFIK_ACME_EMAIL" ] || fail "TRAEFIK_ACME_EMAIL is required in public mode"
-  [ -n "$OPENCLAW_DOMAIN" ] || fail "OPENCLAW_DOMAIN is required in public mode"
-fi
-
-TMP_SYNC_CONFIG=$(mktemp)
+setup_validate
+TMP_SYNC_CONFIG=$(setup_build_temp_config)
 trap 'rm -f "$TMP_SYNC_CONFIG"' EXIT INT TERM
-cat > "$TMP_SYNC_CONFIG" << EOF2
-REMOTE_HOST=$REMOTE_HOST
-REMOTE_DIR=$REMOTE_DIR
-SYNC_REMOTE_ENTRYPOINT=build.sh
-OPENCLAW_ACCESS_MODE=$OPENCLAW_ACCESS_MODE
-OVH_ENDPOINT_API_KEY=$OVH_ENDPOINT_API_KEY
-OPENCLAW_TOKEN=$OPENCLAW_TOKEN
-TRAEFIK_ACME_EMAIL=$TRAEFIK_ACME_EMAIL
-OPENCLAW_DOMAIN=$OPENCLAW_DOMAIN
-EOF2
-chmod 600 "$TMP_SYNC_CONFIG"
-
 SYNC_CONFIG_FILE="$TMP_SYNC_CONFIG" SYNC_LOCAL_ENV_FILE="$TMP_SYNC_CONFIG" sh "$SYNC_SCRIPT"

@@ -29,8 +29,6 @@ cat > "$TMP_DIR/build.sh" << 'EOS'
 #!/usr/bin/env sh
 set -eu
 printf 'build called\n'
-printf 'signal=%s\n' "${OPENCLAW_ENABLE_SIGNAL:-0}"
-
 printf 'openclaw_image=%s skip_build=%s\n' \
   "${OPENCLAW_IMAGE:-unset}" \
   "${SKIP_OPENCLAW_IMAGE_BUILD:-unset}"

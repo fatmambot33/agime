@@ -4,8 +4,7 @@ set -eu
 
 SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 OUTPUT_FILE=$(mktemp)
-OUTPUT_SIGNAL_FILE=$(mktemp)
-trap 'rm -f "$OUTPUT_FILE" "$OUTPUT_SIGNAL_FILE"' EXIT
+trap 'rm -f "$OUTPUT_FILE"' EXIT
 
 (
   cd "$SCRIPT_DIR"
@@ -27,18 +26,3 @@ if grep -q 'Gateway token: dry-run-token' "$OUTPUT_FILE"; then
 fi
 
 echo "DRY_RUN smoke test passed"
-
-(
-  cd "$SCRIPT_DIR"
-  DRY_RUN=1 \
-    OVH_ENDPOINT_API_KEY=dummy-key \
-    OPENCLAW_ENABLE_SIGNAL=1 \
-    OPENCLAW_SIGNAL_ACCOUNT=+15551234567 \
-    OPENCLAW_SIGNAL_CLI_PATH=signal-cli-custom \
-    sh ./build.sh > "$OUTPUT_SIGNAL_FILE"
-)
-
-grep -q 'Signal channel enabled; runtime dependency will be validated inside Docker container after restart' "$OUTPUT_SIGNAL_FILE"
-grep -q 'OpenClaw deployment finished' "$OUTPUT_SIGNAL_FILE"
-
-echo "DRY_RUN signal smoke test passed"

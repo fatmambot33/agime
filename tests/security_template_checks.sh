@@ -26,12 +26,6 @@ if grep -Eq '"mode"[[:space:]]*:[[:space:]]*"none"' "$OPENCLAW_TEMPLATE"; then
   exit 1
 fi
 
-# Signal template defaults should stay explicit and fail-closed.
-grep -Eq '"signal"[[:space:]]*:[[:space:]]*\{' "$OPENCLAW_TEMPLATE"
-grep -Eq '"enabled"[[:space:]]*:[[:space:]]*__OPENCLAW_SIGNAL_ENABLED__' "$OPENCLAW_TEMPLATE"
-grep -Eq '"dmPolicy"[[:space:]]*:[[:space:]]*"pairing"' "$OPENCLAW_TEMPLATE"
-grep -Eq '"cliPath"[[:space:]]*:[[:space:]]*"__OPENCLAW_SIGNAL_CLI_PATH__"' "$OPENCLAW_TEMPLATE"
-
 # Public compose should terminate TLS at Traefik and avoid host port publishing.
 grep -Fq 'traefik.http.routers.openclaw.entrypoints=websecure' "$COMPOSE_TEMPLATE_PUBLIC"
 grep -Fq 'traefik.http.routers.openclaw.tls.certresolver=myresolver' "$COMPOSE_TEMPLATE_PUBLIC"

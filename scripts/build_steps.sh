@@ -24,10 +24,6 @@ initialize_defaults() {
   OPENCLAW_COMPOSE_TEMPLATE_PUBLIC=${OPENCLAW_COMPOSE_TEMPLATE_PUBLIC:-"$SCRIPT_DIR/templates/openclaw-compose.public.yml.tmpl"}
   OPENCLAW_COMPOSE_TEMPLATE_SSH_TUNNEL=${OPENCLAW_COMPOSE_TEMPLATE_SSH_TUNNEL:-"$SCRIPT_DIR/templates/openclaw-compose.ssh-tunnel.yml.tmpl"}
   OPENCLAW_JSON_TEMPLATE=${OPENCLAW_JSON_TEMPLATE:-"$SCRIPT_DIR/templates/openclaw.json.tmpl"}
-  OPENCLAW_ENABLE_SIGNAL=${OPENCLAW_ENABLE_SIGNAL:-"0"}
-  OPENCLAW_SIGNAL_ACCOUNT=${OPENCLAW_SIGNAL_ACCOUNT:-""}
-  OPENCLAW_SIGNAL_ALLOW_FROM=${OPENCLAW_SIGNAL_ALLOW_FROM:-""}
-  OPENCLAW_SIGNAL_CLI_PATH=${OPENCLAW_SIGNAL_CLI_PATH:-"signal-cli"}
   SKIP_DOCKER_GROUP_SETUP=${SKIP_DOCKER_GROUP_SETUP:-"0"}
   SKIP_OPENCLAW_WIZARD=${SKIP_OPENCLAW_WIZARD:-"0"}
   SKIP_OPENCLAW_IMAGE_BUILD=${SKIP_OPENCLAW_IMAGE_BUILD:-"0"}
@@ -87,14 +83,6 @@ check_docker_access() {
     sudo usermod -aG docker "$CURRENT_USER"
     fail "Docker permissions updated. Reconnect or run 'newgrp docker', then rerun the script."
   fi
-}
-
-setup_signal_channel_prerequisites() {
-  if [ "$OPENCLAW_ENABLE_SIGNAL" != "1" ]; then
-    return 0
-  fi
-
-  log "Signal channel enabled; runtime dependency will be validated inside Docker container after restart"
 }
 
 setup_access_mode_prerequisites() {

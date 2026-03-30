@@ -315,26 +315,6 @@ Enabled by default (`POST_BUILD_TEST=1`). Tunables:
 
 Public-mode retry logic treats temporary default/self-signed cert states as transient while ACME issuance finishes.
 
-## Signal channel setup (optional)
-
-This toolkit preconfigures `channels.signal` in `openclaw.json` and validates `signal-cli` inside the running container.
-
-```bash
-OPENCLAW_ENABLE_SIGNAL=1 \
-OPENCLAW_SIGNAL_ACCOUNT=+15551234567 \
-OPENCLAW_SIGNAL_ALLOW_FROM=+15557654321 \
-OVH_ENDPOINT_API_KEY=xxxxx \
-./build.sh
-```
-
-Behavior:
-
-- When `OPENCLAW_ENABLE_SIGNAL=1`, the script validates `signal-cli` is available inside the running `openclaw` container.
-- Rendered config includes `channels.signal.enabled=true`, the configured account, `cliPath`, and optional single-entry DM allowlist.
-- After deployment, complete Signal registration/linking and approve pairing codes from the host:
-  - `openclaw pairing list signal`
-  - `openclaw pairing approve signal <CODE>`
-
 ## Security checklist (validated defaults)
 
 - [x] Default access path is private (`OPENCLAW_ACCESS_MODE=ssh-tunnel`).
@@ -466,10 +446,6 @@ Use dry-run previews when needed:
 
 ```bash
 DRY_RUN=1 sh ./update.sh
-DRY_RUN=1 TOOL=signal sh ./add_tool.sh
 ```
 
-## Signal docs
-
-- <https://docs.openclaw.ai/channels/signal>
 

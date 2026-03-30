@@ -36,8 +36,8 @@ sync_parse_key_value_file() {
     value=${raw_line#*=}
 
     sync_validate_key "$key"
-    sync_validate_value "$key" "$value"
     value=$(sync_strip_wrapping_quotes "$value")
+    sync_validate_value "$key" "$value"
 
     sync_assign_key "$key" "$value"
   done < "$config_file"

@@ -71,7 +71,16 @@ while IFS= read -r entry; do
   done
 
   allowed=0
-  for prefix in $RESTORE_ALLOWED_PREFIXES; do
+  for raw_prefix in $RESTORE_ALLOWED_PREFIXES; do
+    prefix=$raw_prefix
+    case "$prefix" in
+      /*) ;;
+      *) prefix="/$prefix" ;;
+    esac
+    while [ "$prefix" != "/" ] && [ "${prefix%/}" != "$prefix" ]; do
+      prefix=${prefix%/}
+    done
+
     case "$normalized" in
       "$prefix" | "$prefix"/*)
         allowed=1

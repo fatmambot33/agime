@@ -391,8 +391,11 @@ validate_public_mode() {
   attempts_left=$POST_BUILD_TEST_ATTEMPTS
 
   require_command getent
-  domain_ips=$(getent ahostsv4 "$OPENCLAW_DOMAIN" 2> /dev/null | awk '{print $1}' | sort -u | tr '\n' ' ' | sed 's/[[:space:]]*$//')
-  [ -n "$domain_ips" ] || fail "Public validation failed: could not resolve IPv4 address for $OPENCLAW_DOMAIN"
+  domain_ips=$(getent ahosts "$OPENCLAW_DOMAIN" 2> /dev/null | awk '{print $1}' | sort -u | tr '\n' ' ' | sed 's/[[:space:]]*$//')
+  if [ -z "$domain_ips" ]; then
+    domain_ips=$(getent hosts "$OPENCLAW_DOMAIN" 2> /dev/null | awk '{print $1}' | sort -u | tr '\n' ' ' | sed 's/[[:space:]]*$//')
+  fi
+  [ -n "$domain_ips" ] || fail "Public validation failed: could not resolve address for $OPENCLAW_DOMAIN"
   log "Resolved $OPENCLAW_DOMAIN to: $domain_ips"
 
   while [ "$attempts_left" -gt 0 ]; do

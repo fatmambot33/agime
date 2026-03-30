@@ -78,6 +78,7 @@ make check-strict
 ## Strict config parsing (`sync.sh`)
 
 - `SYNC_CONFIG_FILE` and `SYNC_LOCAL_ENV_FILE` are parsed as **data** (`KEY=VALUE`), not executed as shell.
+- Quoted values are accepted (for example `REMOTE_DIR="~/agime"`).
 - Unknown keys, multiline values, and shell-dangerous characters are rejected early.
 - Supported keys are constrained to deploy/update/backup/restore inputs only.
 

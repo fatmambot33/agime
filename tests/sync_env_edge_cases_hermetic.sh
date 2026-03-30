@@ -85,6 +85,21 @@ EOF2
 
 grep -Eq 'ssh .*\./update\.sh' "$CALLS"
 
+# Quoted KEY=VALUE should be accepted.
+CONF_QUOTED="$TMP_DIR/quoted.conf"
+cat > "$CONF_QUOTED" << EOF5
+REMOTE_HOST=test-vps
+REMOTE_DIR="~/agime"
+SYNC_REMOTE_ENTRYPOINT=update.sh
+OPENCLAW_DOMAIN="openclaw.example.com"
+EOF5
+
+(
+  cd "$REPO_DIR"
+  PATH="$BIN_DIR:$PATH" SYNC_CONFIG_FILE="$CONF_QUOTED" sh ./sync.sh
+)
+grep -Eq 'scp .* test-vps:~/agime/' "$CALLS"
+
 # Unsafe config values should be rejected (config is data, not shell).
 CONF_UNSAFE="$TMP_DIR/unsafe.conf"
 cat > "$CONF_UNSAFE" << EOF3

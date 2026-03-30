@@ -92,11 +92,11 @@ mkdir -p "$HOME_FIXTURE"
 (
   cd "$REPO_DIR"
   HOME="$HOME_FIXTURE" \
-  PATH="$BIN_DIR:$PATH" \
-  REMOTE_HOST=test-vps \
-  REMOTE_DIR="$HOME_FIXTURE/agime" \
-  SYNC_REMOTE_ENTRYPOINT=update.sh \
-  sh ./sync.sh
+    PATH="$BIN_DIR:$PATH" \
+    REMOTE_HOST=test-vps \
+    REMOTE_DIR="$HOME_FIXTURE/agime" \
+    SYNC_REMOTE_ENTRYPOINT=update.sh \
+    sh ./sync.sh
 )
 
 grep -q 'ssh -o ControlMaster=auto -o ControlPersist=600 -o ControlPath=.*/agime-sync-%r@%h:%p test-vps mkdir -p "$HOME/agime"' "$CALLS"

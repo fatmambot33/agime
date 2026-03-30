@@ -2,14 +2,33 @@
 # shellcheck shell=sh
 # shellcheck disable=SC2154
 
-# shellcheck source=scripts/optional_tools/common.sh
-. "$SCRIPT_DIR/scripts/optional_tools/common.sh"
-# shellcheck source=scripts/optional_tools/github.sh
-. "$SCRIPT_DIR/scripts/optional_tools/github.sh"
-# shellcheck source=scripts/optional_tools/himalaya.sh
-. "$SCRIPT_DIR/scripts/optional_tools/himalaya.sh"
-# shellcheck source=scripts/optional_tools/coding_agent.sh
-. "$SCRIPT_DIR/scripts/optional_tools/coding_agent.sh"
+source_optional_tool_script() {
+  script_path=$1
+  [ -f "$script_path" ] || return 0
+  # shellcheck disable=SC1090
+  . "$script_path"
+}
+
+source_optional_tool_script "$SCRIPT_DIR/scripts/optional_tools/common.sh"
+source_optional_tool_script "$SCRIPT_DIR/scripts/optional_tools/github.sh"
+source_optional_tool_script "$SCRIPT_DIR/scripts/optional_tools/himalaya.sh"
+source_optional_tool_script "$SCRIPT_DIR/scripts/optional_tools/coding_agent.sh"
+
+if ! command -v optional_tool_github_prepare > /dev/null 2>&1; then
+  optional_tool_github_prepare() { :; }
+fi
+if ! command -v optional_tool_himalaya_prepare > /dev/null 2>&1; then
+  optional_tool_himalaya_prepare() { :; }
+fi
+if ! command -v optional_tool_coding_agent_prepare > /dev/null 2>&1; then
+  optional_tool_coding_agent_prepare() { :; }
+fi
+if ! command -v optional_tool_github_print_post_build_reminder > /dev/null 2>&1; then
+  optional_tool_github_print_post_build_reminder() { :; }
+fi
+if ! command -v validate_optional_skill_container_runtime > /dev/null 2>&1; then
+  validate_optional_skill_container_runtime() { :; }
+fi
 
 initialize_defaults() {
   CURRENT_USER=$(id -un)
@@ -33,6 +52,19 @@ initialize_defaults() {
   OPENCLAW_COMPOSE_TEMPLATE_PUBLIC=${OPENCLAW_COMPOSE_TEMPLATE_PUBLIC:-"$SCRIPT_DIR/templates/openclaw-compose.public.yml.tmpl"}
   OPENCLAW_COMPOSE_TEMPLATE_SSH_TUNNEL=${OPENCLAW_COMPOSE_TEMPLATE_SSH_TUNNEL:-"$SCRIPT_DIR/templates/openclaw-compose.ssh-tunnel.yml.tmpl"}
   OPENCLAW_JSON_TEMPLATE=${OPENCLAW_JSON_TEMPLATE:-"$SCRIPT_DIR/templates/openclaw.json.tmpl"}
+  OPENCLAW_ENABLE_SIGNAL=${OPENCLAW_ENABLE_SIGNAL:-"0"}
+  OPENCLAW_SIGNAL_ACCOUNT=${OPENCLAW_SIGNAL_ACCOUNT:-""}
+  OPENCLAW_SIGNAL_ALLOW_FROM=${OPENCLAW_SIGNAL_ALLOW_FROM:-""}
+  OPENCLAW_SIGNAL_CLI_PATH=${OPENCLAW_SIGNAL_CLI_PATH:-"signal-cli"}
+  OPENCLAW_ENABLE_GITHUB_SKILL=${OPENCLAW_ENABLE_GITHUB_SKILL:-"0"}
+  OPENCLAW_GH_CLI_PATH=${OPENCLAW_GH_CLI_PATH:-"gh"}
+  OPENCLAW_ENABLE_HIMALAYA_SKILL=${OPENCLAW_ENABLE_HIMALAYA_SKILL:-"0"}
+  OPENCLAW_HIMALAYA_CLI_PATH=${OPENCLAW_HIMALAYA_CLI_PATH:-"himalaya"}
+  OPENCLAW_HIMALAYA_REQUIRE_CONFIG=${OPENCLAW_HIMALAYA_REQUIRE_CONFIG:-"1"}
+  OPENCLAW_HIMALAYA_CONFIG_PATH=${OPENCLAW_HIMALAYA_CONFIG_PATH:-"$OPENCLAW_CONFIG_DIR/himalaya/config.toml"}
+  OPENCLAW_HIMALAYA_CONFIG_TOML_BASE64=${OPENCLAW_HIMALAYA_CONFIG_TOML_BASE64:-""}
+  OPENCLAW_ENABLE_CODING_AGENT_SKILL=${OPENCLAW_ENABLE_CODING_AGENT_SKILL:-"0"}
+  OPENCLAW_CODING_AGENT_BACKEND=${OPENCLAW_CODING_AGENT_BACKEND:-"codex"}
   SKIP_DOCKER_GROUP_SETUP=${SKIP_DOCKER_GROUP_SETUP:-"0"}
   SKIP_OPENCLAW_WIZARD=${SKIP_OPENCLAW_WIZARD:-"0"}
   SKIP_OPENCLAW_IMAGE_BUILD=${SKIP_OPENCLAW_IMAGE_BUILD:-"0"}

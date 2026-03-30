@@ -23,8 +23,6 @@ sh ./restore.sh
 
 `restore.sh` refuses `/` restores unless `RESTORE_FORCE=1`.
 
-## Optional image-first runtime
+## Image runtime policy
 
-```sh
-SKIP_OPENCLAW_IMAGE_BUILD=1 OPENCLAW_IMAGE=ghcr.io/example/openclaw:tag sh ./build.sh
-```
+agime pulls the official OpenClaw image (`ghcr.io/openclaw/openclaw:latest`) during deploy.

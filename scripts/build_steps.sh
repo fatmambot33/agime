@@ -14,8 +14,7 @@ initialize_defaults() {
   OPENCLAW_JSON_BACKUP_DIR=${OPENCLAW_JSON_BACKUP_DIR:-"$HOME_DIR/openclaw-backups"}
   TRAEFIK_DIR=${TRAEFIK_DIR:-"$HOME_DIR/docker/traefik"}
   OPENCLAW_REPO=${OPENCLAW_REPO:-"https://github.com/openclaw/openclaw.git"}
-  OPENCLAW_IMAGE=${OPENCLAW_IMAGE:-"openclaw:local"}
-  OPENCLAW_IMAGE_REVISION_STAMP=${OPENCLAW_IMAGE_REVISION_STAMP:-"$OPENCLAW_CONFIG_DIR/openclaw-image-revision.txt"}
+  OPENCLAW_IMAGE="ghcr.io/openclaw/openclaw:latest"
   OPENCLAW_GATEWAY_BIND=${OPENCLAW_GATEWAY_BIND:-"lan"}
   OVH_ENDPOINT_BASE_URL=${OVH_ENDPOINT_BASE_URL:-"https://oai.endpoints.kepler.ai.cloud.ovh.net/v1"}
   OVH_ENDPOINT_MODEL=${OVH_ENDPOINT_MODEL:-"gpt-oss-120b"}
@@ -25,8 +24,6 @@ initialize_defaults() {
   OPENCLAW_COMPOSE_TEMPLATE_SSH_TUNNEL=${OPENCLAW_COMPOSE_TEMPLATE_SSH_TUNNEL:-"$SCRIPT_DIR/templates/openclaw-compose.ssh-tunnel.yml.tmpl"}
   OPENCLAW_JSON_TEMPLATE=${OPENCLAW_JSON_TEMPLATE:-"$SCRIPT_DIR/templates/openclaw.json.tmpl"}
   SKIP_DOCKER_GROUP_SETUP=${SKIP_DOCKER_GROUP_SETUP:-"0"}
-  SKIP_OPENCLAW_WIZARD=${SKIP_OPENCLAW_WIZARD:-"0"}
-  SKIP_OPENCLAW_IMAGE_BUILD=${SKIP_OPENCLAW_IMAGE_BUILD:-"0"}
   POST_BUILD_TEST=${POST_BUILD_TEST:-"1"}
   POST_BUILD_TEST_ATTEMPTS=${POST_BUILD_TEST_ATTEMPTS:-"40"}
   POST_BUILD_TEST_DELAY_SECONDS=${POST_BUILD_TEST_DELAY_SECONDS:-"3"}
@@ -66,8 +63,8 @@ check_docker_access() {
     return 0
   fi
 
-  require_command docker
   require_command git
+  ensure_docker_available
   if [ "$POST_BUILD_TEST" != "0" ]; then
     require_command curl
   fi
@@ -83,6 +80,27 @@ check_docker_access() {
     sudo usermod -aG docker "$CURRENT_USER"
     fail "Docker permissions updated. Reconnect or run 'newgrp docker', then rerun the script."
   fi
+}
+
+ensure_docker_available() {
+  if command -v docker > /dev/null 2>&1; then
+    return 0
+  fi
+
+  install_docker_on_host
+  require_command docker
+}
+
+install_docker_on_host() {
+  log "Docker is missing; installing Docker and docker compose on host"
+  if [ "$DRY_RUN" = "1" ]; then
+    log "[DRY_RUN] sudo sh -c \"curl -fsSL https://get.docker.com | sh\""
+    return 0
+  fi
+
+  require_command curl
+  require_command sh
+  run_with_optional_sudo sh -c "curl -fsSL https://get.docker.com | sh"
 }
 
 setup_access_mode_prerequisites() {
@@ -149,7 +167,7 @@ prepare_openclaw_repo() {
 }
 
 run_openclaw_wizard_if_needed() {
-  if [ ! -f "$OPENCLAW_DIR/.env" ] && [ "$SKIP_OPENCLAW_WIZARD" != "1" ]; then
+  if [ ! -f "$OPENCLAW_DIR/.env" ]; then
     log "Running OpenClaw's docker setup wizard"
     if [ "$DRY_RUN" = "1" ]; then
       log "[DRY_RUN] (cd $OPENCLAW_DIR && ./docker-setup.sh)"
@@ -225,59 +243,13 @@ write_openclaw_json_config() {
 }
 
 ensure_openclaw_image() {
-  if [ "$SKIP_OPENCLAW_IMAGE_BUILD" = "1" ]; then
-    log "Skipping OpenClaw image build (SKIP_OPENCLAW_IMAGE_BUILD=1)"
+  log "Pulling OpenClaw official image: $OPENCLAW_IMAGE"
+  if [ "$DRY_RUN" = "1" ]; then
+    log "[DRY_RUN] docker pull $OPENCLAW_IMAGE"
     return 0
   fi
 
-  current_revision=""
-  if [ "$DRY_RUN" = "1" ]; then
-    current_revision="dry-run-revision"
-  else
-    current_revision=$(cd "$OPENCLAW_DIR" && git rev-parse HEAD)
-  fi
-
-  image_missing=0
-  stamp_missing=0
-  revision_changed=0
-  previous_revision=""
-
-  if [ "$DRY_RUN" = "1" ]; then
-    log "[DRY_RUN] docker image inspect $OPENCLAW_IMAGE"
-    image_missing=1
-  elif ! docker image inspect "$OPENCLAW_IMAGE" > /dev/null 2>&1; then
-    image_missing=1
-  fi
-
-  if [ "$DRY_RUN" = "1" ]; then
-    log "[DRY_RUN] check revision stamp at $OPENCLAW_IMAGE_REVISION_STAMP"
-    stamp_missing=1
-  elif [ ! -f "$OPENCLAW_IMAGE_REVISION_STAMP" ]; then
-    stamp_missing=1
-  else
-    previous_revision=$(sed -n '1p' "$OPENCLAW_IMAGE_REVISION_STAMP")
-    [ "$previous_revision" = "$current_revision" ] || revision_changed=1
-  fi
-
-  if [ "$image_missing" -eq 0 ] && [ "$stamp_missing" -eq 0 ] && [ "$revision_changed" -eq 0 ]; then
-    log "OpenClaw image is up to date for revision $current_revision"
-    return 0
-  fi
-
-  log "Rebuilding $OPENCLAW_IMAGE (missing image: $image_missing, missing stamp: $stamp_missing, revision changed: $revision_changed)"
-  if [ "$DRY_RUN" = "1" ]; then
-    log "[DRY_RUN] (cd $OPENCLAW_DIR && docker build -t $OPENCLAW_IMAGE .)"
-    log "[DRY_RUN] write revision stamp to $OPENCLAW_IMAGE_REVISION_STAMP"
-    return 0
-  fi
-
-  (
-    cd "$OPENCLAW_DIR"
-    run_cmd docker build -t "$OPENCLAW_IMAGE" .
-  )
-  run_cmd mkdir -p "$(dirname "$OPENCLAW_IMAGE_REVISION_STAMP")"
-  printf '%s\n' "$current_revision" > "$OPENCLAW_IMAGE_REVISION_STAMP"
-  chmod 600 "$OPENCLAW_IMAGE_REVISION_STAMP"
+  run_cmd docker pull "$OPENCLAW_IMAGE"
 }
 
 restart_openclaw() {

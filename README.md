@@ -36,6 +36,12 @@ OPENCLAW_ACCESS_MODE=ssh-tunnel \
 sh ./setup.sh
 ```
 
+Before first deploy on a fresh OVH VPS:
+- ensure outbound network access so Docker + Docker Compose can be installed automatically if missing,
+- collect `OVH_ENDPOINT_API_KEY` and select `OPENCLAW_ACCESS_MODE`,
+- for public mode, also set `OPENCLAW_DOMAIN` and `TRAEFIK_ACME_EMAIL`,
+- OpenClaw uses the official image `ghcr.io/openclaw/openclaw:latest`.
+
 `REMOTE_DIR` should point to a path under the remote user home (default `~/agime`). The scripts normalize host-expanded values (for example `/Users/alice/agime`) back to `~/...` for remote-safe sync behavior.
 
 Public mode:
@@ -56,6 +62,11 @@ sh ./setup.sh
 make check
 make check-strict
 ```
+
+## First-run OpenClaw setup behavior
+
+- On first run, `build.sh` runs OpenClaw's `./docker-setup.sh` wizard when `OPENCLAW_DIR/.env` is missing.
+- This wizard step is mandatory for installs; skipping it is not supported.
 
 ## Release and compatibility
 

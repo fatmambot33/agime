@@ -6,6 +6,21 @@
 - SSH access from your workstation.
 - OVH endpoint API key.
 
+## Setup plan (OVH VPS)
+
+1. Collect required OVH inputs up front:
+   - `OVH_ENDPOINT_API_KEY`
+   - `OPENCLAW_ACCESS_MODE` (`ssh-tunnel` or `public`)
+   - `public` mode only: `OPENCLAW_DOMAIN` and `TRAEFIK_ACME_EMAIL`
+2. Ensure outbound network access from the VPS so agime can install Docker and `docker compose` automatically when missing.
+3. Choose OpenClaw image policy:
+   - fixed official image: `ghcr.io/openclaw/openclaw:latest`
+4. Keep Traefik only for `OPENCLAW_ACCESS_MODE=public` (ssh-tunnel mode skips Traefik).
+5. Run `sh ./setup.sh`; on first deploy, OpenClaw wizard (`./docker-setup.sh`) runs when `.env` is missing.
+6. Validate endpoint access:
+   - `ssh-tunnel`: local tunnel to `127.0.0.1:18789`
+   - `public`: HTTPS via `https://$OPENCLAW_DOMAIN`
+
 ## Recommended private deployment (`ssh-tunnel`)
 
 ```sh
@@ -39,6 +54,12 @@ sh ./setup.sh
 ```
 
 Open: `https://openclaw.example.com`
+
+## First-run behavior (`build.sh` on remote host)
+
+On first run, if `OPENCLAW_DIR/.env` is missing, agime runs OpenClaw's `./docker-setup.sh` wizard.
+
+This wizard step is required for installs; skipping the wizard is not supported.
 
 ## Ongoing deployment sync
 

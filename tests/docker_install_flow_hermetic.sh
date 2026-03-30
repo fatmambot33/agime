@@ -11,7 +11,6 @@ trap 'rm -rf "$TMP_DIR"' EXIT
 . "$REPO_DIR/scripts/build_steps.sh"
 
 mkdir -p "$TMP_DIR/bin"
-PATH="$TMP_DIR/bin:$PATH"
 
 cat > "$TMP_DIR/bin/git" << 'EOF2'
 #!/usr/bin/env sh
@@ -36,17 +35,14 @@ exit 0
 EOF2
 chmod +x "$TEST_DOCKER_STUB"
 
-cat > "$TMP_DIR/bin/curl" << EOF2
-#!/usr/bin/env sh
-cat << 'INSTALL_SCRIPT'
-#!/usr/bin/env sh
-ln -sf "$TEST_DOCKER_STUB" "$TMP_DIR/bin/docker"
-INSTALL_SCRIPT
-EOF2
-chmod +x "$TMP_DIR/bin/curl"
+install_docker_on_host() {
+  log "Docker is missing; installing Docker and docker compose on host"
+  ln -sf "$TEST_DOCKER_STUB" "$TMP_DIR/bin/docker"
+}
 
+PATH="$TMP_DIR/bin:/bin"
 check_docker_access > "$TMP_DIR/check.out" 2>&1
-grep -q 'installing Docker and docker compose on host' "$TMP_DIR/check.out"
+/bin/grep -q 'installing Docker and docker compose on host' "$TMP_DIR/check.out"
 [ -x "$TMP_DIR/bin/docker" ]
 
 echo 'docker_install_flow_hermetic: ok'

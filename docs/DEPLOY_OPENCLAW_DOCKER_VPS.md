@@ -13,6 +13,7 @@
    - `OPENCLAW_ACCESS_MODE` (`ssh-tunnel` or `public`)
    - `public` mode only: `OPENCLAW_DOMAIN` and `TRAEFIK_ACME_EMAIL`
 2. Ensure outbound network access from the VPS so agime can install Docker and `docker compose` automatically when missing.
+   - If the current user cannot access Docker yet, agime will continue the current run with `sudo docker` and add the user to the `docker` group for future sessions.
 3. Choose OpenClaw image policy:
    - fixed official image: `ghcr.io/openclaw/openclaw:latest`
 4. Keep Traefik only for `OPENCLAW_ACCESS_MODE=public` (ssh-tunnel mode skips Traefik).
@@ -68,3 +69,5 @@ REMOTE_HOST=ubuntu@203.0.113.10 OVH_ENDPOINT_API_KEY=your-key sh ./sync.sh
 ```
 
 `sync.sh` keeps local authoring and remote apply clearly separated: local upload first, remote execution second.
+
+By default, `sync.sh` transfers only the minimal files needed for the selected remote entrypoint (`build.sh`, `update.sh`, `backup.sh`, or `restore.sh`). For mode-specific templates, it reads `OPENCLAW_ACCESS_MODE` from shell env or `SYNC_LOCAL_ENV_FILE`. Set `SYNC_ITEMS` when you need a custom/full payload.

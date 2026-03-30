@@ -15,10 +15,11 @@ SYNC_LOCAL_ENV_FILE=${SYNC_LOCAL_ENV_FILE:-$SYNC_CONFIG_FILE}
 SYNC_PRINT_CONFIG=${SYNC_PRINT_CONFIG:-0}
 SSH_CONTROL_PERSIST_SECONDS=${SSH_CONTROL_PERSIST_SECONDS:-600}
 SSH_CONTROL_PATH=${SSH_CONTROL_PATH:-"$HOME/.ssh/agime-sync-%r@%h:%p"}
-SYNC_ITEMS=${SYNC_ITEMS:-"build.sh sync.sh setup.sh backup.sh restore.sh update.sh scripts templates docs README.md Makefile"}
+SYNC_ITEMS=${SYNC_ITEMS:-}
 SSH_BASE_ARGS="-o ControlMaster=auto -o ControlPersist=${SSH_CONTROL_PERSIST_SECONDS} -o ControlPath=$SSH_CONTROL_PATH"
 
 sync_load_config
+sync_set_default_items_if_unset
 sync_validate_requirements
 
 [ "$SYNC_PRINT_CONFIG" = "1" ] && sync_print_effective_config

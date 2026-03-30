@@ -36,8 +36,30 @@ EOF2
 )
 
 grep -Eq 'ssh .*test-vps mkdir -p ".*/agime"' "$CALLS"
-grep -Eq 'scp .* -r build.sh sync.sh setup.sh backup.sh restore.sh update.sh scripts templates docs README.md Makefile test-vps:.*/agime/' "$CALLS"
+grep -Eq 'scp .* -r build.sh scripts templates/openclaw.json.tmpl templates/openclaw-compose.ssh-tunnel.yml.tmpl test-vps:.*/agime/' "$CALLS"
 grep -Eq "scp .* $CONF test-vps:.*/agime/sync.conf" "$CALLS"
 grep -Eq 'ssh .*test-vps cd ".*/agime" && chmod \+x \./\*\.sh && set -a && \. '\''\./sync\.conf'\'' && set \+a && \./build\.sh' "$CALLS"
+
+# OPENCLAW_ACCESS_MODE from SYNC_LOCAL_ENV_FILE should drive template selection
+# even when SYNC_CONFIG_FILE is not used.
+CONF_PUBLIC="$TMP_DIR/public-sync.env"
+cat > "$CONF_PUBLIC" << EOF3
+OVH_ENDPOINT_API_KEY=abc123
+OPENCLAW_ACCESS_MODE=public
+TRAEFIK_ACME_EMAIL=ops@example.com
+OPENCLAW_DOMAIN=openclaw.example.com
+EOF3
+
+(
+  cd "$REPO_DIR"
+  PATH="$BIN_DIR:$PATH" \
+    SYNC_CONFIG_FILE=/dev/null \
+    REMOTE_HOST=test-vps \
+    SYNC_LOCAL_ENV_FILE="$CONF_PUBLIC" \
+    sh ./sync.sh
+)
+
+grep -Eq 'scp .* -r build.sh scripts templates/openclaw.json.tmpl templates/openclaw-compose.public.yml.tmpl templates/traefik-compose.yml.tmpl test-vps:.*/agime/' "$CALLS"
+grep -Eq "scp .* $CONF_PUBLIC test-vps:.*/agime/sync.conf" "$CALLS"
 
 echo 'sync_hermetic: ok'

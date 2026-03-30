@@ -40,6 +40,16 @@ sh ./setup.sh
 
 Open: `https://openclaw.example.com`
 
+## First-run behavior (`build.sh` on remote host)
+
+On first run, agime checks `OPENCLAW_DIR/.env`:
+
+1. If `.env` exists: agime keeps it and skips bootstrap/wizard.
+2. If `.env` is missing: agime writes a minimal non-interactive `.env` for OpenClaw Docker runtime.
+3. If `.env` cannot be bootstrapped (for example no `OPENCLAW_TOKEN`, no `openssl`, and no `python3`): agime runs `./docker-setup.sh` unless `SKIP_OPENCLAW_WIZARD=1`.
+
+When `SKIP_OPENCLAW_WIZARD=1`, agime fails fast instead of launching the interactive wizard. Use this only when `.env` already exists or when you provide `OPENCLAW_TOKEN` and prerequisites needed for bootstrap.
+
 ## Ongoing deployment sync
 
 ```sh

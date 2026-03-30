@@ -57,6 +57,21 @@ make check
 make check-strict
 ```
 
+## First-run OpenClaw bootstrap behavior
+
+- `build.sh` now bootstraps `OPENCLAW_DIR/.env` non-interactively when missing.
+- The bootstrap writes a conservative subset used by agime:
+  - `OPENCLAW_CONFIG_DIR`
+  - `OPENCLAW_WORKSPACE_DIR`
+  - `OPENCLAW_GATEWAY_PORT=18789`
+  - `OPENCLAW_BRIDGE_PORT=18790`
+  - `OPENCLAW_GATEWAY_BIND`
+  - `OPENCLAW_GATEWAY_TOKEN`
+  - `OPENCLAW_IMAGE`
+- If `OPENCLAW_TOKEN` is set, that value is reused; otherwise agime generates a token via `openssl` (or `python3` fallback).
+- If token generation is unavailable, agime falls back to `./docker-setup.sh` unless `SKIP_OPENCLAW_WIZARD=1`.
+- `SKIP_OPENCLAW_WIZARD=1` is safe after `.env` already exists (either from bootstrap or one manual wizard run).
+
 ## Release and compatibility
 
 - `docs/RELEASE_PROCESS.md`

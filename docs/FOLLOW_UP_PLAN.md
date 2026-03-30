@@ -19,10 +19,10 @@ Keep the toolkit minimal, auditable, and private-by-default while improving test
 - Added public-mode preflight and sync env edge-case coverage.
 - Added template render substitution tests and contributor architecture checklist.
 
-### Phase 3 (next)
+### Phase 3 (implemented in this cycle)
 
-- Add release process docs (tagging, changelog cadence, compatibility policy).
-- Add troubleshooting runbooks for common operator failures.
+- Added shared helper normalization and deprecation documentation for compatibility shims.
+- Next priority is release process docs (tagging, changelog cadence, compatibility policy).
 
 ## Why this phased approach
 

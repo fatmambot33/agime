@@ -9,10 +9,7 @@ setup_validate() {
   require_nonempty "REMOTE_HOST" "$REMOTE_HOST"
   require_nonempty "OVH_ENDPOINT_API_KEY" "$OVH_ENDPOINT_API_KEY"
 
-  case "$OPENCLAW_ACCESS_MODE" in
-    ssh-tunnel | public) ;;
-    *) fail "OPENCLAW_ACCESS_MODE must be ssh-tunnel or public" ;;
-  esac
+  require_access_mode "$OPENCLAW_ACCESS_MODE"
 
   if [ "$OPENCLAW_ACCESS_MODE" = "public" ]; then
     require_nonempty "TRAEFIK_ACME_EMAIL" "$TRAEFIK_ACME_EMAIL"

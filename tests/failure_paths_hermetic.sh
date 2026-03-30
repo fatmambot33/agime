@@ -9,7 +9,7 @@ trap 'rm -rf "$TMP_DIR"' EXIT
 cat > "$TMP_DIR/bad.conf" << EOF2
 REMOTE_HOST=test-vps
 REMOTE_DIR=~/agime
-SYNC_REMOTE_ENTRYPOINT=configure.sh
+SYNC_REMOTE_ENTRYPOINT=unsupported.sh
 OVH_ENDPOINT_API_KEY=test
 EOF2
 

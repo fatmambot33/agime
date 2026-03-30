@@ -89,10 +89,10 @@ The repository is now much smaller and easier to follow than before, but there i
   - template-render substitution correctness.
 - Added contributor-facing architecture map and decision checklist.
 
-### Phase 3 (next)
+### Phase 3 (implemented in this cycle)
 
-- Normalize helper usage to reduce cross-module duplication.
-- Add explicit deprecation notes for any remaining compatibility shims.
+- Normalized shared validation/helper usage via `scripts/lib/common.sh` (`warn`, `require_access_mode`).
+- Added explicit deprecation notes and compatibility shim policy in `docs/DEPRECATIONS.md`.
 
 ### Phase 4 (next)
 

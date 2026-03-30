@@ -54,3 +54,8 @@ sh -n build.sh setup.sh sync.sh
 make check
 make check-strict
 ```
+
+
+## Compatibility notes
+
+See `docs/DEPRECATIONS.md` for active compatibility shims and migration guidance.

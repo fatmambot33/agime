@@ -5,6 +5,10 @@ log() {
   printf '%s\n' "$*"
 }
 
+warn() {
+  printf 'Warning: %s\n' "$*" >&2
+}
+
 fail() {
   printf 'Error: %s\n' "$*" >&2
   exit 1
@@ -14,6 +18,14 @@ require_nonempty() {
   key=$1
   value=$2
   [ -n "$value" ] || fail "$key is required"
+}
+
+require_access_mode() {
+  value=$1
+  case "$value" in
+    ssh-tunnel | public) ;;
+    *) fail "OPENCLAW_ACCESS_MODE must be ssh-tunnel or public" ;;
+  esac
 }
 
 canonicalize_home_path() {

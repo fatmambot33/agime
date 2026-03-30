@@ -44,7 +44,7 @@ curl() {
         output_file=$2
         shift 2
         ;;
-      http://*|https://*)
+      http://* | https://*)
         url=$1
         shift
         ;;

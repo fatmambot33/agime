@@ -22,7 +22,7 @@ sync_parse_key_value_file() {
 
   while IFS= read -r raw_line || [ -n "$raw_line" ]; do
     case "$raw_line" in
-      '' | '#'* )
+      '' | '#'*)
         continue
         ;;
     esac
@@ -46,7 +46,7 @@ sync_parse_key_value_file() {
 sync_validate_key() {
   key=$1
   case "$key" in
-    '' | *[!A-Z0-9_]* )
+    '' | *[!A-Z0-9_]*)
       fail "Invalid config key: $key"
       ;;
   esac
@@ -192,19 +192,19 @@ sync_validate_items_file() {
 
   while IFS= read -r item || [ -n "$item" ]; do
     case "$item" in
-      '' | '#'* )
+      '' | '#'*)
         continue
         ;;
     esac
 
     case "$item" in
-      /* | *'..'* )
+      /* | *'..'*)
         fail "Invalid sync manifest item path: $item"
         ;;
     esac
 
     case "$item" in
-      *[!A-Za-z0-9._/:-]* )
+      *[!A-Za-z0-9._/:-]*)
         fail "Invalid sync manifest item characters: $item"
         ;;
     esac
@@ -305,7 +305,7 @@ sync_upload_and_run() {
   set --
   while IFS= read -r item || [ -n "$item" ]; do
     case "$item" in
-      '' | '#'* )
+      '' | '#'*)
         continue
         ;;
     esac

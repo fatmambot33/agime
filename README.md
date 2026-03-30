@@ -340,7 +340,7 @@ make check
 Or run the syntax checks directly:
 
 ```bash
-sh -n build.sh configure.sh sync.sh backup.sh update.sh add_tool.sh restore.sh scripts/build_lib.sh scripts/build_steps.sh tests/smoke_dry_run.sh tests/idempotency_dry_run.sh tests/security_template_checks.sh tests/sync_hermetic.sh tests/security_audit_scripts_hermetic.sh tests/backup_restore_hermetic.sh tests/configure_backup_hermetic.sh tests/configure_autoload_env_hermetic.sh tests/ownership_config_dir_hermetic.sh tests/post_install_helpers_hermetic.sh
+sh -n build.sh sync.sh backup.sh update.sh image.sh restore.sh setup.sh scripts/build_lib.sh scripts/build_steps.sh tests/smoke_dry_run.sh tests/idempotency_dry_run.sh tests/security_template_checks.sh tests/sync_hermetic.sh tests/security_audit_scripts_hermetic.sh tests/backup_restore_hermetic.sh tests/configure_backup_hermetic.sh tests/configure_autoload_env_hermetic.sh tests/ownership_config_dir_hermetic.sh tests/post_install_helpers_hermetic.sh
 ```
 
 ## Backup and restore mechanic
@@ -433,14 +433,6 @@ RUN_BACKUP=0 sh ./update.sh    # skip automatic pre-update backup
 RUN_IMAGE_PULL=0 sh ./update.sh  # skip docker pull
 RESTORE_ON_FAILURE=1 sh ./update.sh  # auto-restore backup if build fails
 ```
-
-Optional helper (setup 2.0 usually does not need this): enable one optional tool after initial install (example: GitHub CLI runtime support):
-
-```bash
-TOOL=github sh ./add_tool.sh
-```
-
-Both helpers auto-load `OVH_ENDPOINT_API_KEY` from `$OPENCLAW_DIR/.env` when not already exported.
 
 Use dry-run previews when needed:
 

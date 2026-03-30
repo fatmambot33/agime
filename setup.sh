@@ -40,7 +40,10 @@ echo "=== OpenClaw OVH Remote Setup ==="
 OPENCLAW_ACCESS_MODE=$(ask_default "Access mode (ssh-tunnel/public)" "ssh-tunnel")
 case "$OPENCLAW_ACCESS_MODE" in
   ssh-tunnel | public) ;;
-  *) echo "Unsupported access mode: $OPENCLAW_ACCESS_MODE" >&2; exit 1 ;;
+  *)
+    echo "Unsupported access mode: $OPENCLAW_ACCESS_MODE" >&2
+    exit 1
+    ;;
 esac
 
 OVH_ENDPOINT_API_KEY=$(ask_required "OVH endpoint API key")

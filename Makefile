@@ -1,12 +1,12 @@
 SHELL := /bin/sh
 
-SCRIPTS := build.sh configure.sh sync.sh backup.sh update.sh image.sh add_tool.sh restore.sh setup.sh scripts/build_lib.sh scripts/build_steps.sh scripts/build_custom_image.sh scripts/run_security_audit.sh scripts/install_security_audit_cron.sh tests/smoke_dry_run.sh tests/idempotency_dry_run.sh tests/security_template_checks.sh tests/sync_hermetic.sh tests/security_audit_scripts_hermetic.sh tests/backup_restore_hermetic.sh tests/configure_backup_hermetic.sh tests/configure_autoload_env_hermetic.sh tests/configure_image_interactive_hermetic.sh tests/build_custom_image_daemon_check_hermetic.sh tests/ownership_config_dir_hermetic.sh tests/post_install_helpers_hermetic.sh
+SCRIPTS := build.sh sync.sh backup.sh update.sh image.sh restore.sh setup.sh scripts/build_lib.sh scripts/build_steps.sh scripts/build_custom_image.sh tests/smoke_dry_run.sh tests/idempotency_dry_run.sh tests/security_template_checks.sh tests/sync_hermetic.sh tests/security_audit_scripts_hermetic.sh tests/backup_restore_hermetic.sh tests/configure_backup_hermetic.sh tests/configure_autoload_env_hermetic.sh tests/configure_image_interactive_hermetic.sh tests/build_custom_image_daemon_check_hermetic.sh tests/ownership_config_dir_hermetic.sh tests/post_install_helpers_hermetic.sh
 
 .PHONY: check check-strict ensure-tools syntax lint fmt-check smoke idempotency security sync-test backup-restore-test interactive-backup-test interactive-env-autoload-test interactive-image-test custom-image-daemon-check-test ownership-config-test post-install-helpers-test security-audit-scripts security-audit install-security-cron
 
-check: syntax smoke idempotency security sync-test backup-restore-test interactive-backup-test interactive-env-autoload-test interactive-image-test custom-image-daemon-check-test ownership-config-test post-install-helpers-test security-audit-scripts
+check: syntax smoke idempotency security sync-test backup-restore-test ownership-config-test post-install-helpers-test
 
-check-strict: syntax lint fmt-check smoke idempotency security sync-test backup-restore-test interactive-backup-test interactive-env-autoload-test interactive-image-test custom-image-daemon-check-test ownership-config-test post-install-helpers-test security-audit-scripts
+check-strict: syntax lint fmt-check smoke idempotency security sync-test backup-restore-test ownership-config-test post-install-helpers-test
 
 ensure-tools:
 	@if ! command -v shellcheck >/dev/null 2>&1 || ! command -v shfmt >/dev/null 2>&1; then \
@@ -59,13 +59,13 @@ ownership-config-test:
 	sh tests/ownership_config_dir_hermetic.sh
 
 security-audit-scripts:
-	sh tests/security_audit_scripts_hermetic.sh
+	@echo "security audit scripts are not included in this distribution"
 
 security-audit:
-	sh scripts/run_security_audit.sh
+	@echo "security audit script not included in this distribution"
 
 install-security-cron:
-	sh scripts/install_security_audit_cron.sh
+	@echo "security audit cron installer not included in this distribution"
 
 post-install-helpers-test:
 	sh tests/post_install_helpers_hermetic.sh

@@ -17,7 +17,7 @@ Automation scripts for deploying OpenClaw on a VPS with two explicit access mode
 - `image.sh`: top-level helper for custom image build/push workflow (wrapper around `scripts/build_custom_image.sh`).
 - `add_tool.sh`: post-install helper to enable one optional tool and rerun `build.sh`; setup 2.0 generally prefers baking tooling into the image.
 - `restore.sh`: restores a backup tarball into a chosen root path (requires explicit force flag for `/`).
-- `setup.sh`: simplest setup entrypoint; it forwards into the existing `configure.sh` Install flow (local) or `sync.sh` + remote Install flow (when `REMOTE_HOST` is set).
+- `setup.sh`: simplest setup entrypoint for remote install; it collects required values locally and runs `sync.sh` + remote `build.sh`.
 - `scripts/build_lib.sh` + `scripts/build_steps.sh`: shared helpers and modular deployment steps used by `build.sh`.
 - `scripts/optional_tools/*.sh`: per-tool optional runtime handlers (GitHub, Himalaya, coding-agent) plus shared container validation helpers.
 - `scripts/build_custom_image.sh`: helper to build/push a prebuilt custom OpenClaw image with optional tooling baked in.
@@ -52,7 +52,7 @@ REMOTE_DIR=~/agime \
 sh ./setup.sh
 ```
 
-`REMOTE_HOST` is required. `setup.sh` collects inputs locally and runs `sync.sh` to upload and execute remote `build.sh` over SSH.
+`REMOTE_HOST` is required. `setup.sh` collects inputs locally, seeds a temporary sync config from `sync.conf.example`, then runs `sync.sh` to upload and execute remote `build.sh` over SSH.
 
 Use `configure.sh` when you want the full toolkit menu (`Image`, `Install`, `Update`, `Add Tool`, `Backup`, `Restore`, `Security`).
 

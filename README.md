@@ -77,6 +77,7 @@ make check-strict
 ## First-run OpenClaw setup behavior
 
 - On first run, `build.sh` runs OpenClaw's `./docker-setup.sh` wizard when `OPENCLAW_DIR/.env` is missing.
+- If this run is using `sudo docker` (for example right after docker-group changes), agime also launches the wizard with `sudo` so image build/setup can complete in the same session.
 - This wizard step is mandatory for installs; skipping it is not supported.
 
 ## Release and compatibility

@@ -203,12 +203,24 @@ run_openclaw_wizard_if_needed() {
   if [ ! -f "$OPENCLAW_DIR/.env" ]; then
     log "Running OpenClaw's docker setup wizard"
     if [ "$DRY_RUN" = "1" ]; then
-      log "[DRY_RUN] (cd $OPENCLAW_DIR && ./docker-setup.sh)"
+      if [ "$DOCKER_USE_SUDO" = "1" ]; then
+        log "[DRY_RUN] (cd $OPENCLAW_DIR && sudo ./docker-setup.sh)"
+      else
+        log "[DRY_RUN] (cd $OPENCLAW_DIR && ./docker-setup.sh)"
+      fi
     else
-      (
-        cd "$OPENCLAW_DIR"
-        ./docker-setup.sh
-      )
+      if [ "$DOCKER_USE_SUDO" = "1" ]; then
+        (
+          cd "$OPENCLAW_DIR"
+          run_with_optional_sudo ./docker-setup.sh
+        )
+        run_with_optional_sudo chown -R "$OPENCLAW_USER:$OPENCLAW_USER" "$OPENCLAW_DIR" "$OPENCLAW_CONFIG_DIR"
+      else
+        (
+          cd "$OPENCLAW_DIR"
+          ./docker-setup.sh
+        )
+      fi
     fi
   fi
 

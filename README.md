@@ -60,7 +60,7 @@ make check-strict
 ## First-run OpenClaw setup behavior
 
 - On first run, `build.sh` runs OpenClaw's `./docker-setup.sh` wizard when `OPENCLAW_DIR/.env` is missing.
-- Set `SKIP_OPENCLAW_WIZARD=1` only after `.env` already exists and you want fully non-interactive reruns.
+- This wizard step is mandatory for installs; skipping it is not supported.
 
 ## Release and compatibility
 

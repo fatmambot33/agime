@@ -25,7 +25,6 @@ initialize_defaults() {
   OPENCLAW_COMPOSE_TEMPLATE_SSH_TUNNEL=${OPENCLAW_COMPOSE_TEMPLATE_SSH_TUNNEL:-"$SCRIPT_DIR/templates/openclaw-compose.ssh-tunnel.yml.tmpl"}
   OPENCLAW_JSON_TEMPLATE=${OPENCLAW_JSON_TEMPLATE:-"$SCRIPT_DIR/templates/openclaw.json.tmpl"}
   SKIP_DOCKER_GROUP_SETUP=${SKIP_DOCKER_GROUP_SETUP:-"0"}
-  SKIP_OPENCLAW_WIZARD=${SKIP_OPENCLAW_WIZARD:-"0"}
   SKIP_OPENCLAW_IMAGE_BUILD=${SKIP_OPENCLAW_IMAGE_BUILD:-"0"}
   POST_BUILD_TEST=${POST_BUILD_TEST:-"1"}
   POST_BUILD_TEST_ATTEMPTS=${POST_BUILD_TEST_ATTEMPTS:-"40"}
@@ -149,10 +148,11 @@ prepare_openclaw_repo() {
 }
 
 run_openclaw_wizard_if_needed() {
+  if [ "${SKIP_OPENCLAW_WIZARD:-0}" = "1" ]; then
+    fail "SKIP_OPENCLAW_WIZARD=1 is not supported. First-run installs must complete ./docker-setup.sh."
+  fi
+
   if [ ! -f "$OPENCLAW_DIR/.env" ]; then
-    if [ "$SKIP_OPENCLAW_WIZARD" = "1" ]; then
-      fail "OpenClaw .env not found in $OPENCLAW_DIR and SKIP_OPENCLAW_WIZARD=1. Run ./docker-setup.sh once, then rerun."
-    fi
     log "Running OpenClaw's docker setup wizard"
     if [ "$DRY_RUN" = "1" ]; then
       log "[DRY_RUN] (cd $OPENCLAW_DIR && ./docker-setup.sh)"

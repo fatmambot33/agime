@@ -44,7 +44,7 @@ Open: `https://openclaw.example.com`
 
 On first run, if `OPENCLAW_DIR/.env` is missing, agime runs OpenClaw's `./docker-setup.sh` wizard.
 
-When `SKIP_OPENCLAW_WIZARD=1`, agime fails fast if `.env` is missing. Use this only after one successful wizard run (or when `.env` is already provisioned).
+This wizard step is required for installs; skipping the wizard is not supported.
 
 ## Ongoing deployment sync
 

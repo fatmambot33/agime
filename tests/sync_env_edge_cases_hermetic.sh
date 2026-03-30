@@ -85,6 +85,55 @@ EOF2
 
 grep -Eq 'ssh .*\./update\.sh' "$CALLS"
 
+# Unsafe config values should be rejected (config is data, not shell).
+CONF_UNSAFE="$TMP_DIR/unsafe.conf"
+cat > "$CONF_UNSAFE" << EOF3
+REMOTE_HOST=test-vps
+REMOTE_DIR=~/agime
+SYNC_REMOTE_ENTRYPOINT=update.sh
+OPENCLAW_DOMAIN=openclaw.example.com;uname
+EOF3
+
+set +e
+(
+  cd "$REPO_DIR"
+  SYNC_CONFIG_FILE="$CONF_UNSAFE" sh ./sync.sh > "$TMP_DIR/unsafe.out" 2>&1
+)
+status=$?
+set -e
+[ "$status" -ne 0 ]
+grep -q 'contains unsafe shell characters' "$TMP_DIR/unsafe.out"
+
+# Unknown keys should be rejected.
+CONF_UNKNOWN="$TMP_DIR/unknown.conf"
+cat > "$CONF_UNKNOWN" << EOF4
+REMOTE_HOST=test-vps
+REMOTE_DIR=~/agime
+SYNC_REMOTE_ENTRYPOINT=update.sh
+NOT_ALLOWED=1
+EOF4
+
+set +e
+(
+  cd "$REPO_DIR"
+  SYNC_CONFIG_FILE="$CONF_UNKNOWN" sh ./sync.sh > "$TMP_DIR/unknown.out" 2>&1
+)
+status=$?
+set -e
+[ "$status" -ne 0 ]
+grep -q 'Unsupported config key' "$TMP_DIR/unknown.out"
+
+# SYNC_ITEMS legacy interface should be rejected.
+set +e
+(
+  cd "$REPO_DIR"
+  PATH="$BIN_DIR:$PATH" REMOTE_HOST=test-vps SYNC_REMOTE_ENTRYPOINT=update.sh SYNC_ITEMS='update.sh' sh ./sync.sh > "$TMP_DIR/legacy-items.out" 2>&1
+)
+status=$?
+set -e
+[ "$status" -ne 0 ]
+grep -q 'SYNC_ITEMS is retired' "$TMP_DIR/legacy-items.out"
+
 # REMOTE_DIR expanded from local HOME should be normalized back to ~/ for remote ops.
 HOME_FIXTURE="$TMP_DIR/fake-home"
 mkdir -p "$HOME_FIXTURE"

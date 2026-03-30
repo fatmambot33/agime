@@ -29,6 +29,9 @@ initialize_defaults() {
   POST_BUILD_TEST_DELAY_SECONDS=${POST_BUILD_TEST_DELAY_SECONDS:-"3"}
   POST_BUILD_TEST_CONNECT_TIMEOUT_SECONDS=${POST_BUILD_TEST_CONNECT_TIMEOUT_SECONDS:-"5"}
   POST_BUILD_TEST_MAX_TIME_SECONDS=${POST_BUILD_TEST_MAX_TIME_SECONDS:-"15"}
+  PUBLIC_HEALTH_PATH=${PUBLIC_HEALTH_PATH:-"/healthz"}
+  PUBLIC_EXPECT_SERVER_HEADER=${PUBLIC_EXPECT_SERVER_HEADER:-"traefik"}
+  PUBLIC_HEALTH_EXPECT_SUBSTRING=${PUBLIC_HEALTH_EXPECT_SUBSTRING:-""}
   DRY_RUN=${DRY_RUN:-"0"}
   DOCKER_USE_SUDO=${DOCKER_USE_SUDO:-"0"}
 }
@@ -250,6 +253,7 @@ ensure_openclaw_env_overrides() {
   if [ "$DRY_RUN" = "1" ]; then
     log "[DRY_RUN] append OPENCLAW_CONFIG_DIR to $OPENCLAW_DIR/.env when missing"
     log "[DRY_RUN] append OPENCLAW_WORKSPACE_DIR to $OPENCLAW_DIR/.env when missing"
+    log "[DRY_RUN] normalize OPENCLAW_IMAGE to $OPENCLAW_IMAGE in $OPENCLAW_DIR/.env"
     return 0
   fi
 
@@ -259,6 +263,25 @@ ensure_openclaw_env_overrides() {
   if ! grep -q '^OPENCLAW_WORKSPACE_DIR=' "$OPENCLAW_DIR/.env"; then
     printf 'OPENCLAW_WORKSPACE_DIR=%s\n' "$OPENCLAW_WORKSPACE_DIR" >> "$OPENCLAW_DIR/.env"
   fi
+
+  env_tmp=$(mktemp)
+  awk -v image="$OPENCLAW_IMAGE" '
+    BEGIN { image_written = 0 }
+    /^OPENCLAW_IMAGE=/ {
+      if (image_written == 0) {
+        print "OPENCLAW_IMAGE=" image
+        image_written = 1
+      }
+      next
+    }
+    { print }
+    END {
+      if (image_written == 0) {
+        print "OPENCLAW_IMAGE=" image
+      }
+    }
+  ' "$OPENCLAW_DIR/.env" > "$env_tmp"
+  mv "$env_tmp" "$OPENCLAW_DIR/.env"
 }
 
 write_openclaw_json_config() {
@@ -319,7 +342,7 @@ post_build_connectivity_test() {
 
   if [ "$DRY_RUN" = "1" ]; then
     if [ "$OPENCLAW_ACCESS_MODE" = "public" ]; then
-      log "[DRY_RUN] validate https://$OPENCLAW_DOMAIN with curl (${POST_BUILD_TEST_ATTEMPTS} attempts, connect-timeout=${POST_BUILD_TEST_CONNECT_TIMEOUT_SECONDS}s, max-time=${POST_BUILD_TEST_MAX_TIME_SECONDS}s)"
+      log "[DRY_RUN] validate public DNS/TLS, Traefik route header, and ${PUBLIC_HEALTH_PATH} health on https://$OPENCLAW_DOMAIN (${POST_BUILD_TEST_ATTEMPTS} attempts, connect-timeout=${POST_BUILD_TEST_CONNECT_TIMEOUT_SECONDS}s, max-time=${POST_BUILD_TEST_MAX_TIME_SECONDS}s)"
     else
       log "[DRY_RUN] validate http://127.0.0.1:18789/healthz with curl (${POST_BUILD_TEST_ATTEMPTS} attempts, connect-timeout=${POST_BUILD_TEST_CONNECT_TIMEOUT_SECONDS}s, max-time=${POST_BUILD_TEST_MAX_TIME_SECONDS}s)"
     fi
@@ -364,33 +387,81 @@ validate_ssh_tunnel_mode() {
 }
 
 validate_public_mode() {
-  log "Validating TLS/connectivity for https://$OPENCLAW_DOMAIN"
+  log "Validating public mode for https://$OPENCLAW_DOMAIN (DNS/TLS, reverse-proxy route, app health)"
   attempts_left=$POST_BUILD_TEST_ATTEMPTS
 
+  require_command getent
+  domain_ips=$(getent ahostsv4 "$OPENCLAW_DOMAIN" 2> /dev/null | awk '{print $1}' | sort -u | tr '\n' ' ' | sed 's/[[:space:]]*$//')
+  [ -n "$domain_ips" ] || fail "Public validation failed: could not resolve IPv4 address for $OPENCLAW_DOMAIN"
+  log "Resolved $OPENCLAW_DOMAIN to: $domain_ips"
+
   while [ "$attempts_left" -gt 0 ]; do
-    probe_file=$(mktemp)
-    if http_code=$(curl --silent --show-error --location --output /dev/null --write-out '%{http_code}' \
+    header_file=$(mktemp)
+    root_error_file=$(mktemp)
+    health_body_file=$(mktemp)
+    health_error_file=$(mktemp)
+
+    if root_code=$(curl --silent --show-error --location \
+      --dump-header "$header_file" \
+      --output /dev/null \
+      --write-out '%{http_code}' \
       --connect-timeout "$POST_BUILD_TEST_CONNECT_TIMEOUT_SECONDS" \
       --max-time "$POST_BUILD_TEST_MAX_TIME_SECONDS" \
-      "https://$OPENCLAW_DOMAIN" 2> "$probe_file"); then
-      rm -f "$probe_file"
-      case "$http_code" in
-        2* | 3* | 4*)
-          log "Post-build public TLS/connectivity validation passed (HTTP $http_code)"
-          return 0
+      "https://$OPENCLAW_DOMAIN/" 2> "$root_error_file"); then
+      case "$root_code" in
+        2* | 3*)
+          if ! grep -iq "^server: ${PUBLIC_EXPECT_SERVER_HEADER}" "$header_file"; then
+            route_error="expected server header '${PUBLIC_EXPECT_SERVER_HEADER}', got: $(tr '\n' ';' < "$header_file")"
+          else
+            route_error=""
+          fi
+          ;;
+        *)
+          route_error="unexpected HTTP status for route check: $root_code"
           ;;
       esac
     else
-      probe_error=$(cat "$probe_file")
-      rm -f "$probe_file"
-      case "$probe_error" in
-        *self-signed* | *certificate* | *SSL* | *TLS*)
-          log "TLS is not ready yet (retrying): $probe_error"
-          ;;
-        *)
-          log "Connectivity probe failed (retrying): $probe_error"
-          ;;
-      esac
+      route_error=$(cat "$root_error_file")
+    fi
+
+    if [ -z "${route_error:-}" ]; then
+      if health_code=$(curl --silent --show-error --location \
+        --output "$health_body_file" \
+        --write-out '%{http_code}' \
+        --connect-timeout "$POST_BUILD_TEST_CONNECT_TIMEOUT_SECONDS" \
+        --max-time "$POST_BUILD_TEST_MAX_TIME_SECONDS" \
+        "https://$OPENCLAW_DOMAIN$PUBLIC_HEALTH_PATH" 2> "$health_error_file"); then
+        case "$health_code" in
+          200)
+            if [ -n "$PUBLIC_HEALTH_EXPECT_SUBSTRING" ] && ! grep -Fq "$PUBLIC_HEALTH_EXPECT_SUBSTRING" "$health_body_file"; then
+              health_error="health response missing expected marker: $PUBLIC_HEALTH_EXPECT_SUBSTRING"
+            else
+              health_error=""
+            fi
+            ;;
+          *)
+            health_error="unexpected HTTP status for health check ${PUBLIC_HEALTH_PATH}: $health_code"
+            ;;
+        esac
+      else
+        health_error=$(cat "$health_error_file")
+      fi
+    else
+      health_error=""
+    fi
+
+    rm -f "$header_file" "$root_error_file" "$health_body_file" "$health_error_file"
+
+    if [ -z "${route_error:-}" ] && [ -z "${health_error:-}" ]; then
+      log "Post-build public validation passed (DNS/TLS + Traefik route + app health)"
+      return 0
+    fi
+
+    if [ -n "${route_error:-}" ]; then
+      log "Public route/TLS check not ready (retrying): $route_error"
+    fi
+    if [ -n "${health_error:-}" ]; then
+      log "Public health check not ready (retrying): $health_error"
     fi
 
     attempts_left=$((attempts_left - 1))
@@ -398,7 +469,7 @@ validate_public_mode() {
     sleep "$POST_BUILD_TEST_DELAY_SECONDS"
   done
 
-  fail "Public TLS/connectivity validation failed for https://$OPENCLAW_DOMAIN after ${POST_BUILD_TEST_ATTEMPTS} attempts"
+  fail "Public validation failed for https://$OPENCLAW_DOMAIN after ${POST_BUILD_TEST_ATTEMPTS} attempts (DNS/TLS, reverse-proxy route, and ${PUBLIC_HEALTH_PATH} health must all pass)"
 }
 
 print_summary() {

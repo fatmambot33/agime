@@ -7,7 +7,15 @@
 update_maybe_pull() {
   case "$GIT_PULL" in
     auto)
-      [ -d "$SCRIPT_DIR/.git" ] && git -C "$SCRIPT_DIR" pull --ff-only || true
+      if [ -d "$SCRIPT_DIR/.git" ]; then
+        if ! git -C "$SCRIPT_DIR" pull --ff-only; then
+          if [ "${ALLOW_STALE_CODE:-0}" = "1" ]; then
+            warn "git pull failed in auto mode; continuing due to ALLOW_STALE_CODE=1"
+          else
+            fail "git pull failed in auto mode. Set ALLOW_STALE_CODE=1 to continue with local checkout."
+          fi
+        fi
+      fi
       ;;
     1)
       [ -d "$SCRIPT_DIR/.git" ] || fail "cannot use GIT_PULL=1 outside a git checkout"

@@ -20,7 +20,7 @@ RESTORE_DIR="$TMP_DIR/restore"
 mkdir -p "$RESTORE_DIR"
 (
   cd "$REPO_DIR"
-  RESTORE_ARCHIVE="$ARCHIVE" RESTORE_ROOT="$RESTORE_DIR" sh ./restore.sh
+  RESTORE_ARCHIVE="$ARCHIVE" RESTORE_ROOT="$RESTORE_DIR" RESTORE_ALLOWED_PREFIXES="$SRC/.openclaw" sh ./restore.sh
 )
 
 [ -f "$RESTORE_DIR/$SRC/.openclaw/state.txt" ]

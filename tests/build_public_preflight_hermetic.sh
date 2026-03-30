@@ -22,6 +22,6 @@ grep -q 'Environment variable TRAEFIK_ACME_EMAIL is required' "$TMP_DIR/missing.
 )
 
 grep -q 'render .*openclaw-compose.public.yml.tmpl' "$TMP_DIR/ok.out"
-grep -q '\[DRY_RUN\] validate https://openclaw.example.com with curl' "$TMP_DIR/ok.out"
+grep -q '\[DRY_RUN\] validate public DNS/TLS, Traefik route header, and /healthz health on https://openclaw.example.com' "$TMP_DIR/ok.out"
 
 echo 'build_public_preflight_hermetic: ok'

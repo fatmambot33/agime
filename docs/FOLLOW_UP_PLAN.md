@@ -8,8 +8,8 @@ The refactor is complete: the repository now follows the six-entrypoint architec
 
 ## Next work (post-refactor)
 
-1. Add troubleshooting runbooks for common deployment failures.
-2. Add operator diagnostics cheatsheet (`docker logs`, health probes, TLS checks).
+1. Add CI coverage for strict public-mode validation semantics (DNS/TLS, Traefik routing, app-health invariants).
+2. Expand restore hardening tests (symlink archives, allowlist edge cases, dry-run behavior).
 3. Add release examples and tagging automation snippets.
 
 ## Guardrails to keep

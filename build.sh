@@ -53,6 +53,9 @@ Optional environment variables:
  POST_BUILD_TEST_DELAY_SECONDS Default: 3. Delay between validation attempts.
  POST_BUILD_TEST_CONNECT_TIMEOUT_SECONDS Default: 5. curl connect timeout per probe.
  POST_BUILD_TEST_MAX_TIME_SECONDS Default: 15. curl total timeout per probe.
+ PUBLIC_HEALTH_PATH Default: /healthz. Public mode app health endpoint path.
+ PUBLIC_EXPECT_SERVER_HEADER Default: traefik. Expected reverse-proxy Server header in public mode.
+ PUBLIC_HEALTH_EXPECT_SUBSTRING Optional. Require this substring in public health response body.
  DRY_RUN Default: 0. Set to 1 to print planned actions without applying changes.
 
 Notes:

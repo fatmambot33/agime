@@ -37,8 +37,7 @@ EOF2
 
 grep -Eq 'ssh .*test-vps mkdir -p ".*/agime"' "$CALLS"
 grep -Eq 'scp .* -r build.sh scripts templates/openclaw.json.tmpl templates/openclaw-compose.ssh-tunnel.yml.tmpl test-vps:.*/agime/' "$CALLS"
-grep -Eq "scp .* $CONF test-vps:.*/agime/sync.conf" "$CALLS"
-grep -Eq 'ssh .*test-vps cd ".*/agime" && chmod \+x \./\*\.sh && set -a && \. '\''\./sync\.conf'\'' && set \+a && \./build\.sh' "$CALLS"
+grep -Eq "ssh .*test-vps cd \".*/agime\" && chmod \\+x \\./\\*\\.sh && env OVH_ENDPOINT_API_KEY='abc123' \\./build\\.sh" "$CALLS"
 
 # OPENCLAW_ACCESS_MODE from SYNC_LOCAL_ENV_FILE should drive template selection
 # even when SYNC_CONFIG_FILE is not used.
@@ -60,6 +59,6 @@ EOF3
 )
 
 grep -Eq 'scp .* -r build.sh scripts templates/openclaw.json.tmpl templates/openclaw-compose.public.yml.tmpl templates/traefik-compose.yml.tmpl test-vps:.*/agime/' "$CALLS"
-grep -Eq "scp .* $CONF_PUBLIC test-vps:.*/agime/sync.conf" "$CALLS"
+grep -Eq "ssh .*test-vps cd \".*/agime\" && chmod \\+x \\./\\*\\.sh && env OPENCLAW_ACCESS_MODE='public' OVH_ENDPOINT_API_KEY='abc123' TRAEFIK_ACME_EMAIL='ops@example.com' OPENCLAW_DOMAIN='openclaw.example.com' \\./build\\.sh" "$CALLS"
 
 echo 'sync_hermetic: ok'

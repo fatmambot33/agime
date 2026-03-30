@@ -2,7 +2,7 @@
 
 ## Prerequisites
 
-- Linux VPS with Docker + Docker Compose installed.
+- OVH VPS on Ubuntu LTS with Docker + Docker Compose installed.
 - SSH access from your workstation.
 - OVH endpoint API key.
 
@@ -16,6 +16,7 @@
    - If the current user cannot access Docker yet, agime will continue the current run with `sudo docker` and add the user to the `docker` group for future sessions.
 3. Choose OpenClaw image policy:
    - fixed official image: `ghcr.io/openclaw/openclaw:latest`
+   - agime normalizes `OPENCLAW_IMAGE` in `~/openclaw/.env` to this value during deploy/update so older `openclaw:local` settings do not override compose runtime.
 4. Keep Traefik only for `OPENCLAW_ACCESS_MODE=public` (ssh-tunnel mode skips Traefik).
 5. Run `sh ./setup.sh`; on first deploy, OpenClaw wizard (`./docker-setup.sh`) runs when `.env` is missing.
    - When agime is in `sudo docker` fallback mode for the current session, it runs the wizard with `sudo` as well.
@@ -72,4 +73,6 @@ REMOTE_HOST=ubuntu@203.0.113.10 OVH_ENDPOINT_API_KEY=your-key sh ./sync.sh
 
 `sync.sh` keeps local authoring and remote apply clearly separated: local upload first, remote execution second.
 
-By default, `sync.sh` transfers only the minimal files needed for the selected remote entrypoint (`build.sh`, `update.sh`, `backup.sh`, or `restore.sh`). For mode-specific templates, it reads `OPENCLAW_ACCESS_MODE` from shell env or `SYNC_LOCAL_ENV_FILE`. Set `SYNC_ITEMS` when you need a custom/full payload.
+By default, `sync.sh` transfers only the minimal files needed for the selected remote entrypoint (`build.sh`, `update.sh`, `backup.sh`, or `restore.sh`). For mode-specific templates, it reads `OPENCLAW_ACCESS_MODE` from shell env or `SYNC_LOCAL_ENV_FILE`. `SYNC_ITEMS` is retired; use `SYNC_ITEMS_FILE` (newline-delimited, repo-relative paths) for explicit audited overrides.
+
+`sync.sh` parses config/env files as strict `KEY=VALUE` data: unknown keys, multiline values, and shell-dangerous characters are rejected.

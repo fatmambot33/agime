@@ -9,3 +9,6 @@ OPENCLAW_ACCESS_MODE=ssh-tunnel
 OVH_ENDPOINT_API_KEY=
 # TRAEFIK_ACME_EMAIL=admin@example.com
 # OPENCLAW_DOMAIN=openclaw.example.com
+
+# Optional audited override manifest (newline-delimited repo-relative paths):
+# SYNC_ITEMS_FILE=./sync-items.manifest

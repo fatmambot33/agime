@@ -13,7 +13,7 @@ trap 'rm -rf "$TMP_DIR"' EXIT
 mkdir -p "$TMP_DIR/bin"
 
 cat > "$TMP_DIR/bin/git" << 'EOF2'
-#!/usr/bin/env sh
+#!/bin/sh
 exit 0
 EOF2
 chmod +x "$TMP_DIR/bin/git"
@@ -24,7 +24,7 @@ POST_BUILD_TEST=0
 SKIP_DOCKER_GROUP_SETUP=1
 TEST_DOCKER_STUB="$TMP_DIR/docker-stub"
 cat > "$TEST_DOCKER_STUB" << 'EOF2'
-#!/usr/bin/env sh
+#!/bin/sh
 if [ "${1:-}" = "compose" ] && [ "${2:-}" = "version" ]; then
   exit 0
 fi
@@ -41,7 +41,14 @@ install_docker_on_host() {
 }
 
 PATH="$TMP_DIR/bin:/bin"
+set +e
 check_docker_access > "$TMP_DIR/check.out" 2>&1
+status=$?
+set -e
+[ "$status" -eq 0 ] || {
+  cat "$TMP_DIR/check.out"
+  exit 1
+}
 /bin/grep -q 'installing Docker and docker compose on host' "$TMP_DIR/check.out"
 [ -x "$TMP_DIR/bin/docker" ]
 

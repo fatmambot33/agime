@@ -16,6 +16,8 @@ OPENCLAW_ACCESS_MODE=ssh-tunnel \
 sh ./setup.sh
 ```
 
+`REMOTE_DIR` is interpreted as a remote-home path (`~/...`). If your local shell expands it before invoking the script, agime normalizes it back to `~/...` automatically.
+
 Then tunnel locally:
 
 ```sh

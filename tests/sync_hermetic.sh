@@ -277,4 +277,22 @@ grep -Fq "REMOTE_DIR=/Users/pfourcat/agime looks like a local macOS home path." 
 
 grep -Eq "ssh .*ubuntu@vps-host mkdir -p \"/Users/pfourcat/agime\"" "$CALLS_FILE"
 
+cat > "$MAC_PATH_CONFIG" << EOF
+REMOTE_HOST=ubuntu@[::1]
+REMOTE_DIR=/Users/pfourcat/agime
+EOF
+
+(
+  cd "$REPO_DIR"
+  PATH="$BIN_DIR:$PATH" \
+    SYNC_CONFIG_FILE="$MAC_PATH_CONFIG" \
+    sh ./sync.sh > "$TMP_DIR/mac-path-ipv6-loopback.stdout" 2>&1
+)
+
+if grep -Fq "sync.sh preflight error:" "$TMP_DIR/mac-path-ipv6-loopback.stdout"; then
+  echo "did not expect preflight error for bracketed IPv6 loopback host" >&2
+  exit 1
+fi
+grep -Eq "ssh .*ubuntu@\\[::1\\] mkdir -p \"/Users/pfourcat/agime\"" "$CALLS_FILE"
+
 echo "sync.sh hermetic test passed"

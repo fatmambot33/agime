@@ -253,17 +253,40 @@ EOF
 }
 
 is_loopback_remote_host() {
-  case "$REMOTE_HOST" in
-    localhost | localhost:* | 127.0.0.1 | 127.0.0.1:* | ::1 | ::1:*)
-      return 0
-      ;;
-    *@localhost | *@localhost:* | *@127.0.0.1 | *@127.0.0.1:* | *@::1 | *@::1:*)
-      return 0
-      ;;
-    *)
-      return 1
+  host_target=$REMOTE_HOST
+  case "$host_target" in
+    *@*)
+      host_target=${host_target#*@}
       ;;
   esac
+
+  case "$host_target" in
+    ::1)
+      host_name=::1
+      ;;
+    \[*\]:*)
+      host_name=${host_target%%]:*}
+      host_name=${host_name#\[}
+      ;;
+    \[*\])
+      host_name=${host_target#\[}
+      host_name=${host_name%\]}
+      ;;
+    *:*)
+      host_name=${host_target%%:*}
+      ;;
+    *)
+      host_name=$host_target
+      ;;
+  esac
+
+  case "$host_name" in
+    localhost | 127.0.0.1 | ::1)
+      return 0
+      ;;
+  esac
+
+  return 1
 }
 
 validate_remote_dir_path() {

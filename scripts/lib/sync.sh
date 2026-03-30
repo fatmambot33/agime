@@ -5,11 +5,14 @@
 . "$SCRIPT_DIR/scripts/lib/common.sh"
 
 sync_load_config() {
-  [ -f "$SYNC_CONFIG_FILE" ] || return 0
-  set -a
-  # shellcheck disable=SC1090
-  . "$SYNC_CONFIG_FILE"
-  set +a
+  if [ -f "$SYNC_CONFIG_FILE" ]; then
+    set -a
+    # shellcheck disable=SC1090
+    . "$SYNC_CONFIG_FILE"
+    set +a
+  fi
+
+  REMOTE_DIR=$(canonicalize_home_path "$REMOTE_DIR")
 }
 
 sync_validate_remote_entrypoint() {

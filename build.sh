@@ -37,7 +37,7 @@ Optional environment variables:
  OPENCLAW_JSON_BACKUP_DIR Default: \$HOME/openclaw-backups. Stores timestamped openclaw.json backups.
  TRAEFIK_DIR Default: \$HOME/docker/traefik
  OPENCLAW_REPO Default: https://github.com/openclaw/openclaw.git
- OPENCLAW_IMAGE Default: openclaw:local
+ OPENCLAW_IMAGE Default: ghcr.io/openclaw/openclaw:latest
  OPENCLAW_GATEWAY_BIND Default: lan (public mode template only)
  OVH_ENDPOINT_BASE_URL Default: https://oai.endpoints.kepler.ai.cloud.ovh.net/v1
  OVH_ENDPOINT_MODEL Default: gpt-oss-120b
@@ -48,7 +48,7 @@ Optional environment variables:
    - public: \$SCRIPT_DIR/templates/openclaw-compose.public.yml.tmpl
  OPENCLAW_JSON_TEMPLATE Optional template path. Default: \$SCRIPT_DIR/templates/openclaw.json.tmpl
  SKIP_DOCKER_GROUP_SETUP Default: 0. Set to 1 to skip docker group changes.
- SKIP_OPENCLAW_IMAGE_BUILD Default: 0. Set to 1 to skip rebuilding local OpenClaw image.
+ SKIP_OPENCLAW_IMAGE_BUILD Default: 0. Set to 1 to skip image pull/build.
  POST_BUILD_TEST Default: 1. Set to 0 to skip post-build connectivity validation.
  POST_BUILD_TEST_ATTEMPTS Default: 40. Number of validation attempts.
  POST_BUILD_TEST_DELAY_SECONDS Default: 3. Delay between validation attempts.

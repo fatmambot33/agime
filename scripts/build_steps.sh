@@ -14,7 +14,7 @@ initialize_defaults() {
   OPENCLAW_JSON_BACKUP_DIR=${OPENCLAW_JSON_BACKUP_DIR:-"$HOME_DIR/openclaw-backups"}
   TRAEFIK_DIR=${TRAEFIK_DIR:-"$HOME_DIR/docker/traefik"}
   OPENCLAW_REPO=${OPENCLAW_REPO:-"https://github.com/openclaw/openclaw.git"}
-  OPENCLAW_IMAGE=${OPENCLAW_IMAGE:-"openclaw:local"}
+  OPENCLAW_IMAGE=${OPENCLAW_IMAGE:-"ghcr.io/openclaw/openclaw:latest"}
   OPENCLAW_IMAGE_REVISION_STAMP=${OPENCLAW_IMAGE_REVISION_STAMP:-"$OPENCLAW_CONFIG_DIR/openclaw-image-revision.txt"}
   OPENCLAW_GATEWAY_BIND=${OPENCLAW_GATEWAY_BIND:-"lan"}
   OVH_ENDPOINT_BASE_URL=${OVH_ENDPOINT_BASE_URL:-"https://oai.endpoints.kepler.ai.cloud.ovh.net/v1"}
@@ -247,6 +247,16 @@ write_openclaw_json_config() {
 ensure_openclaw_image() {
   if [ "$SKIP_OPENCLAW_IMAGE_BUILD" = "1" ]; then
     log "Skipping OpenClaw image build (SKIP_OPENCLAW_IMAGE_BUILD=1)"
+    return 0
+  fi
+
+  if [ "$OPENCLAW_IMAGE" != "openclaw:local" ]; then
+    log "Pulling OpenClaw image: $OPENCLAW_IMAGE"
+    if [ "$DRY_RUN" = "1" ]; then
+      log "[DRY_RUN] docker pull $OPENCLAW_IMAGE"
+      return 0
+    fi
+    run_cmd docker pull "$OPENCLAW_IMAGE"
     return 0
   fi
 

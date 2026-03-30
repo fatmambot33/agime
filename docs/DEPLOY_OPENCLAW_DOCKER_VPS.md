@@ -14,8 +14,8 @@
    - `public` mode only: `OPENCLAW_DOMAIN` and `TRAEFIK_ACME_EMAIL`
 2. Ensure outbound network access from the VPS so agime can install Docker and `docker compose` automatically when missing.
 3. Choose OpenClaw image policy:
-   - default: local build (`OPENCLAW_IMAGE=openclaw:local`)
-   - optional: override `OPENCLAW_IMAGE` with an upstream/prebuilt image
+   - default: official image (`OPENCLAW_IMAGE=ghcr.io/openclaw/openclaw:latest`)
+   - optional fallback: set `OPENCLAW_IMAGE=openclaw:local` to use local image builds
 4. Keep Traefik only for `OPENCLAW_ACCESS_MODE=public` (ssh-tunnel mode skips Traefik).
 5. Run `sh ./setup.sh`; on first deploy, OpenClaw wizard (`./docker-setup.sh`) runs when `.env` is missing.
 6. Validate endpoint access:

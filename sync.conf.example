@@ -1,51 +1,11 @@
-#
-# Copy to sync.conf (or set SYNC_CONFIG_FILE) and edit for your host.
-# Values can still be overridden per-command, e.g. REMOTE_HOST=... sh ./sync.sh
-#
+# Local sync + remote apply defaults.
 
-# Required target
-REMOTE_HOST=user@example-vps
-REMOTE_DIR=/tmp/agime
-
-# Remote entrypoint (default non-interactive deploy)
+REMOTE_HOST=ubuntu@203.0.113.10
+REMOTE_DIR=~/agime
 SYNC_REMOTE_ENTRYPOINT=build.sh
 
-# Optional: source this file remotely before entrypoint execution.
-# Local file is auto-uploaded when present.
-# SYNC_REMOTE_ENV_FILE=.sync-build.env
-#
-# Optional: copy the remote env file back locally after the run.
-# Useful to keep local non-interactive config in sync with latest welcome choices.
-# SYNC_MIRROR_ENV_FILE=1
-# SYNC_LOCAL_ENV_FILE=./.sync-build.env
-#
-# Single source-of-truth mode:
-# - `sync.sh` treats this file as your single source of truth.
-# - if local `sync.conf` is missing, `sync.sh` tries downloading remote `sync.conf`;
-#   if missing remotely too, it bootstraps from `sync.conf.example`.
-# - set SYNC_MIRROR_ENV_FILE=1 to copy remote updates back locally after each run.
-# - add your build variables below to keep sync + build settings in one file.
-
-# Optional build variables for non-interactive build.sh
-# OPENCLAW_ACCESS_MODE=ssh-tunnel
-# OVH_ENDPOINT_API_KEY=replace_me
-# OPENCLAW_TOKEN=
-# Image-first VPS preset (recommended):
-# OPENCLAW_IMAGE=ghcr.io/<org>/ovhclaw:<tag>
-# SKIP_OPENCLAW_IMAGE_BUILD=1
-# Keep shared paths machine-agnostic using home-relative values.
-# OPENCLAW_DIR=~/openclaw
-# OPENCLAW_CONFIG_DIR=~/.openclaw
-# OPENCLAW_WORKSPACE_DIR=~/.openclaw/workspace
-# OPENCLAW_USER=$USER
-# DRY_RUN=0
-
-# Default upload set (space-separated, runtime bundle only)
-SYNC_ITEMS="build.sh backup.sh update.sh image.sh restore.sh scripts templates docs README.md"
-
-# SSH multiplexing tunables
-SSH_CONTROL_PERSIST_SECONDS=600
-SSH_CONTROL_PATH="$HOME/.ssh/agime-sync-%r@%h:%p"
-
-# Print effective config before syncing (1=yes, 0=no)
-SYNC_PRINT_CONFIG=1
+# Build-time defaults loaded remotely by build.sh.
+OPENCLAW_ACCESS_MODE=ssh-tunnel
+OVH_ENDPOINT_API_KEY=
+# TRAEFIK_ACME_EMAIL=admin@example.com
+# OPENCLAW_DOMAIN=openclaw.example.com

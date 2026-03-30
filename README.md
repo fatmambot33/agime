@@ -1,419 +1,61 @@
 # agime
 
-Automation scripts for deploying OpenClaw on a VPS with two explicit access modes:
+Clean deployment toolkit for OpenClaw on VPS hosts.
 
-- `ssh-tunnel` (default, private access)
-- `public` (Traefik + Let's Encrypt, explicit opt-in)
+## What this repo does
 
-## Current repository contents
+- Deploy OpenClaw with a private-by-default posture.
+- Support exactly two access modes:
+  - `ssh-tunnel` (default)
+  - `public` (explicit opt-in via Traefik + Let's Encrypt)
+- Provide first-class operations for backup, restore, and update.
 
-- `build.sh`: non-interactive end-to-end setup script (environment-variable driven).
-- `sync.sh`: local helper that reconciles `sync.conf`, uploads the runtime deployment bundle to a VPS, then runs remote deployment (`build.sh`) by default.
-- `sync.conf.example`: sample local config file for `sync.sh` (copy to `sync.conf` to track current sync/build defaults).
-- `.sync-build.env.example`: sample build environment file for non-interactive deploy runs.
-- `backup.sh`: creates a tarball backup of OpenClaw runtime data (`$OPENCLAW_CONFIG_DIR`, `$OPENCLAW_DIR/.env`, optional Traefik state).
-- `update.sh`: post-install helper that can fast-forward pull this toolkit checkout (auto-detected) and rerun `build.sh`.
-- `image.sh`: top-level helper for custom image build/push workflow (wrapper around `scripts/build_custom_image.sh`).
-- `restore.sh`: restores a backup tarball into a chosen root path (requires explicit force flag for `/`).
-- `setup.sh`: simplest setup entrypoint for remote install; it collects required values locally and runs `sync.sh` + remote `build.sh`.
-- `scripts/build_lib.sh` + `scripts/build_steps.sh`: shared helpers and modular deployment steps used by `build.sh`.
-- `scripts/build_custom_image.sh`: helper to build/push a prebuilt custom OpenClaw image with optional tooling baked in.
-- `templates/openclaw-compose.ssh-tunnel.yml.tmpl`: private/local compose template.
-- `templates/openclaw-compose.public.yml.tmpl`: Traefik-integrated compose template.
-- `templates/traefik-compose.yml.tmpl`: Traefik compose template (public mode only).
-- `templates/openclaw.json.tmpl`: OpenClaw JSON config template.
-- `templates/openclaw-custom-image.Dockerfile.tmpl`: starter Dockerfile template used by `scripts/build_custom_image.sh`.
-- `Makefile`: local quality checks.
-- `docs/COMPATIBILITY_MATRIX.md`: OVH Ubuntu compatibility baseline and version expectations.
-- `docs/CUSTOM_IMAGE_WORKFLOW.md`: step-by-step custom image build/push/deploy workflow.
+## Entrypoints
+
+- `build.sh` — deploy/apply on a VPS host.
+- `sync.sh` — local sync + remote execution.
+- `setup.sh` — first-deploy wrapper around `sync.sh`.
+- `backup.sh` — create backup archive.
+- `restore.sh` — restore backup archive (with root safety guard).
+- `update.sh` — optional pull + backup + deploy workflow.
+
+## Repository structure
+
+- `scripts/` — modular shell logic.
+- `templates/` — render-only configuration assets.
+- `tests/` — deterministic hermetic checks.
+- `docs/` — operator/contributor/release docs.
 
 ## Quick start
 
-### Default easy setup (`setup.sh`)
-
-`setup.sh` is now a streamlined OVH-oriented **remote** installer:
-
-- prompts for required OVH + access-mode values;
-- runs remote `build.sh` over SSH via `sync.sh`.
-
-Mode behavior:
-
-- choose `ssh-tunnel` to keep OpenClaw private (default);
-- choose `public` to enable Traefik + HTTPS routing.
-
-Run from your workstation:
-
-```bash
-REMOTE_HOST=<user>@<vps-ip-or-hostname> \
+```sh
+REMOTE_HOST=ubuntu@203.0.113.10 \
 REMOTE_DIR=~/agime \
+OVH_ENDPOINT_API_KEY=your-key \
+OPENCLAW_ACCESS_MODE=ssh-tunnel \
 sh ./setup.sh
 ```
 
-`REMOTE_HOST` is required. `setup.sh` collects inputs locally, seeds a temporary sync config from `sync.conf.example`, then runs `sync.sh` to upload and execute remote `build.sh` over SSH.
+Public mode:
 
-### Sync + remote deploy
-
-Run from your local machine:
-
-```bash
-REMOTE_HOST=<user>@<host> sh ./sync.sh
-```
-
-Behavior:
-
-- sync/upload is executed locally;
-- non-interactive deploy (`build.sh`) is executed on the SSH host by default.
-
-`sync.sh` now enables SSH connection multiplexing by default (`ControlMaster=auto` + `ControlPersist`), which usually avoids repeated password prompts across the multiple SSH/SCP calls.
-
-Tune if needed:
-
-```bash
-SSH_CONTROL_PERSIST_SECONDS=1200 \
-SSH_CONTROL_PATH="$HOME/.ssh/agime-sync-%r@%h:%p" \
-REMOTE_HOST=<user>@<host> \
-sh ./sync.sh
-```
-
-Use a local config file (so current sync + build settings are visible and reusable):
-
-```bash
-# optional: pre-create/edit; otherwise sync.sh will recover/bootstrap it
-$EDITOR ./sync.conf
-sh ./sync.sh
-```
-
-`sync.sh` auto-loads `./sync.conf` when present.
-It then prioritizes an existing remote env file (`SYNC_REMOTE_ENV_FILE`, default `sync.conf`): when found, that remote file is downloaded locally and used as the source of truth for the run.
-If the remote file is missing, `sync.sh` uses local config; and when local is also missing, it bootstraps from `sync.conf.example`, then writes the current `REMOTE_HOST`/`REMOTE_DIR` into that generated config.
-When `sync.sh` creates/downloads that shared config, it normalizes `OPENCLAW_*`/`TRAEFIK_DIR` home paths to `~/...` form so `sync.conf` stays portable across workstation + VPS homes.
-`REMOTE_DIR` is also normalized back to `~/...` whenever it maps to your local `$HOME` (including when loaded from config, refreshed from remote env, or bootstrapped), so a locally expanded path like `/Users/<you>/agime` is never reused as the remote VPS deploy path.
-As an extra safety guard, `sync.sh` now fails fast when `REMOTE_DIR` still points to `/Users/...` for a non-loopback remote host; use `REMOTE_DIR=~/agime` (recommended) or explicitly bypass with `SYNC_ALLOW_ABSOLUTE_REMOTE_DIR=1` if intentional.
-By default, the same `sync.conf` is sourced remotely before execution (`SYNC_REMOTE_ENV_FILE=sync.conf`) under `set -a`, so plain `KEY=value` assignments are auto-exported for the selected remote entrypoint.
-When `SYNC_REMOTE_ENV_FILE` points to the same file already included in `SYNC_ITEMS` (default: `sync.conf`), `sync.sh` uploads it once to avoid duplicate transfer lines.
-Set `SYNC_PRINT_CONFIG=1` to print the effective config before execution.
-`sync.conf` is intentionally gitignored (it may contain secrets), while `sync.conf.example` remains the safe template.
-
-Single-file non-interactive remote deploy (`build.sh`) example:
-
-```bash
-$EDITOR ./sync.conf
-sh ./sync.sh
-```
-
-Set this in `sync.conf`:
-
-- add required `build.sh` variables directly to `sync.conf` (for example `OVH_ENDPOINT_API_KEY=...`, optional access-mode settings). They can remain plain shell assignments; `sync.sh` auto-exports them on the remote host before launching `build.sh`.
-- `sync.sh` now prints a preflight warning when `SYNC_REMOTE_ENTRYPOINT=build.sh` and `OVH_ENDPOINT_API_KEY` is empty in loaded config/environment.
-- `SYNC_REMOTE_CONFIG_PRIORITY=1` (default) keeps remote env authoritative when it already exists; set `SYNC_REMOTE_CONFIG_PRIORITY=0` if you explicitly want to push local config as the source of truth.
-
-If you prefer the welcome flow and want those selections reflected in reusable config:
-
-### Machine boundary and remote footprint
-
-- **Local workstation:** author/update `sync.conf` and run `sync.sh` to reconcile and upload files.
-- **Remote VPS:** run `build.sh` (or other selected entrypoint) to apply deployment changes.
-- Default upload payload is runtime-only: `build.sh backup.sh update.sh image.sh restore.sh scripts templates docs README.md` (plus `sync.conf` when needed).
-- Local authoring helpers are intentionally excluded from default payload; override with `SYNC_ITEMS` only when you explicitly need a different bundle.
-
-### Safer default (`ssh-tunnel`)
-
-```bash
-chmod +x build.sh
-OVH_ENDPOINT_API_KEY=xxxxx \
-./build.sh
-```
-
-Then tunnel from your workstation:
-
-```bash
-ssh -N -L 18789:127.0.0.1:18789 <user>@<host>
-```
-
-Open: `http://127.0.0.1:18789`
-
-### Public mode (explicit opt-in)
-
-```bash
+```sh
+REMOTE_HOST=ubuntu@203.0.113.10 \
+REMOTE_DIR=~/agime \
+OVH_ENDPOINT_API_KEY=your-key \
 OPENCLAW_ACCESS_MODE=public \
 TRAEFIK_ACME_EMAIL=admin@example.com \
 OPENCLAW_DOMAIN=openclaw.example.com \
-OVH_ENDPOINT_API_KEY=xxxxx \
-./build.sh
+sh ./setup.sh
 ```
 
-## Start using OpenClaw after deploy
+## Validation
 
-### `ssh-tunnel` mode
-
-1. Keep an SSH tunnel open from your workstation to the VPS:
-
-   ```bash
-   ssh -N -L 18789:127.0.0.1:18789 <user>@<host>
-   ```
-
-2. Open OpenClaw in your local browser:
-
-   ```text
-   http://127.0.0.1:18789
-   ```
-
-### `public` mode
-
-1. Open OpenClaw in your browser:
-
-   ```text
-   https://<OPENCLAW_DOMAIN>
-   ```
-
-2. If the site is not immediately reachable, check DNS and certificate progress:
-   - `docker logs traefik`
-   - `docker logs openclaw`
-
-## Pairing and approving devices
-
-After OpenClaw is up, pair from the client app/flow you intend to use.
-
-- New devices remain subject to gateway approvals in token mode.
-- List pending/known devices on the VPS:
-
-  ```bash
-  docker exec -it openclaw node dist/index.js devices list
-  ```
-
-- Use the corresponding `devices` subcommands in that CLI to approve/reject as needed.
-
-Operational note: pairing by itself is not a network exposure boundary; prefer `ssh-tunnel` unless public access is explicitly required.
-
-## Access mode behavior
-
-### `ssh-tunnel` (default)
-
-- Skips Traefik setup/startup.
-- Skips `proxy` network setup.
-- Binds OpenClaw on `127.0.0.1:18789`.
-- Post-build validation probes `http://127.0.0.1:18789/healthz`.
-
-### `public`
-
-- Uses Traefik + Let's Encrypt.
-- Uses Docker `proxy` network.
-- Post-build validation probes `https://$OPENCLAW_DOMAIN`.
-- Validation accepts successful TLS/connectivity even if root returns `404`.
-
-## Standard Docker-on-VPS deployment guide
-
-See the standard guide:
-
-- [`docs/DEPLOY_OPENCLAW_DOCKER_VPS.md`](docs/DEPLOY_OPENCLAW_DOCKER_VPS.md)
-
-Quick commands:
-- Interactive: `REMOTE_HOST=<user>@<vps-host> REMOTE_DIR=~/agime sh ./setup.sh`
-- Non-interactive: `REMOTE_HOST=<user>@<vps-host> REMOTE_DIR=~/agime sh ./sync.sh`
-
-Core settings:
-- `OVH_ENDPOINT_API_KEY` (required)
-- `OPENCLAW_ACCESS_MODE=ssh-tunnel|public`
-- `OVH_ENDPOINT_MODEL` optional (default `gpt-oss-120b`)
-
-## Image-first deployment model (optional)
-
-Image-first is optional. Use it only when you want a pinned prebuilt image.
-
-```bash
-OPENCLAW_IMAGE=<registry>/<name>:<tag> \
-SKIP_OPENCLAW_IMAGE_BUILD=1 ./build.sh
-```
-
-If you skip image-first, `build.sh` uses the default local image flow (`openclaw:local`).
-
-## Build your custom image (easy path)
-
-For first-time publishing, use the interactive workflow:
-
-```bash
-sh ./image.sh
-```
-
-The `Image` action now walks through:
-
-- GitHub owner (`ghcr.io/<owner>/...`)
-- image name (`ghcr.io/<owner>/<image-name>:...`)
-- tag (`ghcr.io/<owner>/<image-name>:<tag>`)
-- whether to push after build
-
-Owner and image-name inputs are normalized to lowercase automatically so the generated GHCR reference is always Docker-compatible.
-
-Then it prints the exact computed image reference before running the build:
-
-```text
-ghcr.io/<github-user-or-org>/ovhclaw:<tag>
-```
-
-If push is enabled, it also explains GHCR auth prerequisites (`docker login ghcr.io` with package write permissions) before attempting a push.
-
-Advanced/non-interactive usage remains available via direct environment variables:
-
-```bash
-CUSTOM_OPENCLAW_IMAGE=ghcr.io/<org>/ovhclaw:<tag> \
-sh ./scripts/build_custom_image.sh
-```
-
-`scripts/build_custom_image.sh` requires `docker` to be available on the host. If Docker is missing, the script attempts automatic installation on Debian/Ubuntu; on other hosts, install Docker Engine manually before running the image workflow. The script also checks that the Docker daemon/API is reachable before build (for example, start Docker Desktop on macOS/Windows, or start the Docker service on Linux).
-The script also validates `CUSTOM_OPENCLAW_IMAGE` format (`ghcr.io/<owner>/<image-name>:<tag>`) and fails early if owner/image contain uppercase characters.
-
-Tip: for production builds, pin your base OpenClaw image tag/digest instead of relying on `:latest` (set `CUSTOM_OPENCLAW_BASE_IMAGE=...`).
-
-Push in the same step:
-
-```bash
-CUSTOM_OPENCLAW_IMAGE=ghcr.io/<org>/ovhclaw:<tag> \
-CUSTOM_OPENCLAW_PUSH=1 \
-sh ./scripts/build_custom_image.sh
-```
-
-Then deploy with:
-
-```bash
-OPENCLAW_IMAGE=ghcr.io/<org>/ovhclaw:<tag> \
-SKIP_OPENCLAW_IMAGE_BUILD=1 \
-OPENCLAW_ACCESS_MODE=ssh-tunnel \
-OVH_ENDPOINT_API_KEY=... \
-sh ./build.sh
-```
-
-Advanced options and tunables are documented in `docs/CUSTOM_IMAGE_WORKFLOW.md`.
-
-For `sync.sh` users, add this to `sync.conf`:
-
-```bash
-OPENCLAW_IMAGE=ghcr.io/<org>/ovhclaw:<tag>
-SKIP_OPENCLAW_IMAGE_BUILD=1
-OPENCLAW_ACCESS_MODE=ssh-tunnel
-OVH_ENDPOINT_API_KEY=...
-```
-
-## Post-build connectivity validation
-
-Enabled by default (`POST_BUILD_TEST=1`). Tunables:
-
-- `POST_BUILD_TEST_ATTEMPTS` (default `40`)
-- `POST_BUILD_TEST_DELAY_SECONDS` (default `3`)
-- `POST_BUILD_TEST_CONNECT_TIMEOUT_SECONDS` (default `5`)
-- `POST_BUILD_TEST_MAX_TIME_SECONDS` (default `15`)
-
-Public-mode retry logic treats temporary default/self-signed cert states as transient while ACME issuance finishes.
-
-## Developer checks
-
-Primary validation target is Linux (OVH VPS runtime profile).
-
-```bash
+```sh
 make check
+make check-strict
 ```
 
-`make check` runs syntax + hermetic script checks that model the supported Linux deployment flow.
+## Release and compatibility
 
-`make check-strict` adds `shellcheck` + `shfmt` validation on top of `make check`.
-
-Or run the syntax checks directly:
-
-```bash
-sh -n build.sh sync.sh backup.sh update.sh image.sh restore.sh setup.sh scripts/build_lib.sh scripts/build_steps.sh tests/smoke_dry_run.sh tests/idempotency_dry_run.sh tests/sync_hermetic.sh tests/backup_restore_hermetic.sh tests/ownership_config_dir_hermetic.sh tests/post_install_helpers_hermetic.sh
-```
-
-## Backup and restore mechanic
-
-
-Backup defaults:
-- Includes `$OPENCLAW_CONFIG_DIR` (default `$HOME/.openclaw`).
-- Includes `OPENCLAW_WORKSPACE_DIR` (default `$OPENCLAW_CONFIG_DIR/workspace`) so workspace data is captured even when moved outside `$OPENCLAW_CONFIG_DIR`.
-- Includes `OPENCLAW_SKILLS_DIR` (default `$OPENCLAW_CONFIG_DIR/skills`) and `OPENCLAW_HOOKS_DIR` (default `$OPENCLAW_CONFIG_DIR/hooks`) when present.
-- Includes `OPENCLAW_PAIRED_DEVICES_PATH` (default `$OPENCLAW_CONFIG_DIR/paired-devices.json`) when present.
-- Includes `$OPENCLAW_DIR/.env` (default `$HOME/openclaw/.env`).
-- Includes `$OPENCLAW_DIR/docker-compose.yml` when present.
-- Excludes Traefik data by default unless `INCLUDE_TRAEFIK=1`.
-- Excludes full OpenClaw git checkout by default unless `INCLUDE_OPENCLAW_REPO=1`.
-- Supports additional paths via `EXTRA_BACKUP_PATHS` (space-separated).
-
-During deploy, when `openclaw.json` already exists, `build.sh` now writes timestamped backups to `OPENCLAW_JSON_BACKUP_DIR` (default `$HOME/openclaw-backups`) instead of writing `.bak` files inside `$OPENCLAW_CONFIG_DIR`.
-
-Create a backup:
-
-```bash
-sh ./backup.sh
-```
-
-Tune backup location and include Traefik:
-
-```bash
-INCLUDE_TRAEFIK=1 \
-BACKUP_OUTPUT="$HOME/openclaw-backup.tgz" \
-sh ./backup.sh
-```
-
-Include the full local OpenClaw checkout plus extra files:
-
-```bash
-INCLUDE_OPENCLAW_REPO=1 \
-EXTRA_BACKUP_PATHS="$HOME/notes/IDENTITY.md $HOME/.config/openclaw/custom.env" \
-sh ./backup.sh
-```
-
-Restore to a safe sandbox path first (recommended):
-
-```bash
-RESTORE_ARCHIVE="$HOME/openclaw-backup.tgz" \
-RESTORE_ROOT="/tmp/openclaw-restore-check" \
-sh ./restore.sh
-```
-
-Restore into the real filesystem root (requires explicit opt-in):
-
-```bash
-RESTORE_ARCHIVE="$HOME/openclaw-backup.tgz" \
-RESTORE_FORCE=1 \
-sh ./restore.sh
-```
-
-`restore.sh` also validates archive entry paths and refuses extraction when unsafe entries (absolute paths or `..` traversal segments) are detected.
-
-## Post-install helpers
-
-Create a backup before maintenance changes:
-
-```bash
-sh ./backup.sh
-```
-
-Update this toolkit checkout and rerun deployment (works in both a git clone and synced `/tmp/agime` copy):
-
-```bash
-sh ./update.sh
-```
-
-`update.sh` now runs an easy maintenance flow by default:
-
-1) create a pre-update backup archive,  
-2) auto-load `./.sync-build.env` when present,  
-3) pull `OPENCLAW_IMAGE` when `SKIP_OPENCLAW_IMAGE_BUILD=1` (image-first mode),  
-4) run `build.sh` to deploy and apply changes.
-
-Safety guard: when backup is enabled, `update.sh` now verifies the backup archive file was actually created before continuing.
-
-Control pull behavior explicitly when needed:
-
-```bash
-GIT_PULL=1 sh ./update.sh      # require git checkout and pull
-GIT_PULL=0 sh ./update.sh      # skip pull and only rerun build
-LOAD_DEPLOY_ENV=0 sh ./update.sh  # ignore .sync-build.env for this run
-RUN_BACKUP=0 sh ./update.sh    # skip automatic pre-update backup
-RUN_IMAGE_PULL=0 sh ./update.sh  # skip docker pull
-RESTORE_ON_FAILURE=1 sh ./update.sh  # auto-restore backup if build fails
-```
-
-Use dry-run previews when needed:
-
-```bash
-DRY_RUN=1 sh ./update.sh
-```
+- `docs/RELEASE_PROCESS.md`
+- `docs/COMPATIBILITY_POLICY.md`

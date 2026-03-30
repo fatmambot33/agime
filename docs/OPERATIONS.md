@@ -13,6 +13,7 @@ Deployment model note: Docker is the required runtime boundary for supported VPS
 - Prefer keeping sync + build options in `sync.conf` (copy from `sync.conf.example`) and enable `SYNC_PRINT_CONFIG=1` so current effective values are shown before each run.
 - If `sync.conf` is missing, `sync.sh` first tries to download remote `sync.conf`; if not found remotely, it bootstraps local config from `sync.conf.example`.
 - Shared `sync.conf` is normalized to home-relative paths (for example `~/openclaw`, `~/.openclaw`) for `OPENCLAW_*` + `TRAEFIK_DIR`, which keeps one machine-agnostic config usable on both workstation and VPS.
+- `REMOTE_DIR` is normalized to `~/...` when it resolves under your workstation `$HOME`, so local shell expansion (for example `/Users/<you>/agime`) is converted back before generating SSH/SCP remote paths.
 - Treat `sync.conf` as the local source-of-truth for authoring/updating deploy settings; `build.sh` remains the default remote entrypoint.
 - `SYNC_REMOTE_CONFIG_PRIORITY=1` by default: if remote `SYNC_REMOTE_ENV_FILE` already exists, `sync.sh` treats it as authoritative for the run and refreshes local `sync.conf` from it.
 - For non-interactive deploys, use `SYNC_REMOTE_ENTRYPOINT=build.sh` and keep required build variables in `sync.conf` (single source of truth).
@@ -39,6 +40,14 @@ Deployment model note: Docker is the required runtime boundary for supported VPS
   4. Increase validation budget when issuance is slow:
      - `POST_BUILD_TEST_ATTEMPTS=60`
      - `POST_BUILD_TEST_DELAY_SECONDS=5`
+
+### 3) SSH error: `REMOTE HOST IDENTIFICATION HAS CHANGED`
+- Symptom: SSH/SCP stops with a host-key mismatch warning before `sync.sh` can connect.
+- Fix:
+  1. Verify the VPS was intentionally reprovisioned/rotated and confirm the new host key fingerprint from your cloud console or out-of-band channel.
+  2. Inspect the currently trusted key: `ssh-keygen -F <host-or-ip>`.
+  3. Remove the stale key only after verification: `ssh-keygen -R <host-or-ip>`.
+  4. Reconnect once and confirm the prompted fingerprint matches the verified value, then rerun `sh ./sync.sh`.
 
 ## Connectivity validation behavior
 

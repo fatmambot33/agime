@@ -36,6 +36,8 @@ OPENCLAW_ACCESS_MODE=ssh-tunnel \
 sh ./setup.sh
 ```
 
+`REMOTE_DIR` should point to a path under the remote user home (default `~/agime`). The scripts normalize host-expanded values (for example `/Users/alice/agime`) back to `~/...` for remote-safe sync behavior.
+
 Public mode:
 
 ```sh

@@ -85,4 +85,21 @@ EOF2
 
 grep -Eq 'ssh .*\./update\.sh' "$CALLS"
 
+# REMOTE_DIR expanded from local HOME should be normalized back to ~/ for remote ops.
+HOME_FIXTURE="$TMP_DIR/fake-home"
+mkdir -p "$HOME_FIXTURE"
+: > "$CALLS"
+(
+  cd "$REPO_DIR"
+  HOME="$HOME_FIXTURE" \
+    PATH="$BIN_DIR:$PATH" \
+    REMOTE_HOST=test-vps \
+    REMOTE_DIR="$HOME_FIXTURE/agime" \
+    SYNC_REMOTE_ENTRYPOINT=update.sh \
+    sh ./sync.sh
+)
+
+grep -q 'ssh -o ControlMaster=auto -o ControlPersist=600 -o ControlPath=.*/agime-sync-%r@%h:%p test-vps mkdir -p "$HOME/agime"' "$CALLS"
+grep -q 'scp -o ControlMaster=auto -o ControlPersist=600 -o ControlPath=.*/agime-sync-%r@%h:%p -r .* test-vps:~/agime/' "$CALLS"
+
 echo 'sync_env_edge_cases_hermetic: ok'

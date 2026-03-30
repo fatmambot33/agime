@@ -227,36 +227,16 @@ Core settings:
 - `OPENCLAW_ACCESS_MODE=ssh-tunnel|public`
 - `OVH_ENDPOINT_MODEL` optional (default `gpt-oss-120b`)
 
-## Image-first deployment model (recommended)
+## Image-first deployment model (optional)
 
-Use a prebuilt custom image that already contains optional tools used by your agent workflows.
-
-Recommended settings:
-
-```bash
-OPENCLAW_IMAGE=ghcr.io/<org>/<openclaw-image>:<tag> \
-SKIP_OPENCLAW_IMAGE_BUILD=1 ./build.sh
-```
-
-`build.sh` still supports local rebuilds (`SKIP_OPENCLAW_IMAGE_BUILD=0`) for migration scenarios, but production-like VPS deployments should prefer image-first with immutable tags.
-
-Standard VPS deployment contract:
+Image-first is optional. Use it only when you want a pinned prebuilt image.
 
 ```bash
 OPENCLAW_IMAGE=<registry>/<name>:<tag> \
-SKIP_OPENCLAW_IMAGE_BUILD=1 \
-OPENCLAW_ACCESS_MODE=ssh-tunnel \
-OVH_ENDPOINT_API_KEY=... \
-./build.sh
+SKIP_OPENCLAW_IMAGE_BUILD=1 ./build.sh
 ```
 
-`OVH_ENDPOINT_API_KEY` is mandatory for supported deployments.
-
-Use native OpenClaw factory bootstrap on first install (default `SKIP_OPENCLAW_WIZARD=0`), then switch to `SKIP_OPENCLAW_WIZARD=1` only for post-bootstrap automation.
-
-If `OVH_ENDPOINT_MODEL` is not set, the deployment uses the toolkit default model (`gpt-oss-120b`).
-
-Host responsibilities are intentionally limited to Docker Engine, Docker Compose v2, SSH access, firewall/networking, and persistent bind mounts. Optional tools (`gh`, `himalaya`, `codex`, `claude`, `opencode`, `pi`, `signal-cli`) must be present in the selected `OPENCLAW_IMAGE`.
+If you skip image-first, `build.sh` uses the default local image flow (`openclaw:local`).
 
 ## Build your custom image (easy path)
 

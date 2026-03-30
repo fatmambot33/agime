@@ -2,7 +2,7 @@
 
 ## Mode-first troubleshooting
 
-Deployment model note: Docker is the required runtime boundary for supported VPS deployments. Optional tooling (`gh`, `himalaya`, coding-agent backends, `signal-cli`) is expected inside the selected `OPENCLAW_IMAGE`, not installed on the host at deploy time.
+Deployment model note: Docker is the required runtime boundary for supported VPS deployments.
 
 ### 0) `sync.sh` asks for SSH password multiple times
 - `sync.sh` runs from your local machine and performs three remote operations (`ssh mkdir`, `scp`, then remote entrypoint execution; default is `build.sh`).

@@ -39,6 +39,25 @@ normalize_remote_dir() {
   REMOTE_DIR=$(canonicalize_home_path "$REMOTE_DIR")
 }
 
+remote_home_path() {
+  value=$1
+  case "$value" in
+    "~")
+      printf '$HOME'
+      ;;
+    "~/"*)
+      printf '$HOME/%s' "${value#\~/}"
+      ;;
+    *)
+      printf '%s' "$value"
+      ;;
+  esac
+}
+
+refresh_remote_dir_ssh() {
+  REMOTE_DIR_SSH=$(remote_home_path "$REMOTE_DIR")
+}
+
 normalize_shared_home_paths() {
   env_file=$1
   [ -f "$env_file" ] || return 0
@@ -62,7 +81,7 @@ normalize_shared_home_paths() {
 }
 
 try_download_remote_config() {
-  ssh $SSH_BASE_ARGS "$REMOTE_HOST" "test -f '$REMOTE_DIR/$SYNC_REMOTE_ENV_FILE'" || return 1
+  ssh $SSH_BASE_ARGS "$REMOTE_HOST" "test -f \"$REMOTE_DIR_SSH/$SYNC_REMOTE_ENV_FILE\"" || return 1
   mkdir -p "$(dirname "$SYNC_LOCAL_ENV_FILE")"
   scp $SSH_BASE_ARGS "$REMOTE_HOST:$REMOTE_DIR/$SYNC_REMOTE_ENV_FILE" "$SYNC_LOCAL_ENV_FILE"
   normalize_shared_home_paths "$SYNC_LOCAL_ENV_FILE"
@@ -102,6 +121,7 @@ upsert_env_key() {
 }
 
 normalize_remote_dir
+refresh_remote_dir_ssh
 
 if [ ! -f "$SYNC_LOCAL_ENV_FILE" ]; then
   try_download_remote_config || bootstrap_local_config
@@ -114,6 +134,7 @@ if [ -f "$SYNC_CONFIG_FILE" ]; then
   set +a
 fi
 normalize_remote_dir
+refresh_remote_dir_ssh
 
 OPENCLAW_ACTION=${OPENCLAW_ACTION:-}
 SYNC_REMOTE_ENTRYPOINT=${SYNC_REMOTE_ENTRYPOINT:-build.sh}
@@ -132,7 +153,7 @@ scp_exec() {
 
 remote_env_exists() {
   [ -n "$SYNC_REMOTE_ENV_FILE" ] || return 1
-  ssh_exec "$REMOTE_HOST" "test -f '$REMOTE_DIR/$SYNC_REMOTE_ENV_FILE'"
+  ssh_exec "$REMOTE_HOST" "test -f \"$REMOTE_DIR_SSH/$SYNC_REMOTE_ENV_FILE\""
 }
 
 cleanup_ssh_master() {
@@ -170,6 +191,7 @@ if [ "$SYNC_REMOTE_CONFIG_PRIORITY" = "1" ] && remote_env_exists; then
     . "$SYNC_LOCAL_ENV_FILE"
     set +a
     normalize_remote_dir
+    refresh_remote_dir_ssh
   fi
 fi
 
@@ -242,7 +264,7 @@ if [ -n "$ENV_UPLOAD_SOURCE" ] && [ -f "$SYNC_CONFIG_FILE" ]; then
   esac
 fi
 
-ssh_exec "$REMOTE_HOST" "mkdir -p '$REMOTE_DIR'"
+ssh_exec "$REMOTE_HOST" "mkdir -p \"$REMOTE_DIR_SSH\""
 set -- $UPLOAD_ITEMS
 scp_exec -r "$@" "$REMOTE_HOST:$REMOTE_DIR/"
 if [ -n "$ENV_UPLOAD_SOURCE" ] && [ -n "$SYNC_REMOTE_ENV_FILE" ] && [ "$SKIP_ENV_EXTRA_UPLOAD" != "1" ]; then
@@ -258,13 +280,13 @@ fi
 case "$SYNC_REMOTE_ENTRYPOINT" in
   configure.sh)
     if [ -n "$OPENCLAW_ACTION" ]; then
-      ssh_exec -t "$REMOTE_HOST" "cd '$REMOTE_DIR' && chmod +x ./*.sh && ${REMOTE_ENV_SETUP}OPENCLAW_ACTION='$OPENCLAW_ACTION' OPENCLAW_EXPORT_ENV_FILE='${SYNC_REMOTE_ENV_FILE:-}' ./configure.sh"
+      ssh_exec -t "$REMOTE_HOST" "cd \"$REMOTE_DIR_SSH\" && chmod +x ./*.sh && ${REMOTE_ENV_SETUP}OPENCLAW_ACTION='$OPENCLAW_ACTION' OPENCLAW_EXPORT_ENV_FILE='${SYNC_REMOTE_ENV_FILE:-}' ./configure.sh"
     else
-      ssh_exec -t "$REMOTE_HOST" "cd '$REMOTE_DIR' && chmod +x ./*.sh && ${REMOTE_ENV_SETUP}OPENCLAW_EXPORT_ENV_FILE='${SYNC_REMOTE_ENV_FILE:-}' ./configure.sh"
+      ssh_exec -t "$REMOTE_HOST" "cd \"$REMOTE_DIR_SSH\" && chmod +x ./*.sh && ${REMOTE_ENV_SETUP}OPENCLAW_EXPORT_ENV_FILE='${SYNC_REMOTE_ENV_FILE:-}' ./configure.sh"
     fi
     ;;
   build.sh)
-    ssh_exec "$REMOTE_HOST" "cd '$REMOTE_DIR' && chmod +x ./*.sh && ${REMOTE_ENV_SETUP}./build.sh"
+    ssh_exec "$REMOTE_HOST" "cd \"$REMOTE_DIR_SSH\" && chmod +x ./*.sh && ${REMOTE_ENV_SETUP}./build.sh"
     ;;
   *)
     printf 'Error: unsupported SYNC_REMOTE_ENTRYPOINT: %s\n' "$SYNC_REMOTE_ENTRYPOINT" >&2

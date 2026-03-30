@@ -67,13 +67,13 @@ EOF
 
 grep -Fq "sync.sh preflight warning:" "$TMP_DIR/default.stdout"
 grep -Fq "requires OVH_ENDPOINT_API_KEY" "$TMP_DIR/default.stdout"
-grep -Eq "ssh .*test-host mkdir -p '/tmp/test-agime'" "$CALLS_FILE"
+grep -Eq "ssh .*test-host mkdir -p \"/tmp/test-agime\"" "$CALLS_FILE"
 grep -Eq "scp .* -r build.sh backup.sh update.sh image.sh restore.sh scripts templates docs README.md $TMP_DIR/auto-sync\\.conf test-host:/tmp/test-agime/" "$CALLS_FILE"
 if grep -Eq "scp .* $TMP_DIR/auto-sync\\.conf test-host:/tmp/test-agime/auto-sync\\.conf" "$CALLS_FILE"; then
   echo "expected single upload path for auto-sync.conf, but found duplicate explicit env upload" >&2
   exit 1
 fi
-grep -Eq "ssh .* test-host cd '/tmp/test-agime' && chmod \+x \./\*\.sh && set -a && \. '\./auto-sync\.conf' && set \+a && \./build.sh" "$CALLS_FILE"
+grep -Eq "ssh .* test-host cd \"/tmp/test-agime\" && chmod \+x \./\*\.sh && set -a && \. '\./auto-sync\.conf' && set \+a && \./build.sh" "$CALLS_FILE"
 grep -Eq "ssh .* -O exit test-host" "$CALLS_FILE"
 
 CONFIG_WITH_KEY="$TMP_DIR/config-with-key.conf"
@@ -104,7 +104,7 @@ fi
     sh ./sync.sh
 )
 
-grep -Eq "ssh .* test-host cd '/tmp/test-agime' && chmod \+x \./\*\.sh && set -a && \. '\./auto-sync\.conf' && set \+a && \./build.sh" "$CALLS_FILE"
+grep -Eq "ssh .* test-host cd \"/tmp/test-agime\" && chmod \+x \./\*\.sh && set -a && \. '\./auto-sync\.conf' && set \+a && \./build.sh" "$CALLS_FILE"
 
 CONFIG_FILE="$TMP_DIR/sync.conf"
 cat > "$CONFIG_FILE" << EOF
@@ -127,10 +127,10 @@ printf 'OVH_ENDPOINT_API_KEY=test-key\n' > "$TMP_DIR/mirrored.env"
 
 grep -Fq "sync.sh effective config:" "$TMP_DIR/config.stdout"
 grep -Fq "REMOTE_HOST=config-host" "$TMP_DIR/config.stdout"
-grep -Eq "ssh .*config-host mkdir -p '/tmp/config-agime'" "$CALLS_FILE"
+grep -Eq "ssh .*config-host mkdir -p \"/tmp/config-agime\"" "$CALLS_FILE"
 grep -Eq "scp .* $CONFIG_FILE config-host:/tmp/config-agime/" "$CALLS_FILE"
 grep -Eq "scp .* $TMP_DIR/mirrored\\.env config-host:/tmp/config-agime/\\.sync-build\\.env" "$CALLS_FILE"
-grep -Eq "ssh .* config-host cd '/tmp/config-agime' && chmod \+x \./\*\.sh && set -a && \. '\./\.sync-build\.env' && set \+a && \./build.sh" "$CALLS_FILE"
+grep -Eq "ssh .* config-host cd \"/tmp/config-agime\" && chmod \+x \./\*\.sh && set -a && \. '\./\.sync-build\.env' && set \+a && \./build.sh" "$CALLS_FILE"
 grep -Eq "scp .* config-host:/tmp/config-agime/\.sync-build\.env $TMP_DIR/mirrored\.env" "$CALLS_FILE"
 
 REMOTE_PRIORITY_CONFIG="$TMP_DIR/remote-priority.conf"
@@ -204,7 +204,7 @@ chmod +x "$BOOTSTRAP_DIR/sync.sh"
 
 grep -Fq "REMOTE_HOST=runtime-host" "$BOOTSTRAP_DIR/generated.conf"
 grep -Fq "REMOTE_DIR=/tmp/runtime-agime" "$BOOTSTRAP_DIR/generated.conf"
-grep -Eq "ssh .*runtime-host mkdir -p '/tmp/runtime-agime'" "$CALLS_FILE"
+grep -Eq "ssh .*runtime-host mkdir -p \"/tmp/runtime-agime\"" "$CALLS_FILE"
 
 EXPANDED_HOME_DIR="$TMP_DIR/expanded-home"
 mkdir -p "$EXPANDED_HOME_DIR"
@@ -222,7 +222,7 @@ EOF
     sh ./sync.sh > "$TMP_DIR/expanded-home.stdout" 2>&1
 )
 
-grep -Eq "ssh .*expanded-host mkdir -p '~/agime'" "$CALLS_FILE"
+grep -Eq 'ssh .*expanded-host mkdir -p "\$HOME/agime"' "$CALLS_FILE"
 grep -Eq "scp .* -r build.sh backup.sh update.sh image.sh restore.sh scripts templates docs README.md $EXPANDED_CONFIG expanded-host:~/agime/" "$CALLS_FILE"
 
 EXPANDED_BOOTSTRAP_DIR="$TMP_DIR/bootstrap-expanded"
@@ -245,6 +245,6 @@ chmod +x "$EXPANDED_BOOTSTRAP_DIR/sync.sh"
 )
 
 grep -Fq "REMOTE_DIR=~/agime" "$EXPANDED_BOOTSTRAP_DIR/generated.conf"
-grep -Eq "ssh .*runtime-expanded-host mkdir -p '~/agime'" "$CALLS_FILE"
+grep -Eq 'ssh .*runtime-expanded-host mkdir -p "\$HOME/agime"' "$CALLS_FILE"
 
 echo "sync.sh hermetic test passed"

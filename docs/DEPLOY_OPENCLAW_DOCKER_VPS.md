@@ -18,6 +18,7 @@
    - fixed official image: `ghcr.io/openclaw/openclaw:latest`
 4. Keep Traefik only for `OPENCLAW_ACCESS_MODE=public` (ssh-tunnel mode skips Traefik).
 5. Run `sh ./setup.sh`; on first deploy, OpenClaw wizard (`./docker-setup.sh`) runs when `.env` is missing.
+   - When agime is in `sudo docker` fallback mode for the current session, it runs the wizard with `sudo` as well.
 6. Validate endpoint access:
    - `ssh-tunnel`: local tunnel to `127.0.0.1:18789`
    - `public`: HTTPS via `https://$OPENCLAW_DOMAIN`
@@ -59,6 +60,7 @@ Open: `https://openclaw.example.com`
 ## First-run behavior (`build.sh` on remote host)
 
 On first run, if `OPENCLAW_DIR/.env` is missing, agime runs OpenClaw's `./docker-setup.sh` wizard.
+If agime had to fall back to `sudo docker` for this session, the wizard is launched with `sudo` too so the initial image build does not fail on Docker socket permissions.
 
 This wizard step is required for installs; skipping the wizard is not supported.
 

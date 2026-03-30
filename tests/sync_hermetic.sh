@@ -184,4 +184,26 @@ grep -Fq "TRAEFIK_DIR=~/docker/traefik" "$PORTABLE_DIR/sync.conf"
 grep -Fq "OPENCLAW_JSON_BACKUP_DIR=~/openclaw-backups" "$PORTABLE_DIR/sync.conf"
 grep -Eq "scp .* -r build.sh backup.sh update.sh image.sh restore.sh scripts templates docs README.md $PORTABLE_DIR/sync\\.conf portable-host:/tmp/portable-agime/" "$CALLS_FILE"
 
+BOOTSTRAP_DIR="$TMP_DIR/bootstrap"
+mkdir -p "$BOOTSTRAP_DIR"
+cp "$REPO_DIR/sync.sh" "$BOOTSTRAP_DIR/sync.sh"
+cat > "$BOOTSTRAP_DIR/sync.conf.example" << EOF
+REMOTE_HOST=user@example-vps
+REMOTE_DIR=/tmp/agime
+EOF
+chmod +x "$BOOTSTRAP_DIR/sync.sh"
+
+(
+  cd "$BOOTSTRAP_DIR"
+  PATH="$BIN_DIR:$PATH" \
+    SYNC_CONFIG_FILE="$BOOTSTRAP_DIR/generated.conf" \
+    REMOTE_HOST=runtime-host \
+    REMOTE_DIR=/tmp/runtime-agime \
+    sh ./sync.sh > "$TMP_DIR/bootstrap.stdout" 2>&1
+)
+
+grep -Fq "REMOTE_HOST=runtime-host" "$BOOTSTRAP_DIR/generated.conf"
+grep -Fq "REMOTE_DIR=/tmp/runtime-agime" "$BOOTSTRAP_DIR/generated.conf"
+grep -Eq "ssh .*runtime-host mkdir -p '/tmp/runtime-agime'" "$CALLS_FILE"
+
 echo "sync.sh hermetic test passed"

@@ -90,11 +90,10 @@ sh ./sync.sh
 
 `sync.sh` auto-loads `./sync.conf` when present.
 It then prioritizes an existing remote env file (`SYNC_REMOTE_ENV_FILE`, default `sync.conf`): when found, that remote file is downloaded locally and used as the source of truth for the run.
-If the remote file is missing, `sync.sh` uses local config; and when local is also missing, it runs local `configure.sh` in config-generation mode to create one, then appends `REMOTE_HOST`/`REMOTE_DIR` if absent.
+If the remote file is missing, `sync.sh` uses local config; and when local is also missing, it bootstraps from `sync.conf.example`, then appends `REMOTE_HOST`/`REMOTE_DIR` if absent.
 When `sync.sh` creates/downloads that shared config, it normalizes `OPENCLAW_*`/`TRAEFIK_DIR` home paths to `~/...` form so `sync.conf` stays portable across workstation + VPS homes.
 By default, the same `sync.conf` is sourced remotely before execution (`SYNC_REMOTE_ENV_FILE=sync.conf`) under `set -a`, so plain `KEY=value` assignments are auto-exported for the selected remote entrypoint.
 When `SYNC_REMOTE_ENV_FILE` points to the same file already included in `SYNC_ITEMS` (default: `sync.conf`), `sync.sh` uploads it once to avoid duplicate transfer lines.
-When `configure.sh` is launched from `sync.sh`, values already present in `sync.conf` are reused as prompt defaults (for example `OPENCLAW_ACCESS_MODE`, directories, and optional tool flags), so pressing Enter keeps existing config values.
 Set `SYNC_PRINT_CONFIG=1` to print the effective config before execution.
 `sync.conf` is intentionally gitignored (it may contain secrets), while `sync.conf.example` remains the safe template.
 
@@ -213,6 +212,24 @@ Operational note: pairing by itself is not a network exposure boundary; prefer `
 - Post-build validation probes `https://$OPENCLAW_DOMAIN`.
 - Validation accepts successful TLS/connectivity even if root returns `404`.
 
+## Standard Docker-on-VPS deployment guide
+
+Use the pure operator flow documented in:
+
+- [`docs/DEPLOY_OPENCLAW_DOCKER_VPS.md`](docs/DEPLOY_OPENCLAW_DOCKER_VPS.md)
+
+Simple quick start:
+- Interactive: `REMOTE_HOST=<user>@<vps-host> REMOTE_DIR=~/agime sh ./setup.sh`
+- Non-interactive: `REMOTE_HOST=<user>@<vps-host> REMOTE_DIR=~/agime sh ./sync.sh`
+
+Key deployment constraints:
+
+- `OVH_ENDPOINT_API_KEY` is mandatory.
+- `OVH_ENDPOINT_MODEL` defaults to `gpt-oss-120b` if unset.
+- First install should keep native bootstrap enabled (`SKIP_OPENCLAW_WIZARD=0`).
+- `OPENCLAW_IMAGE` is optional; leave it unset for the default local image flow (`openclaw:local`).
+- Recommended interactive entrypoint: `REMOTE_HOST=<user>@<vps-host> sh ./setup.sh`.
+
 ## Image-first deployment model (recommended)
 
 Use a prebuilt custom image that already contains optional tools used by your agent workflows.
@@ -235,6 +252,12 @@ OPENCLAW_ACCESS_MODE=ssh-tunnel \
 OVH_ENDPOINT_API_KEY=... \
 ./build.sh
 ```
+
+`OVH_ENDPOINT_API_KEY` is mandatory for supported deployments.
+
+Use native OpenClaw factory bootstrap on first install (default `SKIP_OPENCLAW_WIZARD=0`), then switch to `SKIP_OPENCLAW_WIZARD=1` only for post-bootstrap automation.
+
+If `OVH_ENDPOINT_MODEL` is not set, the deployment uses the toolkit default model (`gpt-oss-120b`).
 
 Host responsibilities are intentionally limited to Docker Engine, Docker Compose v2, SSH access, firewall/networking, and persistent bind mounts. Optional tools (`gh`, `himalaya`, `codex`, `claude`, `opencode`, `pi`, `signal-cli`) must be present in the selected `OPENCLAW_IMAGE`.
 

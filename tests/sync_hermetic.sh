@@ -133,23 +133,6 @@ grep -Eq "scp .* $TMP_DIR/mirrored\\.env config-host:/tmp/config-agime/\\.sync-b
 grep -Eq "ssh .* config-host cd '/tmp/config-agime' && chmod \+x \./\*\.sh && set -a && \. '\./\.sync-build\.env' && set \+a && \./build.sh" "$CALLS_FILE"
 grep -Eq "scp .* config-host:/tmp/config-agime/\.sync-build\.env $TMP_DIR/mirrored\.env" "$CALLS_FILE"
 
-INTERACTIVE_CONFIG_FILE="$TMP_DIR/interactive-sync.conf"
-cat > "$INTERACTIVE_CONFIG_FILE" << EOF
-REMOTE_HOST=interactive-host
-REMOTE_DIR=/tmp/interactive-agime
-SYNC_REMOTE_ENTRYPOINT=configure.sh
-EOF
-
-(
-  cd "$REPO_DIR"
-  PATH="$BIN_DIR:$PATH" \
-    SYNC_CONFIG_FILE="$INTERACTIVE_CONFIG_FILE" \
-    OPENCLAW_ACTION=security \
-    sh ./sync.sh
-)
-
-grep -Eq "ssh .* -t interactive-host cd '/tmp/interactive-agime' && chmod \+x \./\*\.sh && set -a && \. '\./interactive-sync\.conf' && set \+a && OPENCLAW_ACTION='security' OPENCLAW_EXPORT_ENV_FILE='interactive-sync\\.conf' \./configure.sh" "$CALLS_FILE"
-
 REMOTE_PRIORITY_CONFIG="$TMP_DIR/remote-priority.conf"
 cat > "$REMOTE_PRIORITY_CONFIG" << EOF
 REMOTE_HOST=remote-priority-host
@@ -174,18 +157,14 @@ fi
 PORTABLE_DIR="$TMP_DIR/portable"
 mkdir -p "$PORTABLE_DIR"
 cp "$REPO_DIR/sync.sh" "$PORTABLE_DIR/sync.sh"
-cat > "$PORTABLE_DIR/configure.sh" << EOF
-#!/usr/bin/env sh
-set -eu
-cat > "\$OPENCLAW_EXPORT_ENV_FILE" << EOF_INNER
+cat > "$PORTABLE_DIR/sync.conf.example" << EOF
 OPENCLAW_DIR=$TMP_DIR/home/openclaw
 OPENCLAW_CONFIG_DIR=$TMP_DIR/home/.openclaw
 OPENCLAW_WORKSPACE_DIR=$TMP_DIR/home/.openclaw/workspace
 TRAEFIK_DIR=$TMP_DIR/home/docker/traefik
 OPENCLAW_JSON_BACKUP_DIR=$TMP_DIR/home/openclaw-backups
-EOF_INNER
 EOF
-chmod +x "$PORTABLE_DIR/sync.sh" "$PORTABLE_DIR/configure.sh"
+chmod +x "$PORTABLE_DIR/sync.sh"
 
 (
   cd "$PORTABLE_DIR"
@@ -197,7 +176,7 @@ chmod +x "$PORTABLE_DIR/sync.sh" "$PORTABLE_DIR/configure.sh"
     sh ./sync.sh > "$TMP_DIR/portable.stdout" 2>&1
 )
 
-grep -Fq "sync.sh: created $PORTABLE_DIR/sync.conf via local configure wizard" "$TMP_DIR/portable.stdout"
+grep -Fq "sync.sh: local config ready at $PORTABLE_DIR/sync.conf" "$TMP_DIR/portable.stdout"
 grep -Fq "OPENCLAW_DIR=~/openclaw" "$PORTABLE_DIR/sync.conf"
 grep -Fq "OPENCLAW_CONFIG_DIR=~/.openclaw" "$PORTABLE_DIR/sync.conf"
 grep -Fq "OPENCLAW_WORKSPACE_DIR=~/.openclaw/workspace" "$PORTABLE_DIR/sync.conf"

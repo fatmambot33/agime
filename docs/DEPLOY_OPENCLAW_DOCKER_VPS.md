@@ -24,8 +24,8 @@ sh ./sync.sh
 - Access mode: `ssh-tunnel` (default) or `public` (explicit).
 - OVH endpoint: `OVH_ENDPOINT_API_KEY` is mandatory.
 - Model: `OVH_ENDPOINT_MODEL` optional, defaults to `gpt-oss-120b`.
-- Image runtime: image-first is recommended (`OPENCLAW_IMAGE` + `SKIP_OPENCLAW_IMAGE_BUILD=1`), but not mandatory.
-- Optional tools must exist inside the selected image, not on the host.
+- Image runtime: no custom image is required for baseline deployment; defaults work out of the box.
+- Use `OPENCLAW_IMAGE` + `SKIP_OPENCLAW_IMAGE_BUILD=1` only when you intentionally deploy a prebuilt image.
 
 ## Native bootstrap rule
 
@@ -57,14 +57,14 @@ Interactive flow asks for required values (including OVH key, access mode, and d
    - Set `OVH_ENDPOINT_API_KEY`.
    - Optionally set `OVH_ENDPOINT_MODEL`.
    - Set `OPENCLAW_ACCESS_MODE=ssh-tunnel|public`.
-   - Optional image-first values (recommended for VPS production):
+   - Optional prebuilt-image values (only if you want a pinned image):
 
    ```sh
    OPENCLAW_IMAGE=<registry>/<name>:<tag>
    SKIP_OPENCLAW_IMAGE_BUILD=1
    ```
 
-   - If unset, `build.sh` can still build/use the default local image (`openclaw:local`).
+   - Otherwise, leave them unset and use the default local image flow (`openclaw:local`).
 
 3. Deploy (non-interactive alternative)
 

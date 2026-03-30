@@ -22,8 +22,9 @@ chmod +x "$WORK_DIR/sync.sh"
 SYNC_CONFIG_CAPTURE="$TMP_DIR/sync.conf"
 (
   cd "$WORK_DIR"
+  HOME="$TMP_DIR/workstation-home" \
   REMOTE_HOST='ubuntu@example' \
-  REMOTE_DIR='~/deploy' \
+  REMOTE_DIR="$TMP_DIR/workstation-home/deploy" \
   SYNC_CONFIG_CAPTURE="$SYNC_CONFIG_CAPTURE" \
   sh ./setup.sh <<'EOF_INPUT'
 
@@ -36,5 +37,6 @@ EOF_INPUT
 grep -Fxq 'OPENCLAW_ACCESS_MODE=ssh-tunnel' "$SYNC_CONFIG_CAPTURE"
 grep -Fxq 'OVH_ENDPOINT_API_KEY=api-key-123' "$SYNC_CONFIG_CAPTURE"
 grep -Fxq 'OPENCLAW_TOKEN=' "$SYNC_CONFIG_CAPTURE"
+grep -Fxq 'REMOTE_DIR=~/deploy' "$SYNC_CONFIG_CAPTURE"
 
 echo "setup_interactive_hermetic test passed"

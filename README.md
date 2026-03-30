@@ -87,6 +87,7 @@ sh ./sync.sh
 It then prioritizes an existing remote env file (`SYNC_REMOTE_ENV_FILE`, default `sync.conf`): when found, that remote file is downloaded locally and used as the source of truth for the run.
 If the remote file is missing, `sync.sh` uses local config; and when local is also missing, it bootstraps from `sync.conf.example`, then writes the current `REMOTE_HOST`/`REMOTE_DIR` into that generated config.
 When `sync.sh` creates/downloads that shared config, it normalizes `OPENCLAW_*`/`TRAEFIK_DIR` home paths to `~/...` form so `sync.conf` stays portable across workstation + VPS homes.
+`REMOTE_DIR` is also normalized back to `~/...` whenever it maps to your local `$HOME` (including when loaded from config, refreshed from remote env, or bootstrapped), so a locally expanded path like `/Users/<you>/agime` is never reused as the remote VPS deploy path.
 By default, the same `sync.conf` is sourced remotely before execution (`SYNC_REMOTE_ENV_FILE=sync.conf`) under `set -a`, so plain `KEY=value` assignments are auto-exported for the selected remote entrypoint.
 When `SYNC_REMOTE_ENV_FILE` points to the same file already included in `SYNC_ITEMS` (default: `sync.conf`), `sync.sh` uploads it once to avoid duplicate transfer lines.
 Set `SYNC_PRINT_CONFIG=1` to print the effective config before execution.
@@ -415,5 +416,4 @@ Use dry-run previews when needed:
 ```bash
 DRY_RUN=1 sh ./update.sh
 ```
-
 

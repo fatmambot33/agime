@@ -206,4 +206,45 @@ grep -Fq "REMOTE_HOST=runtime-host" "$BOOTSTRAP_DIR/generated.conf"
 grep -Fq "REMOTE_DIR=/tmp/runtime-agime" "$BOOTSTRAP_DIR/generated.conf"
 grep -Eq "ssh .*runtime-host mkdir -p '/tmp/runtime-agime'" "$CALLS_FILE"
 
+EXPANDED_HOME_DIR="$TMP_DIR/expanded-home"
+mkdir -p "$EXPANDED_HOME_DIR"
+EXPANDED_CONFIG="$TMP_DIR/expanded-home.conf"
+cat > "$EXPANDED_CONFIG" << EOF
+REMOTE_HOST=expanded-host
+REMOTE_DIR=$EXPANDED_HOME_DIR/agime
+EOF
+
+(
+  cd "$REPO_DIR"
+  HOME="$EXPANDED_HOME_DIR" \
+    PATH="$BIN_DIR:$PATH" \
+    SYNC_CONFIG_FILE="$EXPANDED_CONFIG" \
+    sh ./sync.sh > "$TMP_DIR/expanded-home.stdout" 2>&1
+)
+
+grep -Eq "ssh .*expanded-host mkdir -p '~/agime'" "$CALLS_FILE"
+grep -Eq "scp .* -r build.sh backup.sh update.sh image.sh restore.sh scripts templates docs README.md $EXPANDED_CONFIG expanded-host:~/agime/" "$CALLS_FILE"
+
+EXPANDED_BOOTSTRAP_DIR="$TMP_DIR/bootstrap-expanded"
+mkdir -p "$EXPANDED_BOOTSTRAP_DIR"
+cp "$REPO_DIR/sync.sh" "$EXPANDED_BOOTSTRAP_DIR/sync.sh"
+cat > "$EXPANDED_BOOTSTRAP_DIR/sync.conf.example" << EOF
+REMOTE_HOST=user@example-vps
+REMOTE_DIR=/tmp/agime
+EOF
+chmod +x "$EXPANDED_BOOTSTRAP_DIR/sync.sh"
+
+(
+  cd "$EXPANDED_BOOTSTRAP_DIR"
+  HOME="$EXPANDED_HOME_DIR" \
+    PATH="$BIN_DIR:$PATH" \
+    SYNC_CONFIG_FILE="$EXPANDED_BOOTSTRAP_DIR/generated.conf" \
+    REMOTE_HOST=runtime-expanded-host \
+    REMOTE_DIR="$EXPANDED_HOME_DIR/agime" \
+    sh ./sync.sh > "$TMP_DIR/bootstrap-expanded.stdout" 2>&1
+)
+
+grep -Fq "REMOTE_DIR=~/agime" "$EXPANDED_BOOTSTRAP_DIR/generated.conf"
+grep -Eq "ssh .*runtime-expanded-host mkdir -p '~/agime'" "$CALLS_FILE"
+
 echo "sync.sh hermetic test passed"

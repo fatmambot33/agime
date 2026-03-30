@@ -36,6 +36,27 @@ ask_required() {
   done
 }
 
+canonicalize_home_path() {
+  value=$1
+  home_dir=${HOME:-}
+  [ -n "$home_dir" ] || {
+    printf '%s' "$value"
+    return 0
+  }
+
+  case "$value" in
+    "$home_dir")
+      printf '~'
+      ;;
+    "$home_dir"/*)
+      printf '~/%s' "${value#"$home_dir"/}"
+      ;;
+    *)
+      printf '%s' "$value"
+      ;;
+  esac
+}
+
 echo "=== OpenClaw OVH Remote Setup ==="
 OPENCLAW_ACCESS_MODE=$(ask_default "Access mode (ssh-tunnel/public)" "ssh-tunnel")
 case "$OPENCLAW_ACCESS_MODE" in
@@ -58,6 +79,7 @@ if [ "$OPENCLAW_ACCESS_MODE" = "public" ]; then
 fi
 
 REMOTE_DIR=${REMOTE_DIR:-"~/agime"}
+REMOTE_DIR=$(canonicalize_home_path "$REMOTE_DIR")
 TMP_SYNC_CONFIG=$(mktemp)
 trap 'rm -f "$TMP_SYNC_CONFIG"' EXIT INT TERM
 

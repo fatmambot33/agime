@@ -35,6 +35,10 @@ canonicalize_home_path() {
   esac
 }
 
+normalize_remote_dir() {
+  REMOTE_DIR=$(canonicalize_home_path "$REMOTE_DIR")
+}
+
 normalize_shared_home_paths() {
   env_file=$1
   [ -f "$env_file" ] || return 0
@@ -80,6 +84,7 @@ EOF
   mkdir -p "$(dirname "$SYNC_LOCAL_ENV_FILE")"
   cp "$example_file" "$SYNC_LOCAL_ENV_FILE"
 
+  normalize_remote_dir
   upsert_env_key "REMOTE_HOST" "$REMOTE_HOST"
   upsert_env_key "REMOTE_DIR" "$REMOTE_DIR"
   normalize_shared_home_paths "$SYNC_LOCAL_ENV_FILE"
@@ -96,6 +101,8 @@ upsert_env_key() {
   mv "$tmp_file" "$SYNC_LOCAL_ENV_FILE"
 }
 
+normalize_remote_dir
+
 if [ ! -f "$SYNC_LOCAL_ENV_FILE" ]; then
   try_download_remote_config || bootstrap_local_config
 fi
@@ -106,6 +113,7 @@ if [ -f "$SYNC_CONFIG_FILE" ]; then
   . "$SYNC_CONFIG_FILE"
   set +a
 fi
+normalize_remote_dir
 
 OPENCLAW_ACTION=${OPENCLAW_ACTION:-}
 SYNC_REMOTE_ENTRYPOINT=${SYNC_REMOTE_ENTRYPOINT:-build.sh}
@@ -161,6 +169,7 @@ if [ "$SYNC_REMOTE_CONFIG_PRIORITY" = "1" ] && remote_env_exists; then
     # shellcheck disable=SC1090
     . "$SYNC_LOCAL_ENV_FILE"
     set +a
+    normalize_remote_dir
   fi
 fi
 

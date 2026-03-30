@@ -41,7 +41,7 @@ SYNC_REMOTE_ENTRYPOINT=build.sh
 # DRY_RUN=0
 
 # Default upload set (space-separated, runtime bundle only)
-SYNC_ITEMS="build.sh backup.sh update.sh image.sh add_tool.sh restore.sh scripts templates docs README.md"
+SYNC_ITEMS="build.sh backup.sh update.sh image.sh restore.sh scripts templates docs README.md"
 
 # SSH multiplexing tunables
 SSH_CONTROL_PERSIST_SECONDS=600

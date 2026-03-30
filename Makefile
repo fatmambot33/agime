@@ -1,8 +1,8 @@
 SHELL := /bin/sh
 
-SCRIPTS := build.sh sync.sh backup.sh update.sh image.sh restore.sh setup.sh scripts/build_lib.sh scripts/build_steps.sh scripts/build_custom_image.sh tests/smoke_dry_run.sh tests/idempotency_dry_run.sh tests/security_template_checks.sh tests/sync_hermetic.sh tests/security_audit_scripts_hermetic.sh tests/backup_restore_hermetic.sh tests/configure_backup_hermetic.sh tests/configure_autoload_env_hermetic.sh tests/configure_image_interactive_hermetic.sh tests/build_custom_image_daemon_check_hermetic.sh tests/ownership_config_dir_hermetic.sh tests/post_install_helpers_hermetic.sh
+SCRIPTS := build.sh sync.sh backup.sh update.sh image.sh restore.sh setup.sh scripts/build_lib.sh scripts/build_steps.sh scripts/build_custom_image.sh tests/smoke_dry_run.sh tests/idempotency_dry_run.sh tests/security_template_checks.sh tests/sync_hermetic.sh tests/security_audit_scripts_hermetic.sh tests/backup_restore_hermetic.sh tests/build_custom_image_daemon_check_hermetic.sh tests/ownership_config_dir_hermetic.sh tests/post_install_helpers_hermetic.sh
 
-.PHONY: check check-strict ensure-tools syntax lint fmt-check smoke idempotency security sync-test backup-restore-test interactive-backup-test interactive-env-autoload-test interactive-image-test custom-image-daemon-check-test ownership-config-test post-install-helpers-test security-audit-scripts security-audit install-security-cron
+.PHONY: check check-strict ensure-tools syntax lint fmt-check smoke idempotency security sync-test backup-restore-test custom-image-daemon-check-test ownership-config-test post-install-helpers-test security-audit-scripts security-audit install-security-cron
 
 check: syntax smoke idempotency security sync-test backup-restore-test ownership-config-test post-install-helpers-test
 
@@ -42,15 +42,6 @@ sync-test:
 
 backup-restore-test:
 	sh tests/backup_restore_hermetic.sh
-
-interactive-backup-test:
-	sh tests/configure_backup_hermetic.sh
-
-interactive-env-autoload-test:
-	sh tests/configure_autoload_env_hermetic.sh
-
-interactive-image-test:
-	sh tests/configure_image_interactive_hermetic.sh
 
 custom-image-daemon-check-test:
 	sh tests/build_custom_image_daemon_check_hermetic.sh

@@ -8,14 +8,12 @@ Automation scripts for deploying OpenClaw on a VPS with two explicit access mode
 ## Current repository contents
 
 - `build.sh`: non-interactive end-to-end setup script (environment-variable driven).
-- `configure.sh`: guided entrypoint with a welcome menu (`Image`, `Install`, `Update`, `Add Tool`, `Backup`, `Restore`, `Security`); `Install` collects inputs then runs `build.sh`.
-- `sync.sh`: local helper that reconciles `sync.conf`, uploads the runtime deployment bundle to a VPS, then runs remote deployment (`build.sh`) by default (set `SYNC_REMOTE_ENTRYPOINT=configure.sh` to use the remote welcome menu intentionally).
+- `sync.sh`: local helper that reconciles `sync.conf`, uploads the runtime deployment bundle to a VPS, then runs remote deployment (`build.sh`) by default.
 - `sync.conf.example`: sample local config file for `sync.sh` (copy to `sync.conf` to track current sync/build defaults).
 - `.sync-build.env.example`: sample build environment file for non-interactive deploy runs.
 - `backup.sh`: creates a tarball backup of OpenClaw runtime data (`$OPENCLAW_CONFIG_DIR`, `$OPENCLAW_DIR/.env`, optional Traefik state).
 - `update.sh`: post-install helper that can fast-forward pull this toolkit checkout (auto-detected) and rerun `build.sh`.
 - `image.sh`: top-level helper for custom image build/push workflow (wrapper around `scripts/build_custom_image.sh`).
-- `add_tool.sh`: post-install helper to enable one optional tool and rerun `build.sh`; setup 2.0 generally prefers baking tooling into the image.
 - `restore.sh`: restores a backup tarball into a chosen root path (requires explicit force flag for `/`).
 - `setup.sh`: simplest setup entrypoint for remote install; it collects required values locally and runs `sync.sh` + remote `build.sh`.
 - `scripts/build_lib.sh` + `scripts/build_steps.sh`: shared helpers and modular deployment steps used by `build.sh`.
@@ -52,8 +50,6 @@ sh ./setup.sh
 ```
 
 `REMOTE_HOST` is required. `setup.sh` collects inputs locally, seeds a temporary sync config from `sync.conf.example`, then runs `sync.sh` to upload and execute remote `build.sh` over SSH.
-
-Use `configure.sh` when you want the full toolkit menu (`Image`, `Install`, `Update`, `Add Tool`, `Backup`, `Restore`, `Security`).
 
 ### Sync + remote deploy
 
@@ -111,17 +107,9 @@ Set this in `sync.conf`:
 
 If you prefer the welcome flow and want those selections reflected in reusable config:
 
-- set `SYNC_REMOTE_ENTRYPOINT=configure.sh`;
-- keep `SYNC_REMOTE_ENV_FILE=sync.conf` (default);
-- set `SYNC_MIRROR_ENV_FILE=1` when you want remote updates copied back locally.
-
-With this, `configure.sh` can write updated values on the remote host and `sync.sh` copies the remote env file back locally (chmod `600`) so your local `sync.conf` stays current.
-
-`configure.sh` also checks for `./.sync-build.env` on the host by default; when present, it skips prompts and runs `build.sh` directly. Set `OPENCLAW_FORCE_INTERACTIVE=1` to force the menu/prompts.
-
 ### Machine boundary and remote footprint
 
-- **Local workstation:** run `configure.sh` to author/update config and run `sync.sh` to reconcile and upload files.
+- **Local workstation:** author/update `sync.conf` and run `sync.sh` to reconcile and upload files.
 - **Remote VPS:** run `build.sh` (or other selected entrypoint) to apply deployment changes.
 - Default upload payload is runtime-only: `build.sh backup.sh update.sh image.sh restore.sh scripts templates docs README.md` (plus `sync.conf` when needed).
 - Local authoring helpers are intentionally excluded from default payload; override with `SYNC_ITEMS` only when you explicitly need a different bundle.
@@ -242,8 +230,7 @@ If you skip image-first, `build.sh` uses the default local image flow (`openclaw
 For first-time publishing, use the interactive workflow:
 
 ```bash
-sh ./configure.sh
-# choose: Image
+sh ./image.sh
 ```
 
 The `Image` action now walks through:
@@ -345,7 +332,6 @@ sh -n build.sh sync.sh backup.sh update.sh image.sh restore.sh setup.sh scripts/
 
 ## Backup and restore mechanic
 
-`configure.sh` includes an explicit pre-deploy backup prompt (enabled by default unless `DRY_RUN=1`) so you can capture a restore point before changes are applied.
 
 Backup defaults:
 - Includes `$OPENCLAW_CONFIG_DIR` (default `$HOME/.openclaw`).
@@ -419,7 +405,7 @@ sh ./update.sh
 1) create a pre-update backup archive,  
 2) auto-load `./.sync-build.env` when present,  
 3) pull `OPENCLAW_IMAGE` when `SKIP_OPENCLAW_IMAGE_BUILD=1` (image-first mode),  
-4) run `build.sh` to deploy, validate optional tools, and apply changes.
+4) run `build.sh` to deploy and apply changes.
 
 Safety guard: when backup is enabled, `update.sh` now verifies the backup archive file was actually created before continuing.
 

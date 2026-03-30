@@ -13,10 +13,10 @@ This runbook provides a simple, repeatable process for building the custom image
 
 ## Quick start (interactive first-time publish)
 
-Use the guided entrypoint and select `Image`:
+Use the image entrypoint:
 
 ```sh
-sh ./configure.sh
+sh ./image.sh
 ```
 
 The workflow prompts for:
@@ -26,7 +26,7 @@ The workflow prompts for:
 - tag
 - push preference
 
-`configure.sh` normalizes owner and image name to lowercase so the computed GHCR reference is valid for Docker image tags.
+`image.sh`/`scripts/build_custom_image.sh` normalize owner and image name to lowercase so the computed GHCR reference is valid for Docker image tags.
 
 Then it computes and displays:
 

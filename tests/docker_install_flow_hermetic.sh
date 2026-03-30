@@ -3,7 +3,7 @@ set -eu
 
 REPO_DIR=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 TMP_DIR=$(mktemp -d)
-trap 'rm -rf "$TMP_DIR"' EXIT
+trap '/bin/rm -rf "$TMP_DIR"' EXIT
 
 # shellcheck source=scripts/build_lib.sh
 . "$REPO_DIR/scripts/build_lib.sh"
@@ -37,16 +37,16 @@ chmod +x "$TEST_DOCKER_STUB"
 
 install_docker_on_host() {
   log "Docker is missing; installing Docker and docker compose on host"
-  ln -sf "$TEST_DOCKER_STUB" "$TMP_DIR/bin/docker"
+  /bin/ln -sf "$TEST_DOCKER_STUB" "$TMP_DIR/bin/docker"
 }
 
-PATH="$TMP_DIR/bin:/bin"
+PATH="$TMP_DIR/bin"
 set +e
 check_docker_access > "$TMP_DIR/check.out" 2>&1
 status=$?
 set -e
 [ "$status" -eq 0 ] || {
-  cat "$TMP_DIR/check.out"
+  /bin/cat "$TMP_DIR/check.out"
   exit 1
 }
 /bin/grep -q 'installing Docker and docker compose on host' "$TMP_DIR/check.out"

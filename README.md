@@ -58,6 +58,17 @@ OPENCLAW_DOMAIN=openclaw.example.com \
 sh ./setup.sh
 ```
 
+Local host bootstrap (optional): run installers directly on the current host through `setup.sh`.
+
+```sh
+SETUP_MODE=local-install \
+OPENCLAW_ACCESS_MODE=public \
+TRAEFIK_ACME_EMAIL=admin@example.com \
+sh ./setup.sh
+```
+
+`SETUP_MODE=remote-sync` remains the default behavior and keeps the existing local-sync + remote-build workflow.
+
 ## Validation
 
 ```sh

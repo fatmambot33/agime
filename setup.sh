@@ -17,7 +17,7 @@ OPENCLAW_DOMAIN=${OPENCLAW_DOMAIN:-}
 OPENCLAW_TOKEN=${OPENCLAW_TOKEN:-}
 
 run_local_install() {
-  sh "$SCRIPT_DIR/scripts/entrypoints/docker.install.sh"
+  bash "$SCRIPT_DIR/scripts/entrypoints/docker.install.sh"
   sh "$SCRIPT_DIR/scripts/entrypoints/tailscale.install.sh"
 
   if [ "$OPENCLAW_ACCESS_MODE" = "public" ]; then

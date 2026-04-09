@@ -59,6 +59,7 @@ sh ./setup.sh
 ```
 
 Local host bootstrap (optional): run installers directly on the current host through `setup.sh`.
+The Docker installer entrypoint is invoked with `bash` (matching its `#!/bin/bash` contract).
 
 ```sh
 SETUP_MODE=local-install \

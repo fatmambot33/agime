@@ -13,9 +13,6 @@ set -u
 OPENCLAW_DIR="$HOME/openclaw"
 WORKSPACE_DIR="$HOME/.openclaw/workspace"
 
-echo "=== Installing TailScale ==="
-curl -fsSL https://tailscale.com/install.sh | sh
-
 echo "=== Cloning OpenClaw repository ==="
 if [ ! -d "$OPENCLAW_DIR" ]; then
     git clone https://github.com/openclaw/openclaw.git "$OPENCLAW_DIR"

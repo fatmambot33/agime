@@ -20,6 +20,7 @@
 4. Keep Traefik only for `OPENCLAW_ACCESS_MODE=public` (ssh-tunnel mode skips Traefik).
 5. Run `sh ./setup.sh`; on first deploy, OpenClaw wizard (`./docker-setup.sh`) runs when `.env` is missing.
    - When agime is in `sudo docker` fallback mode for the current session, it runs the wizard with `sudo` as well.
+   - `setup.sh` also supports `SETUP_MODE=local-install` to run host installers directly (`docker.install.sh`, `tailscale.install.sh`, optional `traefik.install.sh`, `openclaw.install.sh`) on the current machine.
 6. Validate endpoint access:
    - `ssh-tunnel`: local tunnel to `127.0.0.1:18789`
    - `public`: HTTPS via `https://$OPENCLAW_DOMAIN`

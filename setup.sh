@@ -22,8 +22,8 @@ run_local_install() {
 
   if [ "$OPENCLAW_ACCESS_MODE" = "public" ]; then
     TRAEFIK_ACME_EMAIL=$TRAEFIK_ACME_EMAIL \
-    TRAEFIK_DIR=${TRAEFIK_DIR:-"$HOME/docker/traefik"} \
-    sh "$SCRIPT_DIR/scripts/entrypoints/traefik.install.sh"
+      TRAEFIK_DIR=${TRAEFIK_DIR:-"$HOME/docker/traefik"} \
+      sh "$SCRIPT_DIR/scripts/entrypoints/traefik.install.sh"
   fi
 
   sh "$SCRIPT_DIR/scripts/entrypoints/openclaw.install.sh"
